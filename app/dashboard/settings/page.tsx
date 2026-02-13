@@ -1,103 +1,313 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { User, Store, Globe, Link as LinkIcon, Save, Mail, Building, Loader2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import Toast from "@/components/Toast"
+
 export default function SettingsPage() {
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [showToast, setShowToast] = useState(false)
+    const [toastMessage, setToastMessage] = useState("")
+    const [toastType, setToastType] = useState<"success" | "error">("success")
+
+    const [user, setUser] = useState({
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: ""
+    })
+
+    const [store, setStore] = useState({
+        name: "",
+        website: "",
+        domain: ""
+    })
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data: { user: authUser } } = await supabase.auth.getUser()
+
+                if (authUser) {
+                    // Fetch profile data
+                    const { data: profile, error } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', authUser.id)
+                        .single()
+
+                    if (profile) {
+                        setUser({
+                            id: authUser.id,
+                            firstName: profile.first_name || "",
+                            lastName: profile.last_name || "",
+                            email: authUser.email || ""
+                        })
+                        setStore({
+                            name: profile.store_name || "",
+                            website: profile.store_website || "",
+                            domain: profile.store_domain || ""
+                        })
+                    } else {
+                        // Fallback if no profile exists yet
+                        setUser(prev => ({ ...prev, id: authUser.id, email: authUser.email || "" }))
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [])
+
+    const showNotification = (message: string, type: "success" | "error") => {
+        setToastMessage(message)
+        setToastType(type)
+        setShowToast(true)
+        setTimeout(() => setShowToast(false), 3000)
+    }
+
+    const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUser({ ...user, [e.target.name]: e.target.value })
+    }
+
+    const handleStoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+
+        if (name === "name") {
+            // Auto-generate domain based on store name
+            const domain = value.toLowerCase().replace(/[^a-z0-9]/g, "")
+            setStore({ ...store, name: value, domain })
+        } else {
+            setStore({ ...store, [name]: value })
+        }
+    }
+
+    const saveUser = async () => {
+        setIsSaving(true)
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    first_name: user.firstName,
+                    last_name: user.lastName,
+                    updated_at: new Date().toISOString()
+                })
+
+            if (error) throw error
+            showNotification("User information updated successfully", "success")
+        } catch (error) {
+            console.error("Error saving user:", error)
+            showNotification("Failed to save user information", "error")
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const saveStore = async () => {
+        setIsSaving(true)
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    store_name: store.name,
+                    store_website: store.website,
+                    store_domain: store.domain,
+                    updated_at: new Date().toISOString()
+                })
+
+            if (error) throw error
+            showNotification("Store settings updated successfully", "success")
+        } catch (error) {
+            console.error("Error saving store:", error)
+            showNotification("Failed to save store settings", "error")
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex h-96 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-12 relative">
+            {showToast && (
+                <div className="fixed top-4 right-4 z-50">
+                    <Toast
+                        message={toastMessage}
+                        isVisible={true}
+                        type={toastType}
+                        onClose={() => setShowToast(false)}
+                    />
+                </div>
+            )}
+
             <div>
-                <h2 className="text-4xl font-black tracking-tighter uppercase italic">Settings</h2>
-                <p className="text-lg font-bold text-gray-600 border-l-4 border-black pl-4 mt-2">
-                    Manage your account settings and preferences.
+                <h1 className="text-3xl font-bold text-white tracking-tight">Settings</h1>
+                <p className="text-gray-400 text-sm font-medium mt-1">
+                    Manage your account and store preferences.
                 </p>
             </div>
 
-            <div className="grid gap-8">
-                <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_black]">
-                    <div className="p-6 border-b-2 border-black bg-pink-200">
-                        <h3 className="text-xl font-black uppercase">Profile Information</h3>
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* User Information */}
+                <div className="bg-[#13171F] p-6 rounded-2xl border border-gray-800 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-800">
+                        <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                            <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold">User Information</h3>
+                            <p className="text-gray-500 text-xs mt-0.5">Manage your personal details</p>
+                        </div>
                     </div>
-                    <div className="p-6">
-                        <p className="text-sm font-bold text-gray-600 mb-6">
-                            Update your photo and personal details.
-                        </p>
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <label className="text-sm font-black uppercase">
-                                    First name
-                                </label>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">First Name</label>
                                 <input
                                     type="text"
-                                    placeholder="JOHN"
-                                    className="flex h-12 w-full border-2 border-black bg-white px-3 py-1 text-sm font-bold shadow-[4px_4px_0px_0px_black] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_black] focus:outline-none transition-all placeholder:text-gray-400"
+                                    name="firstName"
+                                    value={user.firstName}
+                                    onChange={handleUserChange}
+                                    className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg px-4 py-2.5 text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-600"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-black uppercase">
-                                    Last name
-                                </label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Last Name</label>
                                 <input
                                     type="text"
-                                    placeholder="DOE"
-                                    className="flex h-12 w-full border-2 border-black bg-white px-3 py-1 text-sm font-bold shadow-[4px_4px_0px_0px_black] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_black] focus:outline-none transition-all placeholder:text-gray-400"
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-sm font-black uppercase">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    placeholder="john.doe@example.com"
-                                    className="flex h-12 w-full border-2 border-black bg-white px-3 py-1 text-sm font-bold shadow-[4px_4px_0px_0px_black] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_black] focus:outline-none transition-all placeholder:text-gray-400"
+                                    name="lastName"
+                                    value={user.lastName}
+                                    onChange={handleUserChange}
+                                    className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg px-4 py-2.5 text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-600"
                                 />
                             </div>
                         </div>
-                        <div className="mt-8 flex justify-end">
-                            <button className="flex items-center gap-2 border-2 border-black bg-black px-6 py-3 text-sm font-black text-white hover:bg-gray-800 shadow-[4px_4px_0px_0px_#ff90e8] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#ff90e8] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all uppercase">
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Email Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={user.email}
+                                    disabled
+                                    className="w-full bg-[#0B0E14]/50 border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-gray-400 text-sm font-medium cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex justify-end">
+                            <button
+                                onClick={saveUser}
+                                disabled={isSaving}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                 Save Changes
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_black]">
-                    <div className="p-6 border-b-2 border-black bg-blue-200">
-                        <h3 className="text-xl font-black uppercase">Notifications</h3>
+                {/* Store Information */}
+                <div className="bg-[#13171F] p-6 rounded-2xl border border-gray-800 shadow-xl">
+                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-800">
+                        <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                            <Store className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold">Store Settings</h3>
+                            <p className="text-gray-500 text-xs mt-0.5">Configure your store integration</p>
+                        </div>
                     </div>
-                    <div className="p-6">
-                        <p className="text-sm font-bold text-gray-600 mb-6">
-                            Configure how you receive notifications.
-                        </p>
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-4 p-4 border-2 border-black bg-gray-50 shadow-[4px_4px_0px_0px_black] hover:bg-white transition-colors">
-                                <input type="checkbox" id="email-notif" className="h-6 w-6 border-2 border-black text-black focus:ring-black rounded-none" checked readOnly />
-                                <label htmlFor="email-notif" className="text-sm font-black uppercase cursor-pointer">
-                                    Email Notifications
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-4 p-4 border-2 border-black bg-gray-50 shadow-[4px_4px_0px_0px_black] hover:bg-white transition-colors">
-                                <input type="checkbox" id="sms-notif" className="h-6 w-6 border-2 border-black text-black focus:ring-black rounded-none" />
-                                <label htmlFor="sms-notif" className="text-sm font-black uppercase cursor-pointer">
-                                    SMS Notifications
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-4 p-4 border-2 border-black bg-gray-50 shadow-[4px_4px_0px_0px_black] hover:bg-white transition-colors">
-                                <input type="checkbox" id="marketing-notif" className="h-6 w-6 border-2 border-black text-black focus:ring-black rounded-none" />
-                                <label htmlFor="marketing-notif" className="text-sm font-black uppercase cursor-pointer">
-                                    Marketing Emails
-                                </label>
+
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Store Name</label>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={store.name}
+                                    onChange={handleStoreChange}
+                                    className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all placeholder:text-gray-600"
+                                />
                             </div>
                         </div>
-                        <div className="mt-8 flex justify-end gap-4">
-                            <button className="flex items-center gap-2 border-2 border-black bg-white px-6 py-3 text-sm font-black text-black hover:bg-red-200 shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all uppercase">
-                                Cancel
-                            </button>
-                            <button className="flex items-center gap-2 border-2 border-black bg-yellow-400 px-6 py-3 text-sm font-black text-black hover:bg-yellow-300 shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all uppercase">
-                                Save Preferences
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Your Website</label>
+                            <div className="relative">
+                                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                <input
+                                    type="url"
+                                    name="website"
+                                    value={store.website}
+                                    onChange={handleStoreChange}
+                                    className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all placeholder:text-gray-600"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Widget URL</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <LinkIcon className="h-4 w-4 text-purple-500" />
+                                </div>
+                                <div className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg pl-10 pr-4 py-3 text-gray-400 text-sm font-mono flex items-center overflow-x-auto">
+                                    <span className="text-gray-600">www.</span>
+                                    <span className="text-white font-bold">{store.domain || "your-store"}</span>
+                                    <span className="text-gray-600">.droutfit.com</span>
+                                </div>
+                                <div className="absolute inset-0 border border-purple-500/20 rounded-lg pointer-events-none group-hover:border-purple-500/50 transition-colors"></div>
+                            </div>
+                            <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                <InfoIcon className="h-3 w-3" />
+                                This URL is automatically generated from your store name.
+                            </p>
+                        </div>
+
+                        <div className="pt-4 flex justify-end">
+                            <button
+                                onClick={saveStore}
+                                disabled={isSaving}
+                                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-purple-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                Save Store Info
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    )
+}
+
+function InfoIcon({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+        </svg>
     )
 }

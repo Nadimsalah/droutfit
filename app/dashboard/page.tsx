@@ -1,131 +1,225 @@
 "use client"
 
-import { Activity, Camera, Images, Zap, ShoppingBag } from "lucide-react"
+import {
+    Bell,
+    Plus,
+    Loader2
+} from "lucide-react"
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Cell
+} from 'recharts'
+import { useState, useEffect } from "react"
+import { TopUpModal } from "@/components/TopUpModal"
+import { getDashboardStats } from "@/lib/storage"
 
-const stats = [
-    {
-        name: "Total Try-Ons",
-        value: "45,231",
-        change: "+20.1% from last month",
-        icon: Camera,
-        color: "bg-pink-300",
-    },
-    {
-        name: "Generations",
-        value: "12,234",
-        change: "+12.5% from last month",
-        icon: Images,
-        color: "bg-yellow-300",
-    },
-    {
-        name: "VTO Conversion",
-        value: "4.2%",
-        change: "+0.8% from last month",
-        icon: Zap,
-        color: "bg-blue-300",
-    },
-    {
-        name: "Active Now",
-        value: "573",
-        change: "+201 since last hour",
-        icon: Activity,
-        color: "bg-green-300",
-    },
-]
+// We can mock the chart data to follow the total usage for now
+const generateChartData = (total: number) => {
+    const data = [
+        { date: '2026-01-30', success: 0 },
+        { date: '2026-01-31', success: 0 },
+        { date: '2026-02-01', success: 0 },
+        { date: '2026-02-02', success: 0 },
+        { date: '2026-02-03', success: 0 },
+        { date: '2026-02-04', success: 0 },
+        { date: '2026-02-05', success: 0 },
+        { date: '2026-02-06', success: 0 },
+        { date: '2026-02-07', success: 0 },
+        { date: '2026-02-08', success: 0 },
+        { date: '2026-02-09', success: 0 },
+        { date: '2026-02-10', success: 0 },
+        { date: '2026-02-11', success: total },
+        { date: '2026-02-12', success: 0 },
+    ]
+    return data
+}
 
-export default function DashboardPage() {
+export default function OverviewPage() {
+    const [isTopUpOpen, setIsTopUpOpen] = useState(false)
+    const [stats, setStats] = useState<{
+        credits: number;
+        totalUsage: number;
+        successRate: number;
+        productCount: number;
+    } | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await getDashboardStats()
+                setStats(data)
+            } catch (error) {
+                console.error("Error fetching dashboard stats:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchStats()
+    }, [])
+
+    if (isLoading) {
+        return (
+            <div className="flex h-96 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+        )
+    }
+
+    const chartData = generateChartData(stats?.totalUsage || 0)
+
     return (
-        <div className="space-y-8">
-            <div>
-                <h2 className="text-4xl font-black tracking-tighter uppercase italic">Overview</h2>
-                <p className="text-lg font-bold text-gray-600 border-l-4 border-black pl-4 mt-2">
-                    Visualizing how VTO drives your store's growth.
-                </p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat) => (
-                    <div
-                        key={stat.name}
-                        className={`border-2 border-black p-6 shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] transition-all bg-white`}
+        <div className="space-y-8 max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-4xl font-bold text-white tracking-tight">Overview</h1>
+                        <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse tracking-widest uppercase">Live Status</span>
+                    </div>
+                    <p className="text-gray-400 text-sm font-medium">
+                        Monitor your credit usage and API request performance in real-time.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsTopUpOpen(true)}
+                        className="flex items-center gap-2 px-6 py-2 text-[13px] font-black text-white bg-[#2563EB] hover:bg-blue-500 rounded-full transition-all shadow-lg shadow-blue-600/20"
                     >
-                        <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <h3 className="tracking-tight text-sm font-bold text-black uppercase">
-                                {stat.name}
-                            </h3>
-                            <div className={`p-2 border-2 border-black ${stat.color} shadow-[2px_2px_0px_0px_black]`}>
-                                <stat.icon className="h-4 w-4 text-black" />
-                            </div>
-                        </div>
-                        <div className="pt-4">
-                            <div className="text-3xl font-black">{stat.value}</div>
-                            <p className="text-xs font-bold text-gray-500 mt-1">
-                                {stat.change}
-                            </p>
-                        </div>
-                    </div>
-                ))}
+                        <Plus className="h-4 w-4" />
+                        Top Up
+                    </button>
+                </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-                <div className="col-span-4 border-2 border-black bg-white shadow-[8px_8px_0px_0px_black]">
-                    <div className="p-6 border-b-2 border-black bg-pink-100">
-                        <h3 className="text-xl font-black uppercase">Try-On Demand Analysis</h3>
-                    </div>
-                    <div className="p-6 h-[350px] flex flex-col items-center justify-center bg-white space-y-4">
-                        <div className="text-lg font-bold text-gray-400 uppercase tracking-widest mb-4">Hourly Engagement (Last 24h)</div>
-                        <div className="flex gap-2 w-full px-4 items-end h-48">
-                            {[40, 60, 45, 90, 100, 80, 50, 70, 85, 110, 130, 120, 95, 110, 140, 160, 150, 120, 90, 100, 110, 130, 140, 120].map((height, i) => (
+            <TopUpModal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} />
+
+            {/* Top Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Last 24 Hours Card */}
+                <div className="bg-[#13171F] border border-gray-800/40 rounded-2xl shadow-2xl">
+                    <div className="p-7 space-y-6">
+                        <h3 className="text-xl font-bold text-white">Last 24 Hours</h3>
+
+                        {/* Progress Bar Container */}
+                        <div className="space-y-6">
+                            <div className="h-[3px] w-full bg-[#1F2937] rounded-full overflow-hidden">
                                 <div
-                                    key={i}
-                                    className={`flex-1 border-t-2 border-x-2 border-black transition-all hover:bg-black group relative`}
-                                    style={{ height: `${height}%`, backgroundColor: i % 2 === 0 ? '#ff90e8' : '#ffdb58' }}
-                                >
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-1 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {Math.floor(height * 2.5)}
+                                    className="h-full bg-[#10B981] transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                    style={{ width: `${stats?.successRate || 0}%` }}
+                                />
+                            </div>
+
+                            <div className="space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-2 w-2 rounded-full bg-[#10B981]" />
+                                        <span className="text-gray-400 text-sm font-medium">Success</span>
+                                    </div>
+                                    <div className="text-white text-sm font-bold">
+                                        {stats?.totalUsage} <span className="text-gray-500 ml-1 font-medium">( {stats?.successRate.toFixed(1)}% )</span>
                                     </div>
                                 </div>
-                            ))}
+
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-2 w-2 rounded-full bg-red-500/80" />
+                                        <span className="text-gray-400 text-sm font-medium">Failure</span>
+                                    </div>
+                                    <div className="text-white text-sm font-bold">
+                                        0 <span className="text-gray-500 ml-1 font-medium">( 0.0% )</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="w-full flex justify-between text-[10px] font-black uppercase text-gray-400 px-4 pt-2">
-                            <span>00:00</span>
-                            <span>06:00</span>
-                            <span>12:00</span>
-                            <span>18:00</span>
-                            <span>23:59</span>
+
+                        <div className="pt-6 border-t border-gray-800/50 flex justify-between items-end">
+                            <span className="text-gray-500 text-[13px] font-bold mb-1">Total Requests</span>
+                            <span className="text-white text-4xl font-black">{stats?.totalUsage}</span>
                         </div>
                     </div>
                 </div>
-                <div className="col-span-3 border-2 border-black bg-white shadow-[8px_8px_0px_0px_black]">
-                    <div className="p-6 border-b-2 border-black bg-yellow-100">
-                        <h3 className="text-xl font-black uppercase">Live Try-On Feed</h3>
-                        <p className="text-sm font-bold text-gray-600">
-                            Current interactions across your store.
-                        </p>
+
+                {/* Remaining Credits Card */}
+                <div className="bg-[#13171F] border border-gray-800/40 rounded-2xl p-7 shadow-2xl relative flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-white">Remaining credits</h3>
+                        <button className="text-gray-600 hover:text-white transition-colors">
+                            <Bell className="h-5 w-5" />
+                        </button>
                     </div>
-                    <div className="p-6">
-                        <div className="space-y-6">
-                            {[
-                                { user: "Olivia Martin", product: "Premium Denim Jacket", time: "just now", icon: "🧥", color: "bg-blue-200" },
-                                { user: "Jackson Lee", product: "Classic Cotton Tee", time: "4 min ago", icon: "👕", color: "bg-green-200" },
-                                { user: "Isabella Nguyen", product: "Floral Summer Dress", time: "12 min ago", icon: "👗", color: "bg-pink-200" },
-                                { user: "William Kim", product: "Slim Fit Chinos", time: "18 min ago", icon: "👖", color: "bg-yellow-200" },
-                                { user: "Sofia Davis", product: "Leather Biker Jacket", time: "25 min ago", icon: "🧥", color: "bg-purple-200" },
-                                { user: "Lucas Chen", product: "Cotton Oxford Shirt", time: "32 min ago", icon: "👔", color: "bg-blue-200" },
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-center group cursor-pointer">
-                                    <div className={`h-10 w-10 border-2 border-black ${item.color} flex items-center justify-center text-xl shadow-[3px_3px_0px_0px_black] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-none transition-all`}>
-                                        {item.icon}
-                                    </div>
-                                    <div className="ml-4 space-y-0.5">
-                                        <p className="text-sm font-black leading-none">{item.user}</p>
-                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-tighter">{item.product}</p>
-                                    </div>
-                                    <div className="ml-auto text-xs font-black text-gray-400 uppercase italic">{item.time}</div>
-                                </div>
-                            ))}
+                    <div className="mt-8">
+                        <span className="text-8xl font-black text-white tracking-tighter">{stats?.credits}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Activity Analytics Chart */}
+            <div className="bg-[#13171F] border border-gray-800/40 rounded-2xl p-7 shadow-2xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-gray-400 text-sm font-bold tracking-tight">
+                            Jan 30 - Feb 12 <span className="text-gray-600 font-medium ml-1">( total</span>
+                            <span className="text-white font-black mx-1">{stats?.totalUsage}</span>
+                            <span className="text-gray-600 font-medium ml-1">)</span>
+                        </h3>
+                    </div>
+                    <div className="flex items-center gap-5 text-[10px] font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[#10B981]">
+                            <div className="h-2 w-2 rounded-full bg-[#10B981]" />
+                            Success
+                        </div>
+                        <div className="flex items-center gap-2 text-red-500/40">
+                            <div className="h-2 w-2 rounded-full bg-red-500/40" />
+                            Failure
                         </div>
                     </div>
+                </div>
+
+                <div className="h-[300px] w-full mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                            <CartesianGrid vertical={false} stroke="#1F2937" strokeDasharray="0" />
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#4B5563', fontSize: 10, fontWeight: 700 }}
+                                dy={10}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#4B5563', fontSize: 10, fontWeight: 700 }}
+                            />
+                            <Tooltip
+                                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                                contentStyle={{
+                                    backgroundColor: '#0F1116',
+                                    border: '1px solid #1F2937',
+                                    borderRadius: '12px',
+                                    fontSize: '12px',
+                                    color: '#fff',
+                                    fontWeight: 'bold'
+                                }}
+                            />
+                            <Bar
+                                dataKey="success"
+                                radius={[3, 3, 0, 0]}
+                                barSize={24}
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={'#10B981'} className="hover:opacity-80 transition-opacity" />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
         </div>

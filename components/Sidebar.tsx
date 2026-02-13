@@ -1,61 +1,161 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 import {
     LayoutDashboard,
-    Package,
-    BarChart3,
+    Activity,
+    Zap,
+    Key,
+    ScrollText,
     CreditCard,
+
+    FileText,
+    MessageSquare,
+    Send,
     Settings,
-    LogOut
+    Globe,
+    LogOut,
+    X,
+    ChevronRight
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const navigation = [
+const mainNavigation = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Products", href: "/dashboard/products", icon: Package },
-    { name: "Statistics", href: "/dashboard/statistics", icon: BarChart3 },
+    { name: "Products", href: "/dashboard/products", icon: Zap },
+    { name: "Logs", href: "/dashboard/logs", icon: ScrollText },
     { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
+
+    { name: "Document", href: "/dashboard/docs", icon: FileText },
+]
+
+const footerNavigation = [
+    { name: "Get Support On Discord", href: "#", icon: MessageSquare },
+    { name: "Get Support On Telegram", href: "#", icon: Send },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+    isOpen?: boolean
+    onClose?: () => void
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
+    const [profile, setProfile] = useState<{ fullName: string; email: string } | null>(null)
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name')
+                    .eq('id', user.id)
+                    .single()
+
+                setProfile({
+                    fullName: data ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email?.split('@')[0] || 'User' : user.email?.split('@')[0] || 'User',
+                    email: user.email || ''
+                })
+            }
+        }
+        fetchProfile()
+    }, [])
+
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
 
     return (
-        <div className="flex h-full w-64 flex-col border-r-2 border-black bg-white text-black">
-            <div className="flex h-16 items-center px-6 border-b-2 border-black bg-yellow-400">
-                <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
-            </div>
-            <div className="flex-1 overflow-y-auto py-4">
-                <nav className="space-y-2 px-3">
-                    {navigation.map((item) => {
-                        const isActive = pathname === item.href
-                        return (
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            <div className={cn(
+                "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#0F1116] border-r border-gray-800/50 transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+                isOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                {/* User Section */}
+                <div className="p-6">
+                    <div className="flex items-center gap-3 mb-8">
+                        <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 group hover:bg-white/10 transition-all cursor-pointer">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border border-white/20 flex items-center justify-center text-white text-xs font-bold ring-2 ring-black">
+                            {profile ? getInitials(profile.fullName) : '--'}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-white text-sm font-bold truncate">{profile?.fullName || 'Loading...'}</span>
+                            <span className="text-gray-500 text-[10px] truncate">{profile?.email || '...'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+                    <nav className="space-y-1">
+                        {mainNavigation.map((item) => {
+                            const isActive = pathname === item.href
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={onClose}
+                                    className={cn(
+                                        "flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-lg group",
+                                        isActive
+                                            ? "bg-white text-black shadow-lg shadow-white/10"
+                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    )}
+                                >
+                                    <item.icon className={cn("h-4 w-4", isActive ? "text-black" : "text-gray-500 group-hover:text-white")} />
+                                    <span className="flex-1">{item.name}</span>
+                                    {isActive && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+                                </Link>
+                            )
+                        })}
+                    </nav>
+
+                    <div className="my-6 border-t border-gray-800/50" />
+
+                    <nav className="space-y-1">
+                        {footerNavigation.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={cn(
-                                    "flex items-center gap-3 border-2 border-transparent px-3 py-2 text-sm font-bold transition-all",
-                                    isActive
-                                        ? "bg-black text-white shadow-[4px_4px_0px_0px_rgba(255,144,232,1)] translate-x-1 translate-y-1"
-                                        : "text-black hover:bg-pink-300 hover:border-black hover:shadow-[2px_2px_0px_0px_black]"
-                                )}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 rounded-lg group"
                             >
-                                <item.icon className="h-5 w-5" />
-                                {item.name}
+                                <item.icon className="h-4 w-4 text-gray-500 group-hover:text-white" />
+                                <span className="flex-1">{item.name}</span>
                             </Link>
-                        )
-                    })}
-                </nav>
+                        ))}
+
+                        <div className="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 rounded-lg group cursor-pointer">
+                            <div className="flex items-center gap-3 text-gray-400 group-hover:text-white">
+                                <Globe className="h-4 w-4 text-gray-500 group-hover:text-white" />
+                                <span>English</span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-gray-600" />
+                        </div>
+                    </nav>
+                </div>
+
+                <div className="p-4 mt-auto">
+                    <button className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-all group">
+                        <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-500" />
+                        Sign Out
+                    </button>
+                </div>
             </div>
-            <div className="border-t-2 border-black p-4 bg-pink-200">
-                <button className="flex w-full items-center gap-3 border-2 border-black bg-white px-3 py-2 text-sm font-bold shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all">
-                    <LogOut className="h-5 w-5" />
-                    Sign Out
-                </button>
-            </div>
-        </div>
+        </>
     )
 }

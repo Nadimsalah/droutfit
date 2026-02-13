@@ -1,155 +1,209 @@
 "use client"
 
-import { Check, CreditCard, Download } from "lucide-react"
-
-const invoices = [
-    {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card",
-        date: "Feb 10, 2026",
-    },
-    {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal",
-        date: "Jan 10, 2026",
-    },
-    {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer",
-        date: "Dec 10, 2025",
-    },
-    {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card",
-        date: "Nov 10, 2025",
-    },
-    {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal",
-        date: "Oct 10, 2025",
-    },
-]
+import { Check, CreditCard, Shield, Info, Sparkles, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Modal } from "@/components/Modal"
+import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
 
 export default function BillingPage() {
+    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING)
+
+    useEffect(() => {
+        getPricing().then(setPricing)
+    }, [])
+
+    const handleSubscribe = () => {
+        setIsLoading(true)
+        // Simulate API call
+        setTimeout(() => {
+            setIsSubscribed(true)
+            setShowSubscriptionModal(false)
+            setIsLoading(false)
+        }, 1500)
+    }
+
     return (
-        <div className="space-y-8">
-            <div>
-                <h2 className="text-4xl font-black tracking-tighter uppercase italic">Billing</h2>
-                <p className="text-lg font-bold text-gray-600 border-l-4 border-black pl-4 mt-2">
-                    Manage your billing and invoicing.
+        <div className="space-y-8 pb-12 max-w-4xl mx-auto">
+            <div className="text-center space-y-2 mb-12">
+                <h1 className="text-4xl font-bold text-white tracking-tight">Billing & Subscription</h1>
+                <p className="text-gray-400 text-sm font-medium">
+                    Manage your access and view your billing history.
                 </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_black] p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-black px-2 py-1 border-b-2 border-l-2 border-black">
-                        POPULAR
-                    </div>
-                    <h3 className="font-black text-xl uppercase mb-2">Current Plan</h3>
-                    <div className="text-4xl font-black text-black mb-1">PRO PLAN</div>
-                    <p className="text-sm font-bold text-gray-500 mb-6">
-                        $29/month per user
-                    </p>
-                    <div className="space-y-3 mb-8">
-                        <div className="flex items-center text-sm font-bold">
-                            <div className="bg-green-400 border-2 border-black p-0.5 mr-3 shadow-[2px_2px_0px_0px_black]">
-                                <Check className="h-3 w-3 text-black" />
+            {/* Main Subscription Card */}
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative bg-[#0B0E14] border border-gray-800 rounded-2xl overflow-hidden p-8 md:p-12">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex-1 space-y-6">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 uppercase tracking-widest">
+                                <Sparkles className="h-3 w-3" />
+                                Lifetime Value
                             </div>
-                            20 Users included
-                        </div>
-                        <div className="flex items-center text-sm font-bold">
-                            <div className="bg-green-400 border-2 border-black p-0.5 mr-3 shadow-[2px_2px_0px_0px_black]">
-                                <Check className="h-3 w-3 text-black" />
-                            </div>
-                            10GB Data storage
-                        </div>
-                        <div className="flex items-center text-sm font-bold">
-                            <div className="bg-green-400 border-2 border-black p-0.5 mr-3 shadow-[2px_2px_0px_0px_black]">
-                                <Check className="h-3 w-3 text-black" />
-                            </div>
-                            Priority Support
-                        </div>
-                    </div>
-                    <button className="w-full border-2 border-black bg-black text-white px-4 py-3 text-sm font-black hover:bg-gray-800 shadow-[4px_4px_0px_0px_#ff90e8] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#ff90e8] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all uppercase">
-                        Upgrade Plan
-                    </button>
-                </div>
+                            <h2 className="text-3xl font-black text-white">Merchant Access Plan</h2>
+                            <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+                                Get full access to the AI Try-On engine, merchant dashboard, and advanced analytics.
+                                Unlock tiered credit pricing and priority support.
+                            </p>
 
-                <div className="col-span-2 border-2 border-black bg-white shadow-[8px_8px_0px_0px_black] p-6">
-                    <h3 className="font-black text-xl uppercase mb-6">Payment Method</h3>
-                    <div className="flex items-center p-4 border-2 border-black bg-gray-100 mb-6 shadow-[4px_4px_0px_0px_black]">
-                        <CreditCard className="h-8 w-8 mr-4 text-black" />
-                        <div className="flex-1">
-                            <p className="text-base font-black">Visa ending in 4242</p>
-                            <p className="text-xs font-bold text-gray-500">Expiry 06/2028</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <Check className="h-3 w-3 text-green-500" />
+                                    </div>
+                                    Unlimited API Access
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <Check className="h-3 w-3 text-green-500" />
+                                    </div>
+                                    Merchant Dashboard
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <Check className="h-3 w-3 text-green-500" />
+                                    </div>
+                                    Tiered Credit Pricing
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <Check className="h-3 w-3 text-green-500" />
+                                    </div>
+                                    Priority Support
+                                </div>
+                            </div>
                         </div>
-                        <button className="text-sm text-black font-bold underline hover:text-pink-500">Edit</button>
-                    </div>
-                    <button className="flex items-center gap-2 border-2 border-black bg-white px-4 py-2 text-sm font-bold hover:bg-gray-100 shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] transition-all">
-                        <CreditCard className="h-4 w-4 mr-2" /> Add Payment Method
-                    </button>
-                </div>
-            </div>
 
-            <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_black]">
-                <div className="p-6 border-b-2 border-black bg-orange-200">
-                    <h3 className="font-black text-xl uppercase">Invoices</h3>
-                </div>
-                <div className="p-0 overflow-x-auto">
-                    <table className="w-full caption-bottom text-sm font-bold text-black">
-                        <thead className="[&_tr]:border-b-2 border-black bg-gray-100">
-                            <tr className="border-b-2 border-black">
-                                <th className="h-12 px-6 text-left align-middle font-black uppercase">Invoice</th>
-                                <th className="h-12 px-6 text-left align-middle font-black uppercase">Status</th>
-                                <th className="h-12 px-6 text-left align-middle font-black uppercase">Method</th>
-                                <th className="h-12 px-6 text-left align-middle font-black uppercase">Amount</th>
-                                <th className="h-12 px-6 text-right align-middle font-black uppercase">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody className="[&_tr:last-child]:border-0 bg-white">
-                            {invoices.map((invoice) => (
-                                <tr
-                                    key={invoice.invoice}
-                                    className="border-b-2 border-black hover:bg-yellow-50 transition-colors"
+                        <div className="w-full md:w-80 bg-[#13171F] p-8 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
+                            <div className="flex items-baseline gap-1 mb-2">
+                                <span className="text-5xl font-black text-white">${pricing.SUBSCRIPTION_FEE}</span>
+                                <span className="text-gray-500 font-bold">/mo</span>
+                            </div>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8">All Features Included</p>
+
+                            {isSubscribed ? (
+                                <div className="w-full py-4 px-6 bg-green-500/10 border border-green-500/20 text-green-500 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                                    <Check className="h-4 w-4" />
+                                    Active Plan
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setShowSubscriptionModal(true)}
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-blue-600/20 active:scale-95"
                                 >
-                                    <td className="p-6 align-middle font-bold">{invoice.invoice}</td>
-                                    <td className="p-6 align-middle">
-                                        <span
-                                            className={`inline-flex items-center border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_0px_black]
-                      ${invoice.paymentStatus === "Paid"
-                                                    ? "bg-green-400 text-black"
-                                                    : invoice.paymentStatus === "Pending"
-                                                        ? "bg-yellow-400 text-black"
-                                                        : "bg-red-400 text-black"
-                                                }`}
-                                        >
-                                            {invoice.paymentStatus}
-                                        </span>
-                                    </td>
-                                    <td className="p-6 align-middle">{invoice.paymentMethod}</td>
-                                    <td className="p-6 align-middle">{invoice.totalAmount}</td>
-                                    <td className="p-6 align-middle text-right flex justify-end items-center gap-4">
-                                        {invoice.date}
-                                        <button className="h-8 w-8 flex items-center justify-center border-2 border-black bg-white hover:bg-gray-100 shadow-[2px_2px_0px_0px_black] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
-                                            <Download className="h-4 w-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    Subscribe Now
+                                </button>
+                            )}
+
+                            <div className="mt-6 flex items-center gap-2 text-[10px] text-gray-600 font-bold uppercase tracking-widest">
+                                <Shield className="h-3 w-3" />
+                                Secure with Stripe
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Billing History */}
+            <div className="pt-8">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-gray-500" />
+                    Billing History
+                </h3>
+                <div className="bg-[#13171F] rounded-2xl border border-gray-800 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#0B0E14] text-gray-400 uppercase text-xs font-bold border-b border-gray-800">
+                                <tr>
+                                    <th className="px-6 py-4">Invoice</th>
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4 text-right">Amount</th>
+                                    <th className="px-6 py-4 text-right">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800 text-gray-300">
+                                {isSubscribed ? (
+                                    <tr className="hover:bg-white/5 transition-colors">
+                                        <td className="px-6 py-4 font-mono text-xs text-gray-500 uppercase">INV-{Math.random().toString(36).substring(7)}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20">
+                                                Paid
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-bold text-white">${pricing.SUBSCRIPTION_FEE.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-right text-gray-500">{new Date().toLocaleDateString()}</td>
+                                    </tr>
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-20 text-center text-gray-500 font-medium">
+                                            No billing history available.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Subscription Modal */}
+            <Modal
+                isOpen={showSubscriptionModal}
+                onClose={() => setShowSubscriptionModal(false)}
+                title="Confirm Subscription"
+            >
+                <div className="space-y-6">
+                    <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl flex flex-col items-center text-center gap-4">
+                        <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                            <Sparkles className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                            <h4 className="font-black text-white text-xl">Merchant Access</h4>
+                            <p className="text-gray-400 text-xs mt-1">Unlock all premium merchant features</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-[#0B0E14] rounded-2xl p-6 border border-gray-800 space-y-4">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-400 font-medium">Monthly Access Fee</span>
+                            <span className="text-white font-black text-xl">${pricing.SUBSCRIPTION_FEE.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t border-gray-800 pt-4 flex justify-between items-center">
+                            <div className="flex flex-col">
+                                <span className="text-white font-bold">Total Due Today</span>
+                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Recurring Monthly</span>
+                            </div>
+                            <span className="text-2xl font-black text-white tracking-tighter">${pricing.SUBSCRIPTION_FEE.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleSubscribe}
+                        disabled={isLoading}
+                        className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 active:scale-95 group"
+                    >
+                        {isLoading ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <>
+                                Subscribe & Pay ${pricing.SUBSCRIPTION_FEE.toFixed(2)}
+                                <Check className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                            </>
+                        )}
+                    </button>
+
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Secure Checkout Powered by Stripe</p>
+                        <p className="text-[9px] text-gray-700 max-w-xs text-center">
+                            By clicking subscribe, you agree to our Terms of Service and authorize the monthly charge to your payment method.
+                        </p>
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

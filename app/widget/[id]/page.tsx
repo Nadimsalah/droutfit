@@ -2,11 +2,10 @@
 
 import { useParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
-import { Upload, X, Camera, Sparkles, Loader2, ArrowRight } from "lucide-react"
+import { Upload, X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon } from "lucide-react"
 import { uploadImage } from "@/lib/supabase"
 import { generateTryOn } from "@/lib/nanobanana"
-import { getProductById } from "@/lib/storage"
-import NeoProgressBar from "@/components/NeoProgressBar"
+import { getProductById, incrementProductUsage } from "@/lib/storage"
 
 export default function WidgetPage() {
     const params = useParams()
@@ -15,6 +14,7 @@ export default function WidgetPage() {
     const [userFile, setUserFile] = useState<File | null>(null)
     const [resultImage, setResultImage] = useState<string | null>(null)
     const [progress, setProgress] = useState(0)
+    const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const [product, setProduct] = useState<{ id: string, name: string, image: string, storeUrl?: string } | null>(null)
@@ -31,7 +31,6 @@ export default function WidgetPage() {
                     storeUrl: stored.storeUrl
                 })
             } else {
-                // Fallback mock
                 setProduct({
                     id: id,
                     name: "Classic Denim Jacket",
@@ -48,12 +47,35 @@ export default function WidgetPage() {
     const handleUserImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            setUserFile(file)
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setUserImage(reader.result as string)
-            }
-            reader.readAsDataURL(file)
+            processFile(file)
+        }
+    }
+
+    const processFile = (file: File) => {
+        setUserFile(file)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setUserImage(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(true)
+    }
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        const file = e.dataTransfer.files?.[0]
+        if (file && file.type.startsWith('image/')) {
+            processFile(file)
         }
     }
 
@@ -62,7 +84,6 @@ export default function WidgetPage() {
         setStep("processing")
         setProgress(0)
 
-        // Progress simulation
         const progressInterval = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 95) return prev
@@ -71,22 +92,21 @@ export default function WidgetPage() {
         }, 400)
 
         try {
-            // 1. Upload User Image to Supabase
             const publicUrl = await uploadImage(userFile)
-
-            // 2. Call the API with the PUBLIC URL
-            const response = await generateTryOn(product.image, publicUrl)
+            const response = await generateTryOn(product?.image || "", publicUrl)
 
             if (response.status === 'success') {
+                if (product?.id) {
+                    await incrementProductUsage(product.id)
+                }
+
                 clearInterval(progressInterval)
                 setProgress(100)
-                // Small delay to show 100%
                 setTimeout(() => {
                     setResultImage(response.result_url)
                     setStep("result")
-                }, 500)
+                }, 800)
             } else {
-                clearInterval(progressInterval)
                 throw new Error(response.error || "Generation failed")
             }
         } catch (error) {
@@ -100,117 +120,159 @@ export default function WidgetPage() {
         setUserImage(null)
         setResultImage(null)
         setStep("upload")
+        setProgress(0)
     }
 
     return (
-        <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
-            <div className="w-full max-w-lg bg-white border-2 border-black shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-4 font-sans text-gray-800">
+            {/* Main Glass Card */}
+            <div className="w-full max-w-[480px] bg-white/70 backdrop-blur-2xl rounded-[32px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden transition-all duration-500">
+
                 {/* Header */}
-                <div className="bg-yellow-400 border-b-2 border-black p-4 flex items-center justify-between shrink-0">
-                    <img src="/logo.png" alt="Logo" className="h-8 w-auto" />
-                    <div className="text-[10px] font-black bg-black text-white px-2 py-1 uppercase tracking-widest">
-                        vto engine
-                    </div>
-                </div>
-
-                {/* Product Info Bar */}
-                <div className="bg-white border-b-2 border-black p-3 flex items-center gap-3 shrink-0">
-                    <img src={product.image} alt={product.name} className="h-12 w-12 object-cover border-2 border-black" />
+                <div className="px-8 pt-8 pb-4 flex items-center justify-between">
                     <div>
-                        <p className="text-xs font-bold text-gray-500 uppercase">Trying On</p>
-                        <p className="text-sm font-black uppercase text-black leading-tight">{product.name}</p>
+                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+                            Virtual Try-On
+                        </h1>
+                        <p className="text-xs text-gray-500 font-medium mt-1">Powered by AI</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-2xl bg-white shadow-sm border border-gray-100 p-1 flex items-center justify-center overflow-hidden">
+                        <img src={product.image} alt="Product" className="h-full w-full object-cover rounded-xl" />
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 bg-gray-50 p-6 flex flex-col items-center justify-center min-h-[400px] relative overflow-y-auto">
+                {/* Content */}
+                <div className="px-8 pb-8 min-h-[420px] flex flex-col">
 
                     {step === "upload" && (
-                        <div className="w-full text-center space-y-6">
-                            {!userImage ? (
-                                <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="border-2 border-dashed border-black bg-white p-10 cursor-pointer hover:bg-pink-50 transition-colors group"
-                                >
-                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-black group-hover:scale-110 transition-transform">
-                                        <Camera className="h-8 w-8 text-black" />
-                                    </div>
-                                    <h3 className="text-xl font-black uppercase mb-2">Upload Your Photo</h3>
-                                    <p className="text-sm font-bold text-gray-500">
-                                        Ensure your face and body are clearly visible.
-                                    </p>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleUserImageUpload}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="relative inline-block border-2 border-black shadow-[4px_4px_0px_0px_black]">
-                                    <img src={userImage} alt="User" className="max-h-[300px] object-cover" />
-                                    <button
-                                        onClick={() => setUserImage(null)}
-                                        className="absolute -top-3 -right-3 bg-red-500 border-2 border-black text-white p-1 hover:bg-red-600 shadow-[2px_2px_0px_0px_black]"
+                        <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex-1 flex flex-col justify-center">
+                                {!userImage ? (
+                                    <div
+                                        className={`
+                                            relative rounded-[24px] border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-300
+                                            ${isDragging
+                                                ? 'border-blue-400 bg-blue-50/50 scale-[1.02]'
+                                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50/50'
+                                            }
+                                        `}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
                                     >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            )}
+                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20 text-white">
+                                            <Upload className="h-7 w-7" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-800 mb-2">Upload Your Photo</h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed max-w-[200px] mx-auto">
+                                            Drag & drop or tap to browse. Clear full-body shots work best.
+                                        </p>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleUserImageUpload}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="relative rounded-[24px] overflow-hidden group shadow-lg">
+                                        <img src={userImage} alt="User" className="w-full h-[320px] object-cover" />
+                                        <button
+                                            onClick={() => setUserImage(null)}
+                                            className="absolute top-3 right-3 bg-white/30 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/50 transition-all border border-white/20"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent p-6 pt-12">
+                                            <p className="text-white text-sm font-medium">Ready to generate?</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Privacy Notice */}
+                            <div className="mt-6 flex items-start gap-3 bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50">
+                                <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                    <span className="font-bold text-gray-800">Privacy First:</span> We process your photo in real-time and do NOT store it. Your data is automatically deleted after the session.
+                                </p>
+                            </div>
 
                             {userImage && (
                                 <button
                                     onClick={handleGenerate}
-                                    className="w-full border-2 border-black bg-black text-white py-4 text-lg font-black uppercase tracking-widest hover:bg-gray-800 shadow-[4px_4px_0px_0px_#ff90e8] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#ff90e8] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2"
+                                    className="mt-6 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-gray-900/10 hover:shadow-gray-900/20 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group"
                                 >
-                                    Generate Try-On <ArrowRight className="h-5 w-5" />
+                                    <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                                    Generate Try-On
                                 </button>
                             )}
                         </div>
                     )}
 
                     {step === "processing" && (
-                        <div className="w-full flex flex-col items-center justify-center py-10">
-                            <NeoProgressBar
-                                progress={progress}
-                                message={progress < 40 ? "Analyzing Style..." : progress < 80 ? "Stitching Fabric..." : "Finalizing Magic..."}
-                            />
-                            <p className="text-xs font-bold text-gray-400 mt-6 animate-pulse uppercase tracking-widest">
-                                Your digital garment is being tailored
+                        <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in duration-500">
+                            <div className="relative w-24 h-24 mb-8">
+                                <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
+                                <div
+                                    className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                                    style={{ animationDuration: '1.5s' }}
+                                ></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-sm font-bold text-gray-800">{Math.round(progress)}%</span>
+                                </div>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Analyzing Fabric</h3>
+                            <p className="text-sm text-gray-500 max-w-[240px] leading-relaxed">
+                                Our AI is mapping the garment to your pose. This typically takes 5-10 seconds.
                             </p>
+
+                            <div className="mt-12 bg-gray-50 rounded-2xl p-4 w-full flex items-center gap-3">
+                                <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+                                <span className="text-xs text-gray-500 font-medium">Processing high-resolution mesh...</span>
+                            </div>
                         </div>
                     )}
 
                     {step === "result" && resultImage && (
-                        <div className="w-full space-y-6">
-                            <div className="border-2 border-black bg-white p-2 shadow-[8px_8px_0px_0px_black] rotate-1">
-                                <img src={resultImage} alt="Result" className="w-full object-cover" />
+                        <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-8 duration-700">
+                            <div className="relative flex-1 rounded-[24px] overflow-hidden shadow-2xl shadow-blue-900/5 group border border-gray-100">
+                                <img src={resultImage} alt="Result" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                    <p className="text-white font-medium">✨ Looks great on you!</p>
+                                </div>
                             </div>
-                            <div className="flex gap-4">
+
+                            <div className="mt-6 grid grid-cols-5 gap-3">
                                 <button
                                     onClick={reset}
-                                    className="flex-1 border-2 border-black bg-white py-3 font-black uppercase shadow-[4px_4px_0px_0px_black] hover:bg-gray-100 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_black]"
+                                    className="col-span-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2"
                                 >
-                                    Try Another
+                                    <RefreshCw className="h-4 w-4" />
+                                    Retry
                                 </button>
                                 <button
-                                    className="flex-1 flex items-center justify-center border-2 border-black bg-pink-400 py-3 font-black uppercase shadow-[4px_4px_0px_0px_black] hover:bg-pink-300 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_black]"
+                                    className="col-span-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
                                     onClick={() => {
-                                        if (product.storeUrl) {
-                                            window.open(product.storeUrl, '_blank')
-                                        } else {
-                                            alert("Redirecting to checkout...")
-                                        }
+                                        if (product.storeUrl) window.open(product.storeUrl, '_blank')
                                     }}
                                 >
-                                    Complete Buying
+                                    Shop Now
+                                    <ShoppingBag className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
                     )}
-
                 </div>
+            </div>
+
+            {/* Background Elements */}
+            <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[100px] opacity-50"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-100 rounded-full blur-[100px] opacity-50"></div>
             </div>
         </div>
     )

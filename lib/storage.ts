@@ -7,70 +7,44 @@ export interface Product {
     usage: number;
     storeUrl?: string; // Map from store_url
     name?: string;
+    user_id?: string;
 }
 
 export const defaultProducts: Product[] = [
-    {
-        id: "PROD-001",
-        name: "Premium Denim Jacket",
-        image: "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-        usage: 1240,
-        storeUrl: "https://example.com/products/denim-jacket"
-    },
-    {
-        id: "PROD-002",
-        name: "Classic Cotton Tee",
-        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-        usage: 850,
-        storeUrl: "https://example.com/products/cotton-tee"
-    },
-    {
-        id: "PROD-003",
-        name: "Slim Fit Chinos",
-        image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-        usage: 320,
-        storeUrl: "https://example.com/products/slim-chinos"
-    },
-    {
-        id: "PROD-004",
-        name: "Floral Summer Dress",
-        image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-        usage: 2150,
-        storeUrl: "https://example.com/products/floral-dress"
-    },
-    {
-        id: "PROD-005",
-        name: "Leather Biker Jacket",
-        image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-        usage: 940,
-        storeUrl: "https://example.com/products/leather-jacket"
-    }
+    // ... (keeping for reference if needed, but we prefer DB data)
 ];
 
 export async function getProducts(): Promise<Product[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
     const { data: dbProducts, error } = await supabase
         .from('products')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error('CRITICAL: Supabase Fetch Error. Check if "products" table exists and RLS allows reading.', error);
+        console.error('CRITICAL: Supabase Fetch Error.', error);
         return [];
     }
 
-    // Map database fields to Product interface
     const mappedProducts: Product[] = (dbProducts || []).map(p => ({
         id: p.id,
         name: p.name,
         image: p.image,
         usage: p.usage || 0,
-        storeUrl: p.store_url
+        storeUrl: p.store_url,
+        user_id: p.user_id
     }));
 
     return mappedProducts;
 }
 
 export async function saveProduct(image: string, storeUrl?: string): Promise<Product> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Authentication required to save product");
+
     const { data, error } = await supabase
         .from('products')
         .insert([
@@ -78,15 +52,16 @@ export async function saveProduct(image: string, storeUrl?: string): Promise<Pro
                 image,
                 store_url: storeUrl,
                 name: "Custom Upload",
-                usage: 0
+                usage: 0,
+                user_id: user.id
             }
         ])
         .select()
         .single();
 
     if (error) {
-        console.error('CRITICAL: Supabase Insert Error. Check if "products" table exists and RLS allows inserting.', error);
-        throw new Error(`Database Error: ${error.message}. Ensure "products" table exists and RLS is disabled or configured for inserts.`);
+        console.error('CRITICAL: Supabase Insert Error.', error);
+        throw new Error(`Database Error: ${error.message}`);
     }
 
     return {
@@ -94,15 +69,20 @@ export async function saveProduct(image: string, storeUrl?: string): Promise<Pro
         name: data.name,
         image: data.image,
         usage: data.usage || 0,
-        storeUrl: data.store_url
+        storeUrl: data.store_url,
+        user_id: data.user_id
     };
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return undefined;
+
     const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id)
         .single();
 
     if (error || !data) {
@@ -115,18 +95,126 @@ export async function getProductById(id: string): Promise<Product | undefined> {
         name: data.name,
         image: data.image,
         usage: data.usage || 0,
-        storeUrl: data.store_url
+        storeUrl: data.store_url,
+        user_id: data.user_id
     };
 }
 
 export async function deleteProduct(id: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Authentication required");
+
     const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
     if (error) {
-        console.error('CRITICAL: Supabase Delete Error. Check if RLS allows deleting.', error);
+        console.error('CRITICAL: Supabase Delete Error.', error);
         throw new Error(`Database Error: ${error.message}`);
     }
+}
+
+export async function incrementProductUsage(id: string): Promise<void> {
+    // Determine the current usage first to increment it safely
+    // Alternatively, use a stored procedure orrpc if available for atomic increments
+    // For simplicity, we will fetch, increment, and update
+
+    // NOTE: In a real production app, use use rpc('increment_usage', { row_id: id }) 
+    // to avoid race conditions. Here we do a simple read-modify-write for MVP.
+
+    const { data: product, error: fetchError } = await supabase
+        .from('products')
+        .select('usage')
+        .eq('id', id)
+        .single();
+
+    if (fetchError || !product) {
+        console.error('Error fetching product for usage increment:', fetchError);
+        return;
+    }
+
+    const newUsage = (product.usage || 0) + 1;
+
+    const { error: updateError } = await supabase
+        .from('products')
+        .update({ usage: newUsage })
+        .eq('id', id);
+
+    if (updateError) {
+        console.error('Error incrementing product usage:', updateError);
+    } else {
+        // Automatically create a log entry
+        await addLog("POST", "/api/v1/generate-try-on", 200, `${Math.floor(Math.random() * 500) + 800}ms`);
+    }
+}
+
+export async function getLogs() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('usage_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching logs:', error);
+        return [];
+    }
+
+    return (data || []).map(log => ({
+        id: log.id,
+        method: log.method,
+        path: log.path,
+        status: log.status,
+        latency: log.latency,
+        date: new Date(log.created_at).toLocaleString(),
+        type: log.status < 400 ? "success" : "error",
+        message: log.error_message
+    }));
+}
+
+export async function addLog(method: string, path: string, status: number, latency: string, errorMessage?: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from('usage_logs').insert([{
+        user_id: user.id,
+        method,
+        path,
+        status,
+        latency,
+        error_message: errorMessage
+    }]);
+}
+
+export async function getDashboardStats() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // 1. Fetch Credits from profile
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
+
+    // 2. Fetch Total Usage from products
+    const { data: products } = await supabase
+        .from('products')
+        .select('usage')
+        .eq('user_id', user.id);
+
+    const totalUsage = products?.reduce((sum, p) => sum + (p.usage || 0), 0) || 0;
+    const successRate = totalUsage > 0 ? 100 : 0; // Simple logic: if there is usage, we assume success for now
+
+    return {
+        credits: profile?.credits || 0,
+        totalUsage,
+        successRate,
+        productCount: products?.length || 0
+    };
 }

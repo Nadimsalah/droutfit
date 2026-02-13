@@ -23,24 +23,25 @@ export default function Toast({ message, isVisible, onClose, type = "success" }:
 
     if (!isVisible) return null
 
-    const bgColor = type === "success" ? "bg-green-400" : "bg-red-400"
+    const iconColor = type === "success" ? "text-green-500" : "text-red-500"
+    const borderColor = type === "success" ? "border-green-500/20" : "border-red-500/20"
 
     return (
-        <div className="fixed bottom-10 right-10 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-300">
-            <div className={`border-4 border-black ${bgColor} p-6 shadow-[8px_8px_0px_0px_black] flex items-center gap-4 min-w-[300px]`}>
-                <div className="bg-white border-2 border-black p-2 shadow-[2px_2px_0px_0px_black]">
-                    <CheckCircle2 className="h-6 w-6 text-black" />
+        <div className="fixed bottom-6 right-6 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
+            <div className={`bg-[#13171F] border ${borderColor} rounded-xl p-4 shadow-2xl flex items-center gap-4 min-w-[320px] ring-1 ring-white/5`}>
+                <div className={`p-2 rounded-full ${type === "success" ? "bg-green-500/10" : "bg-red-500/10"}`}>
+                    <CheckCircle2 className={`h-5 w-5 ${iconColor}`} />
                 </div>
                 <div className="flex-1">
-                    <p className="text-lg font-black uppercase italic tracking-tight text-black">
+                    <p className="text-sm font-medium text-white">
                         {message}
                     </p>
                 </div>
                 <button
                     onClick={onClose}
-                    className="hover:scale-110 transition-transform p-1"
+                    className="text-gray-500 hover:text-white transition-colors p-1"
                 >
-                    <X className="h-5 w-5 text-black" />
+                    <X className="h-4 w-4" />
                 </button>
             </div>
         </div>
