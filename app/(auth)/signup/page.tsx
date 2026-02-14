@@ -6,13 +6,15 @@ import { Loader2, Mail, Lock, User, Check, ArrowRight } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
+import { signupAction } from "./actions"
+
 export default function SignupPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [fullName, setFullName] = useState("")
     const [error, setError] = useState("")
-    const [success, setSuccess] = useState(false)
+    const [success, setSuccess] = useState(false) // Kept for fallback, though we mostly redirect
     const router = useRouter()
 
     useEffect(() => {
@@ -29,23 +31,29 @@ export default function SignupPage() {
         setError("")
 
         try {
-            const { data, error: signUpError } = await supabase.auth.signUp({
+            // 1. Create verified user via Server Action (Admin API)
+            const formData = new FormData()
+            formData.append("email", email)
+            formData.append("password", password)
+            formData.append("fullName", fullName)
+
+            const result = await signupAction(formData)
+
+            if (result.error) {
+                throw new Error(result.error)
+            }
+
+            // 2. Sign in immediately since email is confirmed
+            const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                    },
-                },
             })
 
-            if (signUpError) throw signUpError
+            if (signInError) throw signInError
 
-            if (data.session) {
-                router.push("/onboarding")
-            } else {
-                setSuccess(true)
-            }
+            // 3. Redirect to onboarding
+            router.push("/onboarding")
+
         } catch (err: any) {
             let msg = err.message || "Failed to create account"
             if (msg.toLowerCase().includes("rate limit")) {

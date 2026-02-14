@@ -69,9 +69,9 @@ export default function Home() {
                     </div>
 
                     {/* Right Visuals */}
-                    <div className="relative h-[600px] w-full flex items-center justify-center">
+                    <div className="relative h-[400px] lg:h-[600px] w-full flex items-center justify-center scale-[0.6] sm:scale-[0.8] lg:scale-100 origin-center mt-10 lg:mt-0">
                         {/* Rack Representation (Left visual in split) */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[280px] h-[400px] bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl border border-white/10 shadow-2xl skew-y-3 transform -translate-x-12 z-10 flex flex-col items-center justify-center p-6 backdrop-blur-xl">
+                        <div className="absolute left-[50%] lg:left-0 top-1/2 -translate-y-1/2 w-[280px] h-[400px] bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl border border-white/10 shadow-2xl skew-y-3 transform -translate-x-[160%] lg:-translate-x-12 z-10 flex flex-col items-center justify-center p-6 backdrop-blur-xl transition-transform duration-500">
                             <div className="w-full h-full bg-black/40 rounded-2xl border border-white/5 p-4 flex flex-col items-center gap-4">
                                 <div className="w-full h-2 bg-gray-700 rounded-full mb-4"></div>
                                 {[1, 2, 3].map((i) => (
@@ -87,7 +87,7 @@ export default function Home() {
                         </div>
 
                         {/* Phone Representation (Right visual in split) */}
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[580px] bg-black rounded-[3rem] border-8 border-gray-800 shadow-[0_0_50px_-10px_rgba(124,58,237,0.3)] z-20 overflow-hidden relative">
+                        <div className="absolute right-[50%] lg:right-0 top-1/2 -translate-y-1/2 w-[300px] h-[580px] bg-black rounded-[3rem] border-8 border-gray-800 shadow-[0_0_50px_-10px_rgba(124,58,237,0.3)] z-20 overflow-hidden relative transform translate-x-[40%] lg:translate-x-0 transition-transform duration-500">
                             {/* Notch */}
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-30"></div>
 
@@ -138,7 +138,7 @@ export default function Home() {
                         </svg>
 
                         {/* Floating Glass Card */}
-                        <div className="absolute bottom-[15%] left-[-20%] md:left-[0%] bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-2xl shadow-xl z-30 animate-[float_6s_ease-in-out_infinite]">
+                        <div className="absolute bottom-[0%] lg:bottom-[15%] left-[5%] lg:left-[0%] bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-2xl shadow-xl z-30 animate-[float_6s_ease-in-out_infinite]">
                             <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/30">
                                     <BarChart3 className="h-6 w-6 text-green-400" />
@@ -165,6 +165,56 @@ export default function Home() {
                         <span className="text-xl font-bold font-mono">ADIDAS</span>
                         <span className="text-xl font-bold italic">ZARA</span>
                         <span className="text-xl font-bold">H&M</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* How it Works Section */}
+            <section id="how-it-works" className="py-24 px-6 relative">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">How it Works</h2>
+                        <p className="text-gray-400 max-w-2xl mx-auto">Transform your customer's shopping experience in three simple steps.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-12 relative">
+                        {/* Connecting Line */}
+                        <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-blue-500/0 via-purple-500/50 to-blue-500/0 border-t border-dashed border-white/20 z-0"></div>
+
+                        {[
+                            {
+                                step: "01",
+                                title: "Upload Product",
+                                desc: "Simply upload your existing product photography to our platform.",
+                                color: "text-blue-400",
+                                bg: "bg-blue-500/10",
+                                border: "border-blue-500/20"
+                            },
+                            {
+                                step: "02",
+                                title: "AI Processing",
+                                desc: "Our engine automatically maps clothing to diverse body types and poses.",
+                                color: "text-purple-400",
+                                bg: "bg-purple-500/10",
+                                border: "border-purple-500/20"
+                            },
+                            {
+                                step: "03",
+                                title: "Go Live",
+                                desc: "Publish the interaction try-on widget to your store instantly.",
+                                color: "text-pink-400",
+                                bg: "bg-pink-500/10",
+                                border: "border-pink-500/20"
+                            }
+                        ].map((s, i) => (
+                            <div key={i} className="relative z-10 flex flex-col items-center text-center group">
+                                <div className={`w-24 h-24 rounded-3xl ${s.bg} ${s.border} border flex items-center justify-center mb-8 shadow-[0_0_30px_-10px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-500`}>
+                                    <span className={`text-4xl font-black ${s.color}`}>{s.step}</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{s.title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed max-w-xs">{s.desc}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>

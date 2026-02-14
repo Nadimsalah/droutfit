@@ -2,30 +2,72 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { Search, MoreHorizontal, Shield, Trash2, Ban } from "lucide-react"
+import { Search, MoreHorizontal, Shield, Trash2, Ban, Pencil } from "lucide-react"
+import { deleteUserAction, updateUserAction } from "./actions"
+import { EditUserModal } from "../components/EditUserModal"
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
+    const [error, setError] = useState<string | null>(null)
+    const [editingUser, setEditingUser] = useState<any>(null)
 
     useEffect(() => {
         fetchUsers()
     }, [])
 
+    const handleUpdate = async (userId: string, data: { credits: number, is_subscribed: boolean }) => {
+        // Optimistic update
+        setUsers(users.map(u => u.id === userId ? { ...u, ...data } : u))
+
+        const result = await updateUserAction(userId, data)
+
+        if (result.error) {
+            alert("Failed to update: " + result.error)
+            fetchUsers()
+        }
+    }
+
+    const handleDelete = async (userId: string) => {
+        if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return
+
+        try {
+            // Delete from profiles (FK should handle auth.users if configured, but usually we can't delete auth.users from client)
+            // Ideally we need a server action or admin API to delete from auth.users.
+            // For now, we'll try to delete from profiles directly via RLS.
+            const { error } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', userId)
+
+            if (error) throw error
+
+            setUsers(users.filter(u => u.id !== userId))
+        } catch (err: any) {
+            console.error("Delete failed:", err)
+            alert("Failed to delete user: " + err.message)
+        }
+    }
+
     const fetchUsers = async () => {
         setLoading(true)
-        // Note: This fetch uses the client-side supabase.
-        // If RLS prevents listing all users, we would need an API route.
-        // Assuming public profile reading is allowed for now or admin has permission.
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50)
+        setError(null)
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50)
 
-        if (data) setUsers(data)
-        setLoading(false)
+            if (error) throw error
+            if (data) setUsers(data)
+        } catch (err: any) {
+            console.error('Error fetching users:', err)
+            setError(err.message || 'Failed to fetch users')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const filteredUsers = users.filter(user =>
@@ -36,6 +78,13 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-6">
+            <EditUserModal
+                isOpen={!!editingUser}
+                user={editingUser}
+                onClose={() => setEditingUser(null)}
+                onSave={handleUpdate}
+            />
+
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-white">User Management</h1>
                 <div className="relative">
@@ -63,7 +112,14 @@ export default function UsersPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
-                            {loading ? (
+                            {error ? (
+                                <tr>
+                                    <td colSpan={5} className="p-8 text-center text-red-500 bg-red-500/5">
+                                        <div className="font-bold">Error loading users</div>
+                                        <div className="text-sm mt-1 opacity-80">{error}</div>
+                                    </td>
+                                </tr>
+                            ) : loading ? (
                                 <tr><td colSpan={5} className="p-8 text-center text-gray-500">Loading users...</td></tr>
                             ) : filteredUsers.length === 0 ? (
                                 <tr><td colSpan={5} className="p-8 text-center text-gray-500">No users found.</td></tr>
@@ -99,9 +155,22 @@ export default function UsersPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-colors">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setEditingUser(user)}
+                                                    className="p-2 hover:bg-blue-500/10 rounded-lg text-gray-500 hover:text-blue-500 transition-colors"
+                                                    title="Edit User"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(user.id)}
+                                                    className="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                                                    title="Delete User"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

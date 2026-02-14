@@ -12,7 +12,7 @@ export default function ProductDetailsPage() {
     const router = useRouter()
     const [product, setProduct] = useState<Product | null>(null)
     const [loading, setLoading] = useState(true)
-    const [embedType, setEmbedType] = useState<"iframe" | "script">("iframe")
+    const [embedType, setEmbedType] = useState<"iframe" | "script" | "popup" | "wordpress">("iframe")
     const [toast, setToast] = useState<{ isVisible: boolean; message: string; type: "success" | "error" }>({
         isVisible: false,
         message: "",
@@ -70,9 +70,33 @@ export default function ProductDetailsPage() {
         )
     }
 
-    const embedCode = embedType === "iframe"
-        ? `<iframe src="${window.location.origin}/widget/${product.id}" width="100%" height="600" frameborder="0"></iframe>`
-        : `<script src="${window.location.origin}/widget-loader.js" data-product-id="${product.id}"></script>`
+    const getEmbedCode = () => {
+        const origin = window.location.origin
+        switch (embedType) {
+            case "iframe":
+                return `<iframe src="${origin}/widget/${product.id}" width="100%" height="600" frameborder="0"></iframe>`
+            case "script":
+                return `<script src="${origin}/widget-loader.js" data-product-id="${product.id}"></script>`
+            case "popup":
+                return `<!-- Include this once -->
+<script src="${origin}/widget-loader.js"></script>
+
+<!-- Place this button anywhere -->
+<button onclick="DrOutfit.open('${product.id}')" style="padding: 12px 24px; background: #000; color: #fff; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;">
+  Try On Now
+</button>`
+            case "wordpress":
+                return `[droutfit_button id="${product.id}" label="Virtual Try-On"]
+
+<!-- OR use Custom HTML block: -->
+<script src="${origin}/widget-loader.js"></script>
+<button onclick="DrOutfit.open('${product.id}')" class="droutfit-popup-btn">Virtual Try-On</button>`
+            default:
+                return ""
+        }
+    }
+
+    const embedCode = getEmbedCode()
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-12">
@@ -195,28 +219,24 @@ export default function ProductDetailsPage() {
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-bold flex items-center gap-2">
                                 <Code className="h-4 w-4 text-green-500" />
-                                Integration Code
+                                Integration Method
                             </h3>
-                            <div className="flex bg-[#0B0E14] rounded-lg p-1 border border-gray-800">
+                        </div>
+
+                        {/* Integration Tabs */}
+                        <div className="flex space-x-1 mb-4 bg-[#0B0E14] p-1 rounded-xl border border-gray-800">
+                            {["iframe", "script", "popup", "wordpress"].map((type) => (
                                 <button
-                                    onClick={() => setEmbedType("iframe")}
-                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${embedType === "iframe"
-                                        ? "bg-gray-800 text-white shadow-sm"
-                                        : "text-gray-400 hover:text-white"
+                                    key={type}
+                                    onClick={() => setEmbedType(type as any)}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all uppercase ${embedType === type
+                                        ? "bg-gray-800 text-white shadow-sm border border-gray-700"
+                                        : "text-gray-400 hover:text-white hover:bg-white/5"
                                         }`}
                                 >
-                                    IFRAME
+                                    {type}
                                 </button>
-                                <button
-                                    onClick={() => setEmbedType("script")}
-                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${embedType === "script"
-                                        ? "bg-gray-800 text-white shadow-sm"
-                                        : "text-gray-400 hover:text-white"
-                                        }`}
-                                >
-                                    SCRIPT
-                                </button>
-                            </div>
+                            ))}
                         </div>
 
                         <div className="relative group">
@@ -232,10 +252,26 @@ export default function ProductDetailsPage() {
                             </button>
                         </div>
 
-                        <p className="text-gray-500 text-xs mt-4 flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                            Paste this code into your website's HTML where you want the widget to appear.
-                        </p>
+                        <div className="mt-4">
+                            {embedType === "popup" && (
+                                <p className="text-gray-500 text-xs flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                    This creates a button that opens the Try-On widget in a modal overlay.
+                                </p>
+                            )}
+                            {embedType === "wordpress" && (
+                                <p className="text-gray-500 text-xs flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                    Use a Custom HTML block in WordPress to insert this button.
+                                </p>
+                            )}
+                            {(embedType === "iframe" || embedType === "script") && (
+                                <p className="text-gray-500 text-xs flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                    Paste this code into your website's HTML where you want the widget to appear.
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

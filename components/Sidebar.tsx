@@ -34,7 +34,6 @@ const mainNavigation = [
 
 const footerNavigation = [
     { name: "Get Support On Discord", href: "#", icon: MessageSquare },
-    { name: "Get Support On Telegram", href: "#", icon: Send },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 

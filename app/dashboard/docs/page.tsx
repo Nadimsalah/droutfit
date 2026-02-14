@@ -13,7 +13,20 @@ export default function DocsPage() {
         setTimeout(() => setShowToast(false), 3000)
     }
 
-    const steps = [
+    interface Step {
+        id: number
+        title: string
+        description: string
+        icon: any
+        action?: {
+            label: string
+            href: string
+        }
+        details: string[]
+        code?: string
+    }
+
+    const steps: Step[] = [
         {
             id: 1,
             title: "Configure Your Store",
@@ -52,12 +65,16 @@ export default function DocsPage() {
             title: "Embed the Widget",
             description: "Integrate the Virtual Try-On experience directly into your e-commerce store with a simple code snippet.",
             icon: Code,
-            code: `<script src="https://cdn.droutfit.com/widget.js" data-store="YOUR_STORE_DOMAIN"></script>`,
+            action: {
+                label: "Get Integration Code",
+                href: "/dashboard/products"
+            },
             details: [
-                "Copy the script tag above",
-                "Paste it into your store's theme file (usually before the closing </body> tag)",
-                "The widget will automatically appear on product pages",
-                "It uses your Store Domain set in Step 1 to load your specific configuration"
+                "Go to your Products page",
+                "Select the product you want to embed",
+                "Scroll down to the 'Integration Code' section",
+                "Choose between IFRAME or SCRIPT method",
+                "Copy the code and paste it into your website"
             ]
         },
         {
