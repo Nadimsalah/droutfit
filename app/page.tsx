@@ -5,8 +5,31 @@ import { ArrowRight, Zap, Shield, BarChart3, ChevronRight, CheckCircle2, Play, S
 import Link from "next/link";
 
 export default function Home() {
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "DrOutfit",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "description": "The leading AI Virtual Try-On widget for Shopify and e-commerce stores. Reduce returns and boost conversion by 35%.",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "120"
+        }
+    }
+
     return (
         <div className="min-h-screen bg-[#0B0E14] text-white font-sans selection:bg-purple-500/30">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <Navbar />
 
             {/* Hero Section ... stays same ... */}
@@ -30,15 +53,15 @@ export default function Home() {
                         </div>
 
                         <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
-                            Bringing the <br />
+                            The #1 AI <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
-                                Physical Dressing Room
+                                Virtual Try-On
                             </span> <br />
-                            to Digital Stores.
+                            Widget for Stores
                         </h1>
 
                         <p className="text-lg text-gray-400 max-w-lg leading-relaxed">
-                            Empower your customers to try before they buy. Boost conversion rates by <span className="text-white font-bold">+35%</span> and drastically reduce returns with our high-fidelity AI try-on engine.
+                            Empower your customers to try before they buy. Boost conversion rates by <span className="text-white font-bold">+35%</span> and drastically reduce returns with our high-fidelity virtual dressing room technology.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -173,7 +196,7 @@ export default function Home() {
             <section id="how-it-works" className="py-24 px-6 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">How it Works</h2>
+                        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">How our AI Try-On Technology Works</h2>
                         <p className="text-gray-400 max-w-2xl mx-auto">Transform your customer's shopping experience in three simple steps.</p>
                     </div>
 
@@ -201,7 +224,7 @@ export default function Home() {
                             {
                                 step: "03",
                                 title: "Go Live",
-                                desc: "Publish the interaction try-on widget to your store instantly.",
+                                desc: "Publish the virtual fitting room widget to your store instantly.",
                                 color: "text-pink-400",
                                 bg: "bg-pink-500/10",
                                 border: "border-pink-500/20"
@@ -222,7 +245,7 @@ export default function Home() {
             {/* FeaturesGrid */}
             <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
                 <div className="text-center mb-20">
-                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Supercharge Your Store</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Why Top Brands Choose DrOutfit's Virtual Fitting Room</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">Our platform integrates seamlessly with your existing stack to provide next-gen experiences.</p>
                 </div>
 
