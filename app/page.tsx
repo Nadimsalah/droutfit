@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import PricingSection from "@/components/PricingSection";
 import { ArrowRight, Zap, Shield, BarChart3, ChevronRight, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { SmartAuthButton } from "@/components/SmartAuthButton";
 
 export default function Home() {
     const jsonLd = {
@@ -66,10 +65,10 @@ export default function Home() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                            <SmartAuthButton className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-2 group">
+                            <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-2 group">
                                 Start Free Trial
                                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </SmartAuthButton>
+                            </Link>
                             <button className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group backdrop-blur-sm">
                                 <Play className="h-5 w-5 fill-current" />
                                 Watch Demo
@@ -304,9 +303,9 @@ export default function Home() {
                             Join 500+ forward-thinking brands using Droutfit to bridge the gap between physical and digital retail.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                            <SmartAuthButton className="px-10 py-5 bg-white text-black rounded-full font-bold text-xl hover:bg-gray-200 transition-all shadow-xl shadow-white/5">
+                            <Link href="/dashboard" className="px-10 py-5 bg-white text-black rounded-full font-bold text-xl hover:bg-gray-200 transition-all shadow-xl shadow-white/5">
                                 Launch Dashboard
-                            </SmartAuthButton>
+                            </Link>
                         </div>
                     </div>
                 </div>

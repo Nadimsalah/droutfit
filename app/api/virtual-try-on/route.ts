@@ -67,6 +67,8 @@ export async function POST(req: NextRequest) {
             console.error("Rate limit check failed:", countError);
             // Proceed with caution or fail open? Let's fail open for now to avoid blocking users on DB errors
         } else if (count !== null && count >= limit) {
+            console.log(`[RateLimit Block] IP ${ip} has reached limit of ${limit}`);
+
             // Log the blocked attempt
             await supabase.from("usage_logs").insert([{
                 user_id: merchantId,
@@ -175,33 +177,13 @@ export async function POST(req: NextRequest) {
                 throw new Error("Generation timed out");
             }
 
-            // 5. Check Credits
-            const { data: creditProfile } = await supabase
-                .from("profiles")
-                .select("credits")
-                .eq("id", merchantId)
-                .single();
-
-            if (!creditProfile || (creditProfile.credits || 0) <= 0) {
-                return NextResponse.json(
-                    { error: "Merchant has insufficient credits." },
-                    { status: 402 } // Payment Required
-                );
-            }
-
-            // ... (API Call) ...
-
-            // 7. Update Usage Log (Success) & Decrement Credits
+            // 7. Update Usage Log (Success)
             if (logEntry) {
                 await supabase.from("usage_logs").update({
                     status: 200,
                     latency: `${Date.now() - startTime}ms`
                 }).eq("id", logEntry.id);
             }
-
-            // Decrement credits atomicaly if possible, or read-update-write
-            // For now, simple update
-            await supabase.rpc('decrement_credits', { user_id_arg: merchantId, amount: 1 });
 
             // Increment product usage
             const { data: prodUsage } = await supabase
@@ -284,6 +266,8 @@ export async function GET(req: NextRequest) {
             .eq("user_id", merchantId)
             .eq("ip_address", ip)
             .gte("created_at", oneDayAgo);
+
+        console.log(`[RateLimit GET Debug] IP: ${ip}, Merchant: ${merchantId}, Limit: ${limit}, Count: ${count}`);
 
         const used = count || 0;
         const remaining = Math.max(0, limit - used);
