@@ -100,6 +100,29 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     };
 }
 
+export async function getProductByIdPublic(id: string): Promise<Product | undefined> {
+    // No auth check - public access for widget
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !data) {
+        console.error('Error fetching product by ID (public):', error);
+        return undefined;
+    }
+
+    return {
+        id: data.id,
+        name: data.name,
+        image: data.image,
+        usage: data.usage || 0,
+        storeUrl: data.store_url,
+        user_id: data.user_id
+    };
+}
+
 export async function deleteProduct(id: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Authentication required");
@@ -217,4 +240,47 @@ export async function getDashboardStats() {
         successRate,
         productCount: products?.length || 0
     };
+}
+
+export async function getChartData(days = 14) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data: logs, error } = await supabase
+        .from('usage_logs')
+        .select('created_at, status')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString());
+
+    if (error) {
+        console.error('Error fetching chart data:', error);
+        return [];
+    }
+
+    // Aggregate by date
+    const dailyStats: Record<string, { date: string, success: number, blocked: number }> = {};
+
+    // Initialize last X days with 0
+    for (let i = 0; i < days; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        dailyStats[dateStr] = { date: dateStr, success: 0, blocked: 0 };
+    }
+
+    logs?.forEach(log => {
+        const dateStr = new Date(log.created_at).toISOString().split('T')[0];
+        if (dailyStats[dateStr]) {
+            if (log.status >= 200 && log.status < 300) {
+                dailyStats[dateStr].success += 1;
+            } else if (log.status === 429) {
+                dailyStats[dateStr].blocked += 1;
+            }
+        }
+    });
+
+    return Object.values(dailyStats).sort((a, b) => a.date.localeCompare(b.date));
 }

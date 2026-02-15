@@ -128,8 +128,11 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                     <div className="flex items-center bg-[#0B0E14] border border-gray-800 rounded-2xl overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all">
                         <input
                             type="number"
-                            value={credits}
-                            onChange={(e) => setCredits(Math.max(0, Number(e.target.value)))}
+                            value={credits || ''}
+                            onChange={(e) => {
+                                const val = e.target.value
+                                setCredits(val === '' ? 0 : Math.max(0, parseInt(val)))
+                            }}
                             className="w-full bg-transparent border-none text-white text-2xl font-black p-5 focus:ring-0 outline-none"
                             placeholder="0"
                             min="0"

@@ -17,28 +17,7 @@ import {
 } from 'recharts'
 import { useState, useEffect } from "react"
 import { TopUpModal } from "@/components/TopUpModal"
-import { getDashboardStats } from "@/lib/storage"
-
-// We can mock the chart data to follow the total usage for now
-const generateChartData = (total: number) => {
-    const data = [
-        { date: '2026-01-30', success: 0 },
-        { date: '2026-01-31', success: 0 },
-        { date: '2026-02-01', success: 0 },
-        { date: '2026-02-02', success: 0 },
-        { date: '2026-02-03', success: 0 },
-        { date: '2026-02-04', success: 0 },
-        { date: '2026-02-05', success: 0 },
-        { date: '2026-02-06', success: 0 },
-        { date: '2026-02-07', success: 0 },
-        { date: '2026-02-08', success: 0 },
-        { date: '2026-02-09', success: 0 },
-        { date: '2026-02-10', success: 0 },
-        { date: '2026-02-11', success: total },
-        { date: '2026-02-12', success: 0 },
-    ]
-    return data
-}
+import { getDashboardStats, getChartData } from "@/lib/storage"
 
 export default function OverviewPage() {
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
@@ -47,14 +26,32 @@ export default function OverviewPage() {
         totalUsage: number;
         successRate: number;
         productCount: number;
+        totalBlocked: number;
     } | null>(null)
+    const [chartData, setChartData] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const data = await getDashboardStats()
-                setStats(data)
+                const [dashboardStats, dailyStats] = await Promise.all([
+                    getDashboardStats(),
+                    getChartData(14)
+                ])
+
+                // Calculate blocked totals from chart data
+                const totalBlocked = dailyStats.reduce((sum, day) => sum + day.blocked, 0);
+                const totalSuccess = dailyStats.reduce((sum, day) => sum + day.success, 0);
+                const totalRequests = totalSuccess + totalBlocked;
+                const successRate = totalRequests > 0 ? (totalSuccess / totalRequests) * 100 : 100;
+
+                setStats({
+                    ...dashboardStats,
+                    totalUsage: totalRequests,
+                    successRate,
+                    totalBlocked
+                } as any)
+                setChartData(dailyStats)
             } catch (error) {
                 console.error("Error fetching dashboard stats:", error)
             } finally {
@@ -71,8 +68,6 @@ export default function OverviewPage() {
             </div>
         )
     }
-
-    const chartData = generateChartData(stats?.totalUsage || 0)
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
@@ -105,14 +100,18 @@ export default function OverviewPage() {
                 {/* Last 24 Hours Card */}
                 <div className="bg-[#13171F] border border-gray-800/40 rounded-2xl shadow-2xl">
                     <div className="p-7 space-y-6">
-                        <h3 className="text-xl font-bold text-white">Last 24 Hours</h3>
+                        <h3 className="text-xl font-bold text-white">Last 14 Days Activity</h3>
 
                         {/* Progress Bar Container */}
                         <div className="space-y-6">
-                            <div className="h-[3px] w-full bg-[#1F2937] rounded-full overflow-hidden">
+                            <div className="h-[6px] w-full bg-[#1F2937] rounded-full overflow-hidden flex">
                                 <div
                                     className="h-full bg-[#10B981] transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                                     style={{ width: `${stats?.successRate || 0}%` }}
+                                />
+                                <div
+                                    className="h-full bg-red-500 transition-all duration-1000 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                                    style={{ width: `${100 - (stats?.successRate || 0)}%` }}
                                 />
                             </div>
 
@@ -123,17 +122,17 @@ export default function OverviewPage() {
                                         <span className="text-gray-400 text-sm font-medium">Success</span>
                                     </div>
                                     <div className="text-white text-sm font-bold">
-                                        {stats?.totalUsage} <span className="text-gray-500 ml-1 font-medium">( {stats?.successRate.toFixed(1)}% )</span>
+                                        {stats?.totalUsage! - stats?.totalBlocked!} <span className="text-gray-500 ml-1 font-medium">( {stats?.successRate.toFixed(1)}% )</span>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="h-2 w-2 rounded-full bg-red-500/80" />
-                                        <span className="text-gray-400 text-sm font-medium">Failure</span>
+                                        <span className="text-gray-400 text-sm font-medium">Blocked (Rate Limit)</span>
                                     </div>
                                     <div className="text-white text-sm font-bold">
-                                        0 <span className="text-gray-500 ml-1 font-medium">( 0.0% )</span>
+                                        {stats?.totalBlocked} <span className="text-gray-500 ml-1 font-medium">( {(100 - (stats?.successRate || 0)).toFixed(1)}% )</span>
                                     </div>
                                 </div>
                             </div>
@@ -165,7 +164,7 @@ export default function OverviewPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3">
                         <h3 className="text-gray-400 text-sm font-bold tracking-tight">
-                            Jan 30 - Feb 12 <span className="text-gray-600 font-medium ml-1">( total</span>
+                            Last 14 Days <span className="text-gray-600 font-medium ml-1">( total</span>
                             <span className="text-white font-black mx-1">{stats?.totalUsage}</span>
                             <span className="text-gray-600 font-medium ml-1">)</span>
                         </h3>
@@ -175,16 +174,16 @@ export default function OverviewPage() {
                             <div className="h-2 w-2 rounded-full bg-[#10B981]" />
                             Success
                         </div>
-                        <div className="flex items-center gap-2 text-red-500/40">
-                            <div className="h-2 w-2 rounded-full bg-red-500/40" />
-                            Failure
+                        <div className="flex items-center gap-2 text-red-500/80">
+                            <div className="h-2 w-2 rounded-full bg-red-500/80" />
+                            Blocked
                         </div>
                     </div>
                 </div>
 
                 <div className="h-[300px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} stackOffset="sign">
                             <CartesianGrid vertical={false} stroke="#1F2937" strokeDasharray="0" />
                             <XAxis
                                 dataKey="date"
@@ -192,6 +191,10 @@ export default function OverviewPage() {
                                 tickLine={false}
                                 tick={{ fill: '#4B5563', fontSize: 10, fontWeight: 700 }}
                                 dy={10}
+                                tickFormatter={(str) => {
+                                    const date = new Date(str);
+                                    return `${date.getDate()}/${date.getMonth() + 1}`;
+                                }}
                             />
                             <YAxis
                                 axisLine={false}
@@ -211,13 +214,18 @@ export default function OverviewPage() {
                             />
                             <Bar
                                 dataKey="success"
-                                radius={[3, 3, 0, 0]}
+                                stackId="a"
+                                fill="#10B981"
+                                radius={[0, 0, 3, 3]} // Round bottom? No, stacked bars usually don't round unless top
                                 barSize={24}
-                            >
-                                {chartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={'#10B981'} className="hover:opacity-80 transition-opacity" />
-                                ))}
-                            </Bar>
+                            />
+                            <Bar
+                                dataKey="blocked"
+                                stackId="a" // Stack on top of success
+                                fill="#EF4444"
+                                radius={[3, 3, 0, 0]} // Round top
+                                barSize={24}
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import {
     LayoutDashboard,
@@ -44,6 +44,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const [profile, setProfile] = useState<{ fullName: string; email: string } | null>(null)
 
     useEffect(() => {
@@ -64,6 +65,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         }
         fetchProfile()
     }, [])
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut()
+        router.push('/login')
+    }
 
     const getInitials = (name: string) => {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -149,7 +155,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <div className="p-4 mt-auto">
-                    <button className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-all group">
+                    <button
+                        onClick={handleSignOut}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-all group"
+                    >
                         <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-500" />
                         Sign Out
                     </button>

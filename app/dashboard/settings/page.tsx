@@ -22,7 +22,8 @@ export default function SettingsPage() {
     const [store, setStore] = useState({
         name: "",
         website: "",
-        domain: ""
+        domain: "",
+        ipLimit: 5
     })
 
     useEffect(() => {
@@ -48,7 +49,8 @@ export default function SettingsPage() {
                         setStore({
                             name: profile.store_name || "",
                             website: profile.store_website || "",
-                            domain: profile.store_domain || ""
+                            domain: profile.store_domain || "",
+                            ipLimit: profile.ip_limit || 5
                         })
                     } else {
                         // Fallback if no profile exists yet
@@ -83,6 +85,8 @@ export default function SettingsPage() {
             // Auto-generate domain based on store name
             const domain = value.toLowerCase().replace(/[^a-z0-9]/g, "")
             setStore({ ...store, name: value, domain })
+        } else if (name === "ipLimit") {
+            setStore({ ...store, ipLimit: parseInt(value) || 0 })
         } else {
             setStore({ ...store, [name]: value })
         }
@@ -120,14 +124,16 @@ export default function SettingsPage() {
                     store_name: store.name,
                     store_website: store.website,
                     store_domain: store.domain,
+                    ip_limit: store.ipLimit,
                     updated_at: new Date().toISOString()
                 })
 
             if (error) throw error
             showNotification("Store settings updated successfully", "success")
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving store:", error)
-            showNotification("Failed to save store settings", "error")
+            console.error("Error details:", error.message, error.details, error.hint)
+            showNotification(`Failed to save store settings: ${error.message || 'Unknown error'}`, "error")
         } finally {
             setIsSaving(false)
         }
@@ -264,6 +270,24 @@ export default function SettingsPage() {
                                     className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all placeholder:text-gray-600"
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Daily Try-On Limit (Per IP)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">#</span>
+                                <input
+                                    type="number"
+                                    name="ipLimit"
+                                    value={store.ipLimit || ''}
+                                    onChange={handleStoreChange}
+                                    min="1"
+                                    className="w-full bg-[#0B0E14] border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all placeholder:text-gray-600"
+                                />
+                            </div>
+                            <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                Limits how many try-ons a single customer can do per day to save your credits.
+                            </p>
                         </div>
 
                         <div className="space-y-1.5">
