@@ -176,18 +176,6 @@ export default function WidgetPage() {
                         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                             Virtual Try-On
                         </h1>
-                        <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-gray-500 font-medium">Powered by AI</p>
-                            {remainingTries !== null ? (
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${remainingTries > 0 ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
-                                    {remainingTries} left today
-                                </span>
-                            ) : (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 animate-pulse">
-                                    Checking...
-                                </span>
-                            )}
-                        </div>
                     </div>
                     <div className="h-10 w-10 rounded-2xl bg-white shadow-sm border border-gray-100 p-1 flex items-center justify-center overflow-hidden">
                         <img src={product.image} alt="Product" className="h-full w-full object-cover rounded-xl" />
