@@ -3,6 +3,7 @@ import PricingSection from "@/components/PricingSection";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import ContactPopup from "@/components/ContactPopup";
 
 export default function Home() {
     const jsonLd = {
@@ -256,7 +257,7 @@ export default function Home() {
                             <ul className="space-y-4 text-sm text-gray-400">
                                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                                 <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+                                <li><ContactPopup /></li>
                             </ul>
                         </nav>
                     </div>
