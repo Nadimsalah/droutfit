@@ -27,7 +27,7 @@ export async function generateTryOn(garmentUrl: string, faceImageUrl: string, pr
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                prompt: 'virtual try-on garment replacement',
+                prompt: 'high quality fashion photography, realistic lighting',
                 type: 'IMAGETOIAMGE', // API expects this typo "IAMGE"
                 numImages: 1,
                 imageUrls: [faceImageUrl, garmentUrl],

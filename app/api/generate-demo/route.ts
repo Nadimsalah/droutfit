@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
                 "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
             },
             body: JSON.stringify({
-                prompt: "virtual try-on garment replacement, extremely high quality, realistic lighting",
+                prompt: "high quality fashion photography, realistic lighting",
                 type: "IMAGETOIAMGE",
                 numImages: 1,
                 imageUrls: [finalUserImageUrl, absoluteGarmentUrl],
