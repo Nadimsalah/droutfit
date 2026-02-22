@@ -134,6 +134,16 @@ export async function POST(req: NextRequest) {
                 }).eq("id", logEntryId);
             }
 
+            // DEDUCT CREDITS IN MOCK CASE TOO
+            const newCredits = Math.max(0, (profile.credits || 0) - 1);
+            try {
+                const { data: pr } = await supabase.from('products').select('usage').eq('id', productId).single();
+                await Promise.all([
+                    supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
+                    supabase.from('products').update({ usage: (pr?.usage || 0) + 1 }).eq('id', productId)
+                ]);
+            } catch (e) { console.warn("Mock credit deduction failed:", e); }
+
             return NextResponse.json({
                 status: "success",
                 result_url: imageUrls[1] // Return garment as result
