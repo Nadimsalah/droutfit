@@ -27,7 +27,13 @@ export async function generateTryOn(garmentUrl: string, faceImageUrl: string, pr
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                prompt: 'Put the provided clothing item onto the uploaded person. Keep the original face, body shape, pose, and background unchanged. Only replace the outfit. Make it realistic, properly fitted, and naturally blended with correct lighting and shadows.',
+                prompt: `
+Replace the clothing on the uploaded person with the provided garment image.
+Keep the person's body shape, face, pose, and proportions exactly the same.
+Only change the clothing.
+Ensure the new outfit fits naturally with realistic fabric, lighting, and shadows.
+Do not alter the background or the character's identity.
+            `.trim(),
                 type: 'IMAGETOIAMGE', // API expects this typo "IAMGE"
                 numImages: 1,
                 imageUrls: [faceImageUrl, garmentUrl],
