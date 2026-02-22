@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
                 "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
             },
             body: JSON.stringify({
-                prompt: "high quality fashion photography, realistic lighting",
+                prompt: "Put the provided clothing item onto the uploaded person. Keep the original face, body shape, pose, and background unchanged. Only replace the outfit. Make it realistic, properly fitted, and naturally blended with correct lighting and shadows.",
                 type: "IMAGETOIAMGE",
                 numImages: 1,
                 imageUrls: [finalUserImageUrl, absoluteGarmentUrl],
