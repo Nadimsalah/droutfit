@@ -192,7 +192,7 @@ export default function InteractiveTryOnSection() {
                                 <p className="text-white font-bold animate-pulse relative z-10">Dr Outfit Engine Processing...</p>
                                 <p className="text-xs text-blue-400 mt-2 relative z-10">Analyzing pose and lighting.</p>
                                 {/* Scanning Effect */}
-                                <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 shadow-[0_0_20px_4px_#3b82f6] animate-[scan_3s_ease-in-out_infinite] z-20" />
+                                <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 shadow-[0_0_20px_4px_#3b82f6] animate-scan z-20 transform translate-z-0" />
                             </div>
                         ) : errorMsg ? (
                             <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-[#10141d]">
