@@ -61,7 +61,7 @@ export default function Home() {
 
                     <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
                         <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-white/10">
-                            Get API Access
+                            Start in Minutes
                             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <a href="#demo" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group backdrop-blur-sm">
