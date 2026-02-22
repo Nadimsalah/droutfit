@@ -2,27 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 
 const NANOBANANA_API_KEY = process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
 const NANOBANANA_BASE_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana";
-const IMGBB_API_KEY = "6e50cdadbd11bf7df0cc0d381180fb22"; // dummy if needed
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || "");
 
 async function uploadToImgBB(base64Image: string): Promise<string> {
-    const formData = new FormData();
+    if (!supabaseServiceKey) throw new Error("Missing Supabase Service Key for upload");
+
     // Remove data:image/jpeg;base64, prefix if present
-    const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|webp|jpg);base64,/, "");
-    formData.append("image", cleanBase64);
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
 
-    // Fallback key just for the demo flow to ensure it runs smooth for the user without DB Config
-    const response = await fetch(`https://api.imgbb.com/1/upload?key=8e65cf11186713915f79ee8bc116f1b3`, {
-        method: "POST",
-        body: formData,
-    });
+    // Generate random filename
+    const fileName = `demo_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
 
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        throw new Error(result.error?.message || "ImgBB upload failed");
+    const { data, error } = await supabaseAdmin.storage
+        .from("tryimages")
+        .upload(fileName, buffer, {
+            contentType: "image/jpeg",
+            upsert: true
+        });
+
+    if (error) {
+        throw new Error("Failed to upload image to storage: " + error.message);
     }
 
-    return result.data.url;
+    const { data: urlData } = supabaseAdmin.storage
+        .from("tryimages")
+        .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
 }
+
 
 export async function POST(req: NextRequest) {
     try {
@@ -36,12 +49,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing NanoBanana API Key in env" }, { status: 500 });
         }
 
+        // Ensure userImageUrl is uploaded if it's base64 (which it should be from the demo UI)
+        let finalUserImageUrl = userImageUrl;
+        if (userImageUrl.startsWith('data:image')) {
+            console.log("Uploading demo user image to ImgBB...");
+            finalUserImageUrl = await uploadToImgBB(userImageUrl);
+        }
+
         // Ensure garmentUrl is absolute since we are testing
         const absoluteGarmentUrl = garmentUrl.startsWith('http')
             ? garmentUrl
             : new URL(garmentUrl, req.nextUrl.origin).toString();
 
-        console.log("Images ready:", userImageUrl, absoluteGarmentUrl);
+        console.log("Images ready:", finalUserImageUrl, absoluteGarmentUrl);
 
         // 2. Call NanoBanana API
         const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
@@ -54,7 +74,7 @@ export async function POST(req: NextRequest) {
                 prompt: "virtual try-on garment replacement, extremely high quality, realistic lighting",
                 type: "IMAGETOIAMGE",
                 numImages: 1,
-                imageUrls: [userImageUrl, absoluteGarmentUrl],
+                imageUrls: [finalUserImageUrl, absoluteGarmentUrl],
             }),
         });
 

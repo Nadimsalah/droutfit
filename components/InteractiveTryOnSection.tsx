@@ -35,15 +35,22 @@ export default function InteractiveTryOnSection() {
         setErrorMsg(null);
 
         try {
-            const publicUrl = await uploadImage(uploadedFile);
+            // Convert file to base64 directly in the browser
+            const base64Image = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(uploadedFile);
+            });
 
+            // Use the reliable public URL for the jacket
             const garmentUrl = 'https://plyvtxtapvhenkumknai.supabase.co/storage/v1/object/public/tryimages/alaska-jacket.webp';
 
             const response = await fetch('/api/generate-demo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userImageUrl: publicUrl,
+                    userImageUrl: base64Image,
                     garmentUrl: garmentUrl
                 })
             });
