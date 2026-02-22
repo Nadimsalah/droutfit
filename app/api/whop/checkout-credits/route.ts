@@ -58,7 +58,7 @@ export async function POST(request: Request) {
                 redirect_url: (() => {
                     const origin = request.headers.get('origin') || 'https://droutfit.ai';
                     // Whop strictly requires https:// for redirect URLs
-                    return origin.replace(/^http:\/\//, 'https://') + `/api/whop/process?user_id=${user_id}&credits=${credits}&tx_id=${crypto.randomUUID()}`;
+                    return origin.replace(/^http:\/\//, 'https://') + `/api/whop/process?user_id=${user_id}&credits=${credits}&amount=${totalCost.toFixed(2)}&tx_id=${crypto.randomUUID()}`;
                 })()
             })
         })

@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const baseUrl = new URL(request.url).origin
     const user_id = searchParams.get('user_id')
     const credits = parseInt(searchParams.get('credits') || '0')
+    const amount = parseFloat(searchParams.get('amount') || '0')
 
     const tx_id = searchParams.get('tx_id') || ''
 
@@ -39,6 +40,15 @@ export async function GET(request: Request) {
             // We pass it to the frontend which can securely run it using the user's active session!
             return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
         }
+
+        // Record the transaction
+        await supabaseAdmin.from('transactions').insert([{
+            user_id: user_id,
+            amount: amount,
+            type: 'CREDITS',
+            status: 'succeeded',
+            description: `Purchased ${credits} image generation credits`
+        }])
 
         // Server update succeeded! Send confirmation email
         try {
