@@ -58,33 +58,35 @@ body {
   overflow-x: hidden;
 }
 
-/* Optimize blurry background blobs for Safari */
+/* Optimize blurry background blobs for Safari (Decorative ONLY) */
 .bg-blue-600\/10,
 .bg-purple-600\/10,
 .bg-blue-600\/5,
 .bg-purple-600\/5,
-[class*='blur-'] {
+.bg-blue-600\/20 {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: filter, transform;
   pointer-events: none;
-  isolation: isolate;
   /* Safari handles smaller blurs much better */
   -webkit-filter: blur(40px);
   filter: blur(40px);
+  z-index: 0;
 }
 
-/* Improve Navbar performance on Safari */
+/* Improve Navbar performance and consistency */
 nav {
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  pointer-events: auto !important;
+  /* Ensure menu is clickable */
+  z-index: 100;
 }
 
-/* Force hardware acceleration for all blurs and fixed elements */
-.fixed,
-.absolute {
+/* Force hardware acceleration for problematic elements, but avoid breaking stacking */
+.fixed-gpu {
   -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
 }
