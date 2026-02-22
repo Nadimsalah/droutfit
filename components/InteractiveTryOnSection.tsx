@@ -29,7 +29,7 @@ export default function InteractiveTryOnSection() {
         }
     };
 
-    const handleTryOnDeOutfit = async () => {
+    const handleTryOnDrOutfit = async () => {
         if (!uploadedFile) return;
         setIsGenerating(true);
         setErrorMsg(null);
@@ -89,13 +89,13 @@ export default function InteractiveTryOnSection() {
                 <div className="text-center mb-16 space-y-6">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-white shadow-xl shadow-blue-900/10">
                         <Sparkles className="w-4 h-4 text-blue-400" />
-                        Powered by De Outfit Vision
+                        Powered by Dr Outfit Vision
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                         Experience the Magic.
                     </h2>
                     <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                        Upload a photo of yourself to try on our <b className="text-white">Alaska Puffer Jacket</b>. Powered by our custom De Outfit API framework for hyper-realistic virtual fitting.
+                        Upload a photo of yourself to try on our <b className="text-white">Alaska Puffer Jacket</b>. Powered by our custom Dr Outfit API framework for hyper-realistic virtual fitting.
                     </p>
                 </div>
 
@@ -152,7 +152,7 @@ export default function InteractiveTryOnSection() {
                         )}
 
                         <button
-                            onClick={handleTryOnDeOutfit}
+                            onClick={handleTryOnDrOutfit}
                             disabled={!uploadedImage || isGenerating || resultImage !== null}
                             className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center justify-center shadow-[0_0_40px_rgba(168,85,247,0.4)] group relative"
                         >
@@ -162,10 +162,10 @@ export default function InteractiveTryOnSection() {
                                 <ArrowRight className="w-8 h-8 text-white" />
                             )}
 
-                            {/* De Outfit Label */}
+                            {/* Dr Outfit Label */}
                             {!isGenerating && !resultImage && uploadedImage && (
                                 <span className="absolute top-full mt-4 whitespace-nowrap text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    Apply De Outfit API
+                                    Apply Dr Outfit API
                                 </span>
                             )}
                         </button>
@@ -189,7 +189,7 @@ export default function InteractiveTryOnSection() {
                                 {uploadedImage && <img src={uploadedImage} className="absolute inset-0 w-full h-full object-cover blur-sm opacity-30" />}
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                                 <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6 relative z-10" />
-                                <p className="text-white font-bold animate-pulse relative z-10">De Outfit Engine Processing...</p>
+                                <p className="text-white font-bold animate-pulse relative z-10">Dr Outfit Engine Processing...</p>
                                 <p className="text-xs text-blue-400 mt-2 relative z-10">Analyzing pose and lighting.</p>
                                 {/* Scanning Effect */}
                                 <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 shadow-[0_0_20px_4px_#3b82f6] animate-[scan_3s_ease-in-out_infinite] z-20" />
@@ -227,7 +227,7 @@ export default function InteractiveTryOnSection() {
                     </div>
 
                 </div>
-            </div>
-        </section>
+            </div >
+        </section >
     );
 }

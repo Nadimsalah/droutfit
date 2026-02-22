@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "DrOutfit",
     images: [
       {
-        url: "https://droutfit.com/og-image.jpg", // We should ideally add a real OG image later
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "DrOutfit AI Virtual Try-On Preview",
