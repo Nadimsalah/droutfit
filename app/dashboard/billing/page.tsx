@@ -83,7 +83,7 @@ export default function BillingPage() {
                                 <Sparkles className="h-3 w-3" />
                                 Lifetime Value
                             </div>
-                            <h2 className="text-3xl font-black text-white">Merchant Access Plan</h2>
+                            <h2 className="text-3xl font-black text-white">Pro Merchant Plan</h2>
                             <p className="text-gray-400 text-sm leading-relaxed max-w-md">
                                 Get full access to the AI Try-On engine, merchant dashboard, and advanced analytics.
                                 Unlock tiered credit pricing and priority support.
@@ -119,9 +119,9 @@ export default function BillingPage() {
 
                         <div className="w-full md:w-80 bg-[#13171F] p-8 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
                             <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-5xl font-black text-white">Pay as you go</span>
+                                <span className="text-5xl font-black text-white">Topup Credits</span>
                             </div>
-                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8">Purchase Credits Dynamically</p>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8">Purchase Pro Image Generation</p>
 
                             <button
                                 onClick={() => setShowSubscriptionModal(true)}

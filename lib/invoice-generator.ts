@@ -6,18 +6,24 @@ export const generateInvoicePDF = async (data: any) => {
     const pageWidth = doc.internal.pageSize.width
 
     try {
-        // logo placeholder or simple text for stability
-        doc.setFontSize(22)
-        doc.setTextColor(59, 130, 246) // blue-500
-        doc.setFont('helvetica', 'bold')
-        doc.text('DROUTFIT', 15, 20)
+        // Render Logo
+        const logoUrl = "https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
+        try {
+            doc.addImage(logoUrl, 'PNG', 15, 12, 35, 10)
+        } catch (e) {
+            // Fallback to text if logo fails to load
+            doc.setFontSize(22)
+            doc.setTextColor(59, 130, 246)
+            doc.setFont('helvetica', 'bold')
+            doc.text('DROUTFIT', 15, 20)
+        }
 
         // Header Info
         doc.setFontSize(10)
         doc.setTextColor(100)
         doc.setFont('helvetica', 'normal')
-        doc.text('DROUTFIT AI VIRTUAL TRY-ON', pageWidth - 15, 15, { align: 'right' })
-        doc.text('support@droutfit.ai', pageWidth - 15, 20, { align: 'right' })
+        doc.text('PRO MERCHANT BILLING', pageWidth - 15, 15, { align: 'right' })
+        doc.text('billing@droutfit.ai', pageWidth - 15, 20, { align: 'right' })
         doc.text('droutfit.ai', pageWidth - 15, 25, { align: 'right' })
 
         // Invoice Title

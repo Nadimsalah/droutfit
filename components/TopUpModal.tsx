@@ -96,7 +96,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Premium Image Generation Credits">
+        <Modal isOpen={isOpen} onClose={onClose} title="Topup Pro Generation Credits">
             <div className="space-y-6">
 
                 <div className="space-y-3">

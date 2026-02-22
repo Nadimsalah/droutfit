@@ -65,13 +65,13 @@ export default function PricingSection() {
                                 <Zap className="h-8 w-8 text-blue-500" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold text-white">Full API Access</h3>
+                                <h3 className="text-2xl font-bold text-white">Pro Merchant Access</h3>
                                 <p className="text-blue-400 font-medium text-sm">Everything required for Shopify & Custom Builds</p>
                             </div>
                         </div>
 
                         <div className="flex items-baseline gap-1 mb-8">
-                            <span className="text-5xl font-black text-white tracking-tighter">Pay as you go</span>
+                            <span className="text-5xl font-black text-white tracking-tighter">Topup Credits</span>
                         </div>
 
                         <ul className="space-y-4 mb-8" aria-label="Features included in Merchant Access Plan">
