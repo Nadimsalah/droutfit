@@ -48,9 +48,9 @@ export default function OnboardingPage() {
             if (error) throw error
 
             router.push("/dashboard")
-        } catch (error) {
-            console.error("Error saving onboarding data:", error)
-            alert("Failed to save information. Please try again.")
+        } catch (error: any) {
+            console.error("Error saving onboarding data Details:", error)
+            alert(`Failed to save information: ${error.message || "Unknown error"}. Please try again.`)
         } finally {
             setIsLoading(false)
         }

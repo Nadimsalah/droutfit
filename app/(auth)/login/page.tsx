@@ -29,14 +29,37 @@ export default function LoginPage() {
             const { data: { user } } = await supabase.auth.getUser()
 
             if (user) {
-                const { data: profile } = await supabase
+                const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select('id')
                     .eq('id', user.id)
                     .single()
 
                 if (!profile) {
-                    router.push("/onboarding")
+                    // This is an "old user" who doesn't have a profile record yet
+                    // Create one automatically so they don't get stuck in onboarding
+                    const { error: createError } = await supabase
+                        .from('profiles')
+                        .insert([
+                            {
+                                id: user.id,
+                                credits: 5,
+                                full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+                                first_name: user.user_metadata?.full_name?.split(' ')[0] || "",
+                                last_name: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || "",
+                                store_name: "My Store",
+                                store_domain: "store-" + Math.random().toString(36).substring(7),
+                                updated_at: new Date().toISOString()
+                            }
+                        ])
+
+                    if (createError) {
+                        console.error("Auto-profile creation failed Details:", createError)
+                        console.error("Error Message:", createError.message)
+                        router.push("/onboarding")
+                    } else {
+                        router.push("/dashboard")
+                    }
                 } else {
                     router.push("/dashboard")
                 }
@@ -89,7 +112,7 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between ml-1">
                                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Password</label>
-                                <Link href="#" className="text-xs font-bold text-blue-500 hover:text-blue-400">Forgot password?</Link>
+                                <Link href="/forgot-password" className="text-xs font-bold text-blue-500 hover:text-blue-400">Forgot password?</Link>
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-500 transition-colors" />

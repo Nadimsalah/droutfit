@@ -55,7 +55,11 @@ export async function POST(request: Request) {
                     user_id: user_id,
                     credits: credits
                 },
-                redirect_url: `${(request.headers.get('origin') || '').replace('http://localhost', 'https://localhost')}/api/whop/process?user_id=${user_id}&credits=${credits}&tx_id=${crypto.randomUUID()}`
+                redirect_url: (() => {
+                    const origin = request.headers.get('origin') || 'https://droutfit.ai';
+                    // Whop strictly requires https:// for redirect URLs
+                    return origin.replace(/^http:\/\//, 'https://') + `/api/whop/process?user_id=${user_id}&credits=${credits}&tx_id=${crypto.randomUUID()}`;
+                })()
             })
         })
 

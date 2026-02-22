@@ -40,7 +40,18 @@ export async function GET(request: Request) {
             return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
         }
 
-        // Server update succeeded!
+        // Server update succeeded! Send confirmation email
+        try {
+            // Get user email from profiles or auth
+            const { data: userData } = await supabaseAdmin.auth.admin.getUserById(user_id)
+            if (userData?.user?.email) {
+                const { sendPaymentEmail } = await import('@/lib/resend')
+                await sendPaymentEmail(userData.user.email, credits, newCredits, baseUrl, tx_id)
+            }
+        } catch (emailErr) {
+            console.error("Confirmation email failed to send:", emailErr)
+        }
+
         return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
     } catch (e: any) {
         console.error("Whop process error:", e)

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getPricing, updatePricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
+import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
+import { updateAllPricingAction } from "./actions"
 import { Save, Loader2, DollarSign, RefreshCw } from "lucide-react"
 
 export default function SettingsPage() {
@@ -25,15 +26,15 @@ export default function SettingsPage() {
         setSaving(true)
         setMessage(null)
         try {
-            // Update all keys concurrently
-            await Promise.all(
-                Object.keys(config).map(key =>
-                    updatePricing(key as keyof PricingConfig, config[key as keyof PricingConfig])
-                )
-            )
-            setMessage({ type: 'success', text: 'Settings saved successfully!' })
+            const res = await updateAllPricingAction(config)
+
+            if (res.error) {
+                setMessage({ type: 'error', text: `Failed: ${res.error}` })
+            } else {
+                setMessage({ type: 'success', text: 'Settings saved successfully!' })
+            }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to save settings.' })
+            setMessage({ type: 'error', text: 'Connection error. Please try again.' })
         }
         setSaving(false)
     }
