@@ -43,22 +43,35 @@ export async function POST(req: NextRequest) {
 
         const merchantId = product.user_id;
 
-        // 3. Get Rate Limit Settings
-        const { data: profile } = await supabase
+        // 3. Get Merchant Profile (Credits & Limits)
+        const { data: profile, error: profileError } = await supabase
             .from("profiles")
-            .select("ip_limit")
+            .select("credits, ip_limit")
             .eq("id", merchantId)
             .single();
 
-        const limit = profile?.ip_limit || 5;
+        if (profileError || !profile) {
+            return NextResponse.json({ error: "Merchant profile not found" }, { status: 404 });
+        }
 
-        // 4. Check Rate Limit
+        // 4. Check Credits First
+        if ((profile.credits || 0) <= 0) {
+            console.log(`[Credit Block] Merchant ${merchantId} has no credits left.`);
+            return NextResponse.json(
+                { error: "This merchant has an insufficient credit balance to process try-ons. Please contact support." },
+                { status: 403 }
+            );
+        }
+
+        const limit = profile.ip_limit || 5;
+
+        // 5. Check Rate Limit (IP based)
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { count, error: countError } = await supabase
             .from("usage_logs")
             .select("*", { count: "exact", head: true })
-            .eq("user_id", merchantId) // Filter by merchant
-            .eq("ip_address", ip)     // Filter by IP
+            .eq("user_id", merchantId)
+            .eq("ip_address", ip)
             .gte("created_at", oneDayAgo);
 
         console.log(`[RateLimit Debug] IP: ${ip}, Merchant: ${merchantId}, Limit: ${limit}, Count: ${count}`);
@@ -85,7 +98,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // 5. Log Usage (Pending)
+        // 6. Log Usage (Pending)
         // Reserve the slot immediately to prevent race conditions
         const startTime = Date.now();
         const { data: logEntry, error: logError } = await supabase.from("usage_logs").insert([{
@@ -103,7 +116,7 @@ export async function POST(req: NextRequest) {
             // But for now, we'll proceed
         }
 
-        // 6. Call NanoBanana API
+        // 7. Call NanoBanana API
         if (!NANOBANANA_API_KEY) {
             // Mock response if no key
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -177,7 +190,7 @@ export async function POST(req: NextRequest) {
                 throw new Error("Generation timed out");
             }
 
-            // 7. Update Usage Log (Success)
+            // 8. Update Usage Log & Deduct Credit (Success)
             if (logEntry) {
                 await supabase.from("usage_logs").update({
                     status: 200,
@@ -185,18 +198,25 @@ export async function POST(req: NextRequest) {
                 }).eq("id", logEntry.id);
             }
 
-            // Increment product usage
-            const { data: prodUsage } = await supabase
-                .from('products')
-                .select('usage')
-                .eq('id', productId)
-                .single();
+            // Deduct 1 credit from merchant and increment product usage
+            const newCredits = Math.max(0, (profile.credits || 0) - 1);
 
-            if (prodUsage) {
-                await supabase
+            try {
+                // Determine the current usage first to increment it safely
+                const { data: prodUsage } = await supabase
                     .from('products')
-                    .update({ usage: (prodUsage.usage || 0) + 1 })
-                    .eq('id', productId);
+                    .select('usage')
+                    .eq('id', productId)
+                    .single();
+
+                const currentUsage = prodUsage?.usage || 0;
+
+                await Promise.all([
+                    supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
+                    supabase.from('products').update({ usage: currentUsage + 1 }).eq('id', productId)
+                ]);
+            } catch (err) {
+                console.error("Post-success updates failed:", err);
             }
 
             return NextResponse.json({
