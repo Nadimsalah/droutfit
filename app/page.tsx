@@ -194,43 +194,74 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-white/10 bg-[#050608] pt-20 pb-10 px-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-                    <div className="col-span-2 md:col-span-1 space-y-4">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="h-6 w-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">D</div>
-                            <span className="text-xl font-black tracking-tight">Droutfit</span>
+            <footer className="border-t border-white/10 bg-[#050608] pt-20 pb-10 px-6 mt-12">
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 mb-16">
+                    <div className="space-y-6 max-w-sm">
+                        <Link href="/" className="flex items-center gap-2 group">
+                            <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />
                         </Link>
                         <p className="text-gray-500 text-sm leading-relaxed">
-                            The enterprise standard for API-driven virtual try-on.
+                            The enterprise standard for API-driven virtual try-on. Increase conversions and reduce returns with realistic AI.
                         </p>
+
+                        <div className="pt-2 flex flex-col gap-3">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Supported Payments</span>
+                            <div className="flex gap-3 items-center">
+                                {/* Visa */}
+                                <div className="flex bg-white/5 rounded-lg border border-white/10 px-3 py-1.5 items-center justify-center">
+                                    <span className="font-black italic text-white text-sm tracking-wider">VISA</span>
+                                </div>
+                                {/* Mastercard */}
+                                <div className="flex bg-white/5 rounded-lg border border-white/10 px-3 py-1.5 items-center justify-center">
+                                    <div className="flex -space-x-2 mr-1">
+                                        <div className="w-3 h-3 rounded-full bg-red-500 mix-blend-screen opacity-80"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500 mix-blend-screen opacity-80"></div>
+                                    </div>
+                                    <span className="font-bold text-white text-xs tracking-wider">mastercard</span>
+                                </div>
+                                {/* AMEX / General */}
+                                <div className="flex bg-white/5 rounded-lg border border-white/10 px-3 py-1.5 items-center justify-center">
+                                    <span className="font-bold text-white text-xs tracking-wider">AMEX</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <nav aria-label="Product Navigation">
-                        <h4 className="font-bold mb-6">Product</h4>
-                        <ul className="space-y-4 text-sm text-gray-500">
-                            <li><Link href="#features" className="hover:text-white transition-colors">API Features</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Shopify App</Link></li>
-                            <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing Structure</Link></li>
-                        </ul>
-                    </nav>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-12 w-full lg:w-auto">
+                        <nav aria-label="Product Navigation">
+                            <h4 className="font-bold text-white mb-6">Product</h4>
+                            <ul className="space-y-4 text-sm text-gray-400">
+                                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
+                                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                                <li><Link href="#demo" className="hover:text-white transition-colors">Live Demo</Link></li>
+                            </ul>
+                        </nav>
 
-                    <nav aria-label="Developer Navigation">
-                        <h4 className="font-bold mb-6">Developers</h4>
-                        <ul className="space-y-4 text-sm text-gray-500">
-                            <li><Link href="#" className="hover:text-white transition-colors">API Documentation</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">SDKs</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Support Portal</Link></li>
-                        </ul>
-                    </nav>
+                        <nav aria-label="Portal Navigation">
+                            <h4 className="font-bold text-white mb-6">Portal</h4>
+                            <ul className="space-y-4 text-sm text-gray-400">
+                                <li><Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                                <li><Link href="/login" className="hover:text-white transition-colors">Sign In</Link></li>
+                                <li><Link href="/signup" className="hover:text-white transition-colors">Create Account</Link></li>
+                            </ul>
+                        </nav>
 
-                    <nav aria-label="Legal Navigation">
-                        <h4 className="font-bold mb-6">Legal</h4>
-                        <ul className="space-y-4 text-sm text-gray-500">
-                            <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                        </ul>
-                    </nav>
+                        <nav aria-label="Legal Navigation">
+                            <h4 className="font-bold text-white mb-6">Legal</h4>
+                            <ul className="space-y-4 text-sm text-gray-400">
+                                <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                                <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                                <li><Link href="#" className="hover:text-white transition-colors">Contact Us</Link></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+                <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-gray-600 text-xs font-bold">
+                    <p>© {new Date().getFullYear()} Droutfit. All rights reserved.</p>
+                    <div className="flex items-center gap-2 mt-4 md:mt-0">
+                        Secured by Stripe & Whop Payments
+                    </div>
                 </div>
             </footer>
         </div>
