@@ -7,17 +7,29 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function uploadImage(file: File, bucket: string = 'tryimages'): Promise<string> {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Math.random()}.${fileExt}`
-    const filePath = `${fileName}`
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = async () => {
+            try {
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        base64Image: reader.result,
+                        bucketName: bucket
+                    })
+                })
 
-    const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file)
+                const data = await response.json()
+                if (!response.ok) throw new Error(data.error || 'Upload failed')
 
-    if (uploadError) {
-        console.error('Upload Error:', uploadError)
-        throw new Error(uploadError.message)
-    }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath)
-    return data.publicUrl
+                resolve(data.url)
+            } catch (err) {
+                console.error("Upload routing failed:", err)
+                reject(err)
+            }
+        }
+        reader.onerror = error => reject(error)
+    })
 }
