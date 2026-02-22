@@ -85,7 +85,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <div className={cn(
                 "fixed inset-y-0 left-0 z-50 flex w-full md:w-72 flex-col bg-[#0F1116] border-r border-gray-800/50 transition-all duration-300 ease-in-out md:relative",
-                isOpen ? "translate-x-0" : "-translate-x-full"
+                isOpen ? "translate-x-0" : "-translate-x-full",
+                "md:translate-x-0"
             )}>
                 {/* User Section */}
                 <div className="p-6">
