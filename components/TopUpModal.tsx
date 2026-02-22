@@ -36,7 +36,9 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
         { id: 'package_4', amount: pricing.PACKAGE_4_AMOUNT, price: pricing.PACKAGE_4_PRICE, label: "Max Value" }
     ]
 
-    const [isCustom, setIsCustom] = useState(false)
+    const [isCustom, setIsCustom] = useState(false);
+    // Determine selected package (if not custom)
+    const selectedPackage = !isCustom ? packages.find(p => p.amount === credits) : null
 
     // Default to package 1 amount when pricing loads
     useEffect(() => {
@@ -172,7 +174,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                             <span className="text-white font-bold">Total Payment</span>
                             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Stripe Secure</span>
                         </div>
-                        <span className="text-3xl font-black text-white tracking-tighter">${totalCost}</span>
+                        <span className="text-5xl font-black text-white tracking-tighter">{credits} Images{!isCustom && selectedPackage?.label ? ` (${selectedPackage.label})` : ''}</span>
                     </div>
                 </div>
 

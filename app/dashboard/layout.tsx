@@ -45,7 +45,7 @@ export default function DashboardLayout({
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full pointer-events-none" />
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-10 relative z-10">
+                <main className="flex-1 overflow-y-auto p-4 md:p-10 pt-20 md:pt-0 relative z-10">
                     {children}
                 </main>
             </div>

@@ -119,7 +119,7 @@ export default function BillingPage() {
 
                         <div className="w-full md:w-80 bg-[#13171F] p-8 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
                             <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-5xl font-black text-white">Topup Credits</span>
+                                <span className="text-5xl font-black text-white tracking-tighter">{credits} Images{!isCustom && selectedPackage?.label ? ` (${selectedPackage.label})` : ''}</span>
                             </div>
                             <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8">Purchase Pro Image Generation</p>
 
