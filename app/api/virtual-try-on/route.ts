@@ -82,11 +82,11 @@ export async function POST(req: NextRequest) {
         let isAllowedByRateLimit = true;
         try {
             const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-            const { count, error: countError } = await supabase
+            const { count, error: countError } = await (supabase as any)
                 .from("usage_logs")
                 .select("*", { count: "exact", head: true })
                 .eq("user_id", merchantId)
-                .eq("ip_address" as any, ip) // Use type casting to avoid TS errors
+                .eq("ip_address", ip)
                 .gte("created_at", oneDayAgo);
 
             if (!countError && count !== null && count >= limit) {
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         const startTime = Date.now();
         let logEntryId: string | null = null;
         try {
-            const { data: logEntry } = await supabase.from("usage_logs").insert([{
+            const { data: logEntry } = await (supabase as any).from("usage_logs").insert([{
                 user_id: merchantId,
                 method: "POST",
                 path: "/api/virtual-try-on",
@@ -291,11 +291,11 @@ export async function GET(req: NextRequest) {
         let used = 0;
         try {
             const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-            const { count } = await supabase
+            const { count } = await (supabase as any)
                 .from("usage_logs")
                 .select("*", { count: "exact", head: true })
                 .eq("user_id", merchantId)
-                .eq("ip_address" as any, ip)
+                .eq("ip_address", ip)
                 .gte("created_at", oneDayAgo);
             used = count || 0;
         } catch (e) {
