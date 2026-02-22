@@ -9,7 +9,9 @@ const supabaseAdmin = createClient(
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const baseUrl = new URL(request.url).origin
+    const host = request.headers.get('host') || 'droutfit.ai';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
     const user_id = searchParams.get('user_id')
     const credits = parseInt(searchParams.get('credits') || '0')
     const amount = parseFloat(searchParams.get('amount') || '0')

@@ -9,44 +9,37 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 export async function requestResetAction(emailInput: string) {
     if (!emailInput) return { error: "Email is required" }
     const email = emailInput.trim().toLowerCase()
+    console.log("Password reset requested for:", email)
 
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!serviceKey) {
-        return { error: "Security restriction: Please add SUPABASE_SERVICE_ROLE_KEY to your .env.local to enable password resets." }
+        return { error: "Security restriction: Supabase keys are missing." }
     }
 
     const supabase = createClient(supabaseUrl, serviceKey, {
         auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    // 1. Find user by email (checking multiple pages if needed)
+    // 1. Find user by email
     let targetUser = null
-    let page = 1
-    const perPage = 100
-
-    while (true) {
-        const { data: { users }, error } = await supabase.auth.admin.listUsers({
-            page,
-            perPage
-        })
-
-        if (error || !users || users.length === 0) break
-
+    try {
+        const { data: { users }, error } = await supabase.auth.admin.listUsers()
+        if (error) throw error
         targetUser = users.find(u => u.email?.toLowerCase() === email)
-        if (targetUser) break
-
-        if (users.length < perPage) break
-        page++
+    } catch (e) {
+        console.error("Auth search error:", e)
+        return { error: "Failed to search user database" }
     }
 
     // For security, mimic success even if user doesn't exist
     if (!targetUser) {
-        console.log("Password reset requested for non-existent user:", email)
+        console.log("No user found with email:", email)
         return { success: true }
     }
 
     const code = Math.floor(1000 + Math.random() * 9000).toString()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+    console.log(`Generated code ${code} for ${email}`)
 
     try {
         // Delete old codes
@@ -58,19 +51,21 @@ export async function requestResetAction(emailInput: string) {
         ])
 
         if (insertError) throw insertError
+        console.log("Verification code stored in database")
 
         // Send Email and check for success
         const emailResult = await sendResetOTP(email, code)
 
         if (!emailResult.success) {
-            console.error("Resend Error during reset OTP send:", emailResult.error)
+            console.error("EMAIL SENDING FAILED:", emailResult.error)
             const errorMsg = (emailResult.error as any)?.message || "Failed to deliver reset email."
-            return { error: `Email Error: ${errorMsg}` }
+            return { error: `Verification System Error: ${errorMsg}` }
         }
 
+        console.log("Reset email sent successfully to:", email)
         return { success: true }
     } catch (error: any) {
-        console.error("Reset request error:", error)
+        console.error("Reset request catch block error:", error)
         return { error: error.message }
     }
 }
