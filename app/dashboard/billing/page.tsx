@@ -150,14 +150,6 @@ export default function BillingPage() {
                         </div>
                         Billing History
                     </h3>
-                    <a
-                        href="https://whop.com/hub"
-                        target="_blank"
-                        className="text-xs font-bold text-blue-500 hover:text-blue-400 flex items-center gap-2 bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/20 tracking-widest uppercase transition-all"
-                    >
-                        Whop Portal
-                        <ExternalLink className="h-3 w-3" />
-                    </a>
                 </div>
 
                 <div className="bg-[#13171F] rounded-2xl border border-gray-800 overflow-hidden">
@@ -226,7 +218,7 @@ export default function BillingPage() {
                 <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 items-start">
                     <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-blue-200/70 font-medium leading-relaxed">
-                        Invoices are generated instantly in PDF format based on your profile information. Ensure your Store Name and Full Name are correct in Settings for accurate billing.
+                        Invoices are generated instantly in PDF format based on your profile information. Ensure your Store Name and Full Name are correct in Settings for accurate billing documents.
                     </p>
                 </div>
             </div>

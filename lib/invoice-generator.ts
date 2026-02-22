@@ -1,55 +1,21 @@
 import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
-interface InvoiceData {
-    id: string
-    created_at: string
-    amount: number
-    description: string
-    status: string
-    user: {
-        full_name: string
-        store_name: string
-    }
-}
-
-export const generateInvoicePDF = async (data: InvoiceData) => {
+export const generateInvoicePDF = async (data: any) => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.width
 
-    // Helper to get base64 logo (simplest for jspdf)
-    const getBase64Image = (url: string): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const img = new Image()
-            img.crossOrigin = 'Anonymous'
-            img.onload = () => {
-                const canvas = document.createElement('canvas')
-                canvas.width = img.width
-                canvas.height = img.height
-                const ctx = canvas.getContext('2d')
-                ctx?.drawImage(img, 0, 0)
-                resolve(canvas.toDataURL('image/png'))
-            }
-            img.onerror = reject
-            img.src = url
-        })
-    }
-
     try {
-        // logo
-        try {
-            const logoBase64 = await getBase64Image('/logo-black.png')
-            doc.addImage(logoBase64, 'PNG', 15, 15, 30, 8)
-        } catch (e) {
-            // fallback if logo fails
-            doc.setFontSize(22)
-            doc.setTextColor(59, 130, 246) // blue-500
-            doc.text('DROUTFIT', 15, 20)
-        }
+        // logo placeholder or simple text for stability
+        doc.setFontSize(22)
+        doc.setTextColor(59, 130, 246) // blue-500
+        doc.setFont('helvetica', 'bold')
+        doc.text('DROUTFIT', 15, 20)
 
         // Header Info
         doc.setFontSize(10)
         doc.setTextColor(100)
+        doc.setFont('helvetica', 'normal')
         doc.text('DROUTFIT AI VIRTUAL TRY-ON', pageWidth - 15, 15, { align: 'right' })
         doc.text('support@droutfit.ai', pageWidth - 15, 20, { align: 'right' })
         doc.text('droutfit.ai', pageWidth - 15, 25, { align: 'right' })
@@ -83,11 +49,10 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
 
         // Table
         const tableBody = [
-            [data.description, '1', `$${data.amount.toFixed(2)}`, `$${data.amount.toFixed(2)}`]
+            [data.description, '1', `$${parseFloat(data.amount).toFixed(2)}`, `$${parseFloat(data.amount).toFixed(2)}`]
         ]
 
-        // @ts-ignore
-        doc.autoTable({
+        autoTable(doc, {
             startY: 95,
             head: [['Description', 'Qty', 'Unit Price', 'Total']],
             body: tableBody,
