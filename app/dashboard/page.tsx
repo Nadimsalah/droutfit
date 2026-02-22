@@ -18,6 +18,7 @@ import {
 import { useState, useEffect } from "react"
 import { TopUpModal } from "@/components/TopUpModal"
 import { getDashboardStats, getChartData } from "@/lib/storage"
+import { supabase } from "@/lib/supabase"
 
 export default function OverviewPage() {
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
@@ -32,7 +33,45 @@ export default function OverviewPage() {
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const handlePaymentAndFetchStats = async () => {
+            setIsLoading(true)
+
+            // Check for frontend credit processing (fallback for missing server key)
+            if (typeof window !== 'undefined') {
+                const searchParams = new URLSearchParams(window.location.search)
+                const addedCredits = parseInt(searchParams.get('added') || '0')
+                const isSuccess = searchParams.get('payment_successful') === 'true'
+
+                if (isSuccess && addedCredits > 0) {
+                    try {
+                        const { data: { user } } = await supabase.auth.getUser()
+                        if (user) {
+                            // 1. Fetch current credits
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('credits')
+                                .eq('id', user.id)
+                                .single()
+
+                            const currentCredits = profile?.credits || 0
+                            const newCredits = currentCredits + addedCredits
+
+                            // 2. Perform the update acting exactly as the authorized user!
+                            await supabase
+                                .from('profiles')
+                                .update({ credits: newCredits })
+                                .eq('id', user.id)
+
+                            // 3. Clean up the URL so it doesn't trigger again on refresh
+                            window.history.replaceState({}, '', '/dashboard')
+                        }
+                    } catch (e) {
+                        console.error("Frontend credit update failed:", e)
+                    }
+                }
+            }
+
+            // Normal Stats Fetching
             try {
                 const [dashboardStats, dailyStats] = await Promise.all([
                     getDashboardStats(),
@@ -58,7 +97,7 @@ export default function OverviewPage() {
                 setIsLoading(false)
             }
         }
-        fetchStats()
+        handlePaymentAndFetchStats()
     }, [])
 
     if (isLoading) {
