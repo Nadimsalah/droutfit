@@ -62,7 +62,7 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14]/90 backdrop-blur-md border-b border-white/10' : 'bg-transparent border-b border-transparent'}`}>
+            <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14]/95 backdrop-blur-xl border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/50 backdrop-blur-md border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 group relative z-50">
                         <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />

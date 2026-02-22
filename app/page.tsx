@@ -67,7 +67,7 @@ export default function Home() {
                         </Link>
                         <a href="#demo" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group backdrop-blur-sm">
                             <Play className="h-5 w-5 fill-current" />
-                            Try Live Demo
+                            Watch Demo
                         </a>
                     </div>
                 </div>
