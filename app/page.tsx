@@ -129,42 +129,60 @@ export default function Home() {
             <InteractiveTryOnSection />
 
             {/* Features SEO Section */}
-            <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
-                <header className="text-center mb-20">
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">API Features Built for Scale</h2>
-                    <p className="text-gray-400 mx-auto max-w-2xl text-lg">Our scalable infrastructure is ready to process thousands of generations per minute, providing state-of-the-art results for any garment type.</p>
+            <section id="features" className="py-24 px-6 max-w-7xl mx-auto flex flex-col items-center relative z-10">
+                <header className="text-center mb-16">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold text-purple-400 mb-6 uppercase tracking-widest">
+                        Why Choose Droutfit
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-white">
+                        Built for Scale. <br className="md:hidden" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                            Powered by AI.
+                        </span>
+                    </h2>
+                    <p className="text-gray-400 mx-auto max-w-2xl text-lg leading-relaxed">
+                        Our state-of-the-art vision models process thousands of garments per minute, providing hyper-realistic results that outclass traditional mannequins and simple overlays.
+                    </p>
                 </header>
 
-                <div className="grid md:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-3 gap-8 w-full mb-16">
                     {[
                         {
                             icon: <Zap className="h-6 w-6 text-yellow-400" />,
-                            title: "Instant Image Processing",
+                            title: "Instant Processing",
                             desc: "High-quality AI try-on rendering in under 3 seconds. Minimize store latency while users view clothes.",
                             gradient: "from-yellow-400/20 to-orange-500/20"
                         },
                         {
                             icon: <Shield className="h-6 w-6 text-blue-400" />,
-                            title: "Secure & Compliant Architecture",
-                            desc: "Photos are immediately swept from our edge servers. We strictly adhere to GDPR, CCPA & global privacy rules.",
+                            title: "Privacy First",
+                            desc: "Models are strictly isolated. We adhere to GDPR, CCPA & global privacy rules, sweeping edge caches instantly.",
                             gradient: "from-blue-400/20 to-cyan-500/20"
                         },
                         {
                             icon: <BarChart3 className="h-6 w-6 text-purple-400" />,
-                            title: "Insightful E-commerce SEO",
-                            desc: "Lowering bounce rates drastically improves SEO rankings on Google. Users spend 3x more time on site.",
+                            title: "Engagement Boost",
+                            desc: "Radically lower your store's bounce rate. Shoppers spend 3x more time interacting with AI fitting rooms.",
                             gradient: "from-purple-400/20 to-pink-500/20"
                         }
                     ].map((f, i) => (
-                        <article key={i} className="p-8 rounded-3xl bg-[#131720] border border-white/5 hover:border-white/10 hover:-translate-y-1 transition-all group relative overflow-hidden">
-                            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${f.gradient} blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                            <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform duration-300 relative z-10">
+                        <article key={i} className="p-8 rounded-3xl bg-[#131720] border border-white/5 hover:border-white/10 hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden shadow-xl">
+                            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${f.gradient} blur-[60px] rounded-full opacity-10 group-hover:opacity-100 transition-opacity duration-500`} />
+                            <div className="h-14 w-14 rounded-2xl bg-[#1A1F2B] border border-white/5 flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform duration-300 relative z-10 shadow-inner">
                                 {f.icon}
                             </div>
-                            <h3 className="text-xl font-bold mb-3 relative z-10">{f.title}</h3>
+                            <h3 className="text-xl font-bold mb-3 relative z-10 text-white">{f.title}</h3>
                             <p className="text-gray-400 leading-relaxed text-sm relative z-10">{f.desc}</p>
                         </article>
                     ))}
+                </div>
+
+                <div className="text-center w-full flex flex-col items-center justify-center">
+                    <p className="text-sm font-bold text-gray-400 mb-6 uppercase tracking-widest">Stop guessing. Start seeing.</p>
+                    <a href="#demo" className="px-10 py-5 bg-white text-black rounded-full font-black text-lg transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 hover:scale-105 hover:bg-gray-100">
+                        <Play className="h-5 w-5 fill-current" />
+                        Try Our AI Now
+                    </a>
                 </div>
             </section>
 
