@@ -7,21 +7,39 @@ import { Send, Mail, User, MessageSquare, Loader2, CheckCircle2 } from "lucide-r
 export default function ContactPopup() {
     const [isOpen, setIsOpen] = useState(false)
     const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle")
+    const [name, setName] = useState("")
+    const [email, setEmail] = useState("")
+    const [message, setMessage] = useState("")
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setStatus("sending")
 
-        // Simulate network request
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, message })
+            })
 
-        setStatus("success")
+            if (!response.ok) throw new Error("Failed to send")
 
-        // Auto close after success
-        setTimeout(() => {
-            setIsOpen(false)
-            setStatus("idle")
-        }, 3000)
+            setStatus("success")
+
+            // Auto close after success
+            setTimeout(() => {
+                setIsOpen(false)
+                setStatus("idle")
+                // Reset form
+                setName("")
+                setEmail("")
+                setMessage("")
+            }, 3000)
+        } catch (err) {
+            console.error(err)
+            setStatus("error")
+            setTimeout(() => setStatus("idle"), 3000)
+        }
     }
 
     return (
@@ -63,6 +81,8 @@ export default function ContactPopup() {
                                     <input
                                         type="text"
                                         required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
                                         placeholder="John Doe"
                                         className="w-full bg-[#0B0E14] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
                                     />
@@ -76,6 +96,8 @@ export default function ContactPopup() {
                                     <input
                                         type="email"
                                         required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         placeholder="john@example.com"
                                         className="w-full bg-[#0B0E14] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
                                     />
@@ -89,6 +111,8 @@ export default function ContactPopup() {
                                     <textarea
                                         required
                                         rows={4}
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
                                         placeholder="How can we help you today?"
                                         className="w-full bg-[#0B0E14] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
                                     />
@@ -98,13 +122,15 @@ export default function ContactPopup() {
                             <button
                                 type="submit"
                                 disabled={status === "sending"}
-                                className="w-full mt-4 bg-white text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`w-full mt-4 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${status === "error" ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-gray-200'}`}
                             >
                                 {status === "sending" ? (
                                     <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Sending...
                                     </>
+                                ) : status === "error" ? (
+                                    "Error Sending. Try Again."
                                 ) : (
                                     <>
                                         <Send className="h-4 w-4" />
