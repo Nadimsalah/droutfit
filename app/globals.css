@@ -50,19 +50,51 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   /* Fix Safari stuttering on transitions */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 /* Optimize blurry background blobs for Safari */
 .bg-blue-600\/10,
 .bg-purple-600\/10,
 .bg-blue-600\/5,
-.bg-purple-600\/5 {
+.bg-purple-600\/5,
+[class*='blur-'] {
   transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   will-change: filter, transform;
   pointer-events: none;
+  isolation: isolate;
+  /* Safari handles smaller blurs much better */
+  -webkit-filter: blur(40px);
+  filter: blur(40px);
+}
+
+/* Improve Navbar performance on Safari */
+nav {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Force hardware acceleration for all blurs and fixed elements */
+.fixed,
+.absolute {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Optimize text gradients for Safari */
+.text-transparent.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* Fix disappearing text in some Safari versions */
+  -webkit-text-fill-color: transparent;
 }
 
 /* Custom Scrollbar for Dark Mode */
@@ -90,11 +122,12 @@ body {
   border-radius: 0.75rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: translateZ(0);
-  /* Hardware acceleration */
+  -webkit-transform: translateZ(0);
+  contain: content;
 }
 
-/* Force hardware acceleration for all blurs */
-[class*='blur-'] {
-  transform: translateZ(0);
-  will-change: filter;
+/* Smooth scrolling for Apple devices */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
