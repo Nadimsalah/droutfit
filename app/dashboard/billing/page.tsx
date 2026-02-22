@@ -6,12 +6,15 @@ import { Check, CreditCard, Shield, Info, Sparkles, Loader2, FileText, ExternalL
 import { Modal } from "@/components/Modal"
 import { TopUpModal } from "@/components/TopUpModal"
 import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
+import { generateInvoicePDF } from "@/lib/invoice-generator"
 
 export default function BillingPage() {
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
     const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING)
     const [transactions, setTransactions] = useState<any[]>([])
+    const [profile, setProfile] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
     useEffect(() => {
         getPricing().then(setPricing)
@@ -22,15 +25,43 @@ export default function BillingPage() {
         setLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-            const { data } = await supabase
+            // Fetch Transactions
+            const { data: txData } = await supabase
                 .from('transactions')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
 
-            if (data) setTransactions(data)
+            if (txData) setTransactions(txData)
+
+            // Fetch Profile
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('full_name, store_name')
+                .eq('id', user.id)
+                .single()
+
+            if (profileData) setProfile(profileData)
         }
         setLoading(false)
+    }
+
+    const handleDownloadInvoice = async (tx: any) => {
+        setDownloadingId(tx.id)
+        try {
+            await generateInvoicePDF({
+                ...tx,
+                user: {
+                    full_name: profile?.full_name || 'Valued Merchant',
+                    store_name: profile?.store_name || 'Independent Store'
+                }
+            })
+        } catch (error) {
+            console.error('Download failed', error)
+            alert('Failed to generate PDF. Please try again.')
+        } finally {
+            setDownloadingId(null)
+        }
     }
 
     return (
@@ -172,14 +203,18 @@ export default function BillingPage() {
                                                 {new Date(tx.created_at).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <a
-                                                    href="https://whop.com/hub"
-                                                    target="_blank"
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 border border-gray-800 text-gray-400 hover:text-white hover:bg-white/10 transition-all group-hover:border-blue-500/30"
-                                                    title="View PDF Invoice"
+                                                <button
+                                                    onClick={() => handleDownloadInvoice(tx)}
+                                                    disabled={downloadingId === tx.id}
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 border border-gray-800 text-gray-400 hover:text-white hover:bg-white/10 transition-all group-hover:border-blue-500/30 disabled:opacity-50"
+                                                    title="Download PDF Invoice"
                                                 >
-                                                    <FileText className="h-4 w-4" />
-                                                </a>
+                                                    {downloadingId === tx.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <FileText className="h-4 w-4" />
+                                                    )}
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -188,10 +223,10 @@ export default function BillingPage() {
                         </table>
                     </div>
                 </div>
-                <div className="mt-6 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl flex gap-3 items-start">
-                    <Info className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-orange-200/70 font-medium leading-relaxed">
-                        Official tax invoices and PDF receipts are generated and managed by Whop. Click the invoice icon or visit your Whop Portal to download your documents.
+                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 items-start">
+                    <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-blue-200/70 font-medium leading-relaxed">
+                        Invoices are generated instantly in PDF format based on your profile information. Ensure your Store Name and Full Name are correct in Settings for accurate billing.
                     </p>
                 </div>
             </div>

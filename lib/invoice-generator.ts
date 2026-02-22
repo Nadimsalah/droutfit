@@ -1,0 +1,125 @@
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
+
+interface InvoiceData {
+    id: string
+    created_at: string
+    amount: number
+    description: string
+    status: string
+    user: {
+        full_name: string
+        store_name: string
+    }
+}
+
+export const generateInvoicePDF = async (data: InvoiceData) => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.width
+
+    // Helper to get base64 logo (simplest for jspdf)
+    const getBase64Image = (url: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image()
+            img.crossOrigin = 'Anonymous'
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+                ctx?.drawImage(img, 0, 0)
+                resolve(canvas.toDataURL('image/png'))
+            }
+            img.onerror = reject
+            img.src = url
+        })
+    }
+
+    try {
+        // logo
+        try {
+            const logoBase64 = await getBase64Image('/logo-black.png')
+            doc.addImage(logoBase64, 'PNG', 15, 15, 30, 8)
+        } catch (e) {
+            // fallback if logo fails
+            doc.setFontSize(22)
+            doc.setTextColor(59, 130, 246) // blue-500
+            doc.text('DROUTFIT', 15, 20)
+        }
+
+        // Header Info
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        doc.text('DROUTFIT AI VIRTUAL TRY-ON', pageWidth - 15, 15, { align: 'right' })
+        doc.text('support@droutfit.ai', pageWidth - 15, 20, { align: 'right' })
+        doc.text('droutfit.ai', pageWidth - 15, 25, { align: 'right' })
+
+        // Invoice Title
+        doc.setFontSize(24)
+        doc.setTextColor(0)
+        doc.text('INVOICE', 15, 50)
+
+        // Billed To & Invoice Details
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        doc.text('BILLED TO', 15, 65)
+        doc.text('INVOICE DETAILS', 120, 65)
+
+        doc.setFontSize(11)
+        doc.setTextColor(0)
+        doc.text(data.user.full_name || 'Valued Merchant', 15, 72)
+        doc.text(data.user.store_name || 'Independent Store', 15, 77)
+
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        doc.text('Invoice #:', 120, 72)
+        doc.text('Date:', 120, 77)
+        doc.text('Status:', 120, 82)
+
+        doc.setTextColor(0)
+        doc.text(data.id.substring(0, 8).toUpperCase(), 150, 72)
+        doc.text(new Date(data.created_at).toLocaleDateString(), 150, 77)
+        doc.text(data.status.toUpperCase(), 150, 82)
+
+        // Table
+        const tableBody = [
+            [data.description, '1', `$${data.amount.toFixed(2)}`, `$${data.amount.toFixed(2)}`]
+        ]
+
+        // @ts-ignore
+        doc.autoTable({
+            startY: 95,
+            head: [['Description', 'Qty', 'Unit Price', 'Total']],
+            body: tableBody,
+            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+            bodyStyles: { textColor: 50 },
+            alternateRowStyles: { fillColor: [245, 247, 250] },
+            margin: { left: 15, right: 15 },
+        })
+
+        // Totals
+        // @ts-ignore
+        const finalY = doc.lastAutoTable.finalY + 10
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Total Amount Paid:', 120, finalY + 5)
+        doc.setFontSize(16)
+        doc.setTextColor(59, 130, 246)
+        doc.text(`$${data.amount.toFixed(2)}`, pageWidth - 15, finalY + 5, { align: 'right' })
+
+        // Footer
+        doc.setFontSize(10)
+        doc.setTextColor(150)
+        doc.setFont('helvetica', 'normal')
+        const footerY = doc.internal.pageSize.height - 20
+        doc.text('Thank you for choosing Droutfit AI.', pageWidth / 2, footerY, { align: 'center' })
+        doc.text('This is a computer-generated invoice and does not require a signature.', pageWidth / 2, footerY + 5, { align: 'center' })
+
+        // Save
+        doc.save(`Invoice-Droutfit-${data.id.substring(0, 8)}.pdf`)
+
+    } catch (error) {
+        console.error('PDF Generation failed', error)
+        throw error
+    }
+}
