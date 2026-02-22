@@ -112,22 +112,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Trusted By */}
-            <section className="py-10 border-y border-white/5 bg-white/[0.01]">
-                <div className="max-w-7xl mx-auto px-6 text-center">
-                    <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-8">Trusted by hyper-growth e-commerce sites</p>
-                    <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-                        <span className="text-2xl font-bold font-serif">VOGUE</span>
-                        <span className="text-2xl font-bold font-sans tracking-tighter">NIKE</span>
-                        <span className="text-2xl font-bold font-mono">ADIDAS</span>
-                        <span className="text-2xl font-bold italic">ZARA</span>
-                    </div>
-                </div>
-            </section>
-
-            {/* Interactive Try-On Demonstration Area */}
-            <InteractiveTryOnSection />
-
             {/* Features SEO Section */}
             <section id="features" className="py-24 px-6 max-w-7xl mx-auto flex flex-col items-center relative z-10">
                 <header className="text-center mb-16">
@@ -185,6 +169,9 @@ export default function Home() {
                     </a>
                 </div>
             </section>
+
+            {/* Interactive Try-On Demonstration Area */}
+            <InteractiveTryOnSection />
 
             {/* Pricing Section (SEO Optimized inside) */}
             <PricingSection />
