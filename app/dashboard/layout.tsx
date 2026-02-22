@@ -1,8 +1,10 @@
 "use client"
 
 import { Sidebar } from "@/components/Sidebar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Menu } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 export default function DashboardLayout({
     children,
@@ -10,6 +12,17 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const router = useRouter()
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session }, error } = await supabase.auth.getSession()
+            if (!session || error) {
+                router.push("/signup")
+            }
+        }
+        checkAuth()
+    }, [router])
 
     return (
         <div className="flex h-screen bg-[#0B0E14] font-sans overflow-hidden text-white">
