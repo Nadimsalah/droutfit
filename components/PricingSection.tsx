@@ -103,14 +103,14 @@ export default function PricingSection() {
                     <aside className="bg-[#0B0E14] border border-gray-800 rounded-3xl p-8 relative flex flex-col min-h-full">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-                        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                            <Sparkles className="h-6 w-6 text-purple-500" />
-                            Credit Packages
+                        <h3 className="text-2xl font-black text-white mb-2 flex items-center gap-2 uppercase tracking-tight">
+                            <Sparkles className="h-6 w-6 text-blue-500" />
+                            Select a Package
                         </h3>
-                        <p className="text-gray-400 text-sm mb-6">Choose a package that matches your expected generation volume.</p>
+                        <p className="text-gray-400 text-sm mb-8">Choose one of our optimized credit bundles to power your AI fitting room.</p>
 
                         <div className="space-y-4 flex-1">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                                 {packages.map((pkg) => (
                                     <button
                                         key={pkg.id}

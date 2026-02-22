@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Check, Info, Loader2, Sparkles, Shield, AlertCircle } from "lucide-react"
+import { Box, Zap, Gem, Crown, Check, Info, Loader2, Sparkles, Shield, AlertCircle } from "lucide-react"
 import { Modal } from "@/components/Modal"
 import { supabase } from "@/lib/supabase"
 import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
@@ -20,9 +20,15 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
     // Fetch pricing on mount
     useEffect(() => {
         const init = async () => {
-            const pricingData = await getPricing()
-            setPricing(pricingData)
-            setIsCheckingSubscription(false)
+            try {
+                const pricingData = await getPricing()
+                setPricing(pricingData)
+            } catch (error) {
+                console.error("Failed to fetch pricing:", error)
+                // We keep DEFAULT_PRICING from initial state
+            } finally {
+                setIsCheckingSubscription(false)
+            }
         }
         if (isOpen) {
             init()
@@ -30,29 +36,26 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
     }, [isOpen])
 
     const packages = [
-        { id: 'package_1', amount: pricing.PACKAGE_1_AMOUNT, price: pricing.PACKAGE_1_PRICE, label: "Starter Pack" },
-        { id: 'package_2', amount: pricing.PACKAGE_2_AMOUNT, price: pricing.PACKAGE_2_PRICE, label: "Popular" },
-        { id: 'package_3', amount: pricing.PACKAGE_3_AMOUNT, price: pricing.PACKAGE_3_PRICE, label: "Pro Value" },
-        { id: 'package_4', amount: pricing.PACKAGE_4_AMOUNT, price: pricing.PACKAGE_4_PRICE, label: "Max Value" }
+        { id: 'package_1', amount: Number(pricing.PACKAGE_1_AMOUNT), price: Number(pricing.PACKAGE_1_PRICE), label: "Starter Pack" },
+        { id: 'package_2', amount: Number(pricing.PACKAGE_2_AMOUNT), price: Number(pricing.PACKAGE_2_PRICE), label: "Popular" },
+        { id: 'package_3', amount: Number(pricing.PACKAGE_3_AMOUNT), price: Number(pricing.PACKAGE_3_PRICE), label: "Pro Value" },
+        { id: 'package_4', amount: Number(pricing.PACKAGE_4_AMOUNT), price: Number(pricing.PACKAGE_4_PRICE), label: "Max Value" }
     ]
 
     const [isCustom, setIsCustom] = useState(false);
     // Determine selected package (if not custom)
-    const selectedPackage = !isCustom ? packages.find(p => p.amount === credits) : null
+    const activePackage = !isCustom ? packages.find(p => p.amount === Number(credits)) : null
 
     // Default to package 1 amount when pricing loads
     useEffect(() => {
         if (!isCheckingSubscription && credits === 0) {
-            setCredits(pricing.PACKAGE_1_AMOUNT)
+            setCredits(Number(pricing.PACKAGE_1_AMOUNT) || 100)
         }
     }, [isCheckingSubscription, pricing])
 
-    let creditsCost = 0;
-    if (credits === pricing.PACKAGE_1_AMOUNT) creditsCost = pricing.PACKAGE_1_PRICE;
-    else if (credits === pricing.PACKAGE_2_AMOUNT) creditsCost = pricing.PACKAGE_2_PRICE;
-    else if (credits === pricing.PACKAGE_3_AMOUNT) creditsCost = pricing.PACKAGE_3_PRICE;
-    else if (credits === pricing.PACKAGE_4_AMOUNT) creditsCost = pricing.PACKAGE_4_PRICE;
-    else creditsCost = credits * pricing.CUSTOM_CREDIT_PRICE;
+    const creditsCost = activePackage
+        ? activePackage.price
+        : Number(credits) * (Number(pricing.CUSTOM_CREDIT_PRICE) || 0.035);
 
     const processingFee = credits > 0 ? (creditsCost * 0.027) + 0.30 : 0;
     const totalCost = (creditsCost + processingFee).toFixed(2)
@@ -99,33 +102,79 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Topup Pro Generation Credits">
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
 
-                <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block ml-1">Select a Package</label>
-                    <div className="grid grid-cols-2 gap-3">
-                        {packages.map((pkg) => (
-                            <button
-                                key={pkg.id}
-                                onClick={() => { setIsCustom(false); setCredits(pkg.amount) }}
-                                className={`p-4 rounded-2xl border text-left transition-all ${!isCustom && credits === pkg.amount ? 'bg-blue-600/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-[#13171F] border-gray-800 hover:border-gray-600'}`}
-                            >
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                    {pkg.amount === pricing.PACKAGE_4_AMOUNT && <Sparkles className="h-3 w-3 text-yellow-500" />}
-                                    {pkg.label}
-                                </div>
-                                <div className="text-xl font-black text-white">{pkg.amount} <span className="text-sm font-medium text-gray-400">images</span></div>
-                                <div className="text-sm font-bold text-blue-400 mt-2">${pkg.price.toFixed(2)}</div>
-                            </button>
-                        ))}
+                <div className="space-y-4">
+                    <label className="text-sm font-black text-white/90 uppercase tracking-[0.2em] block ml-2">
+                        Select a Package
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                            { ...packages[0], icon: <Box className="h-4 w-4" /> },
+                            { ...packages[1], icon: <Zap className="h-4 w-4" /> },
+                            { ...packages[2], icon: <Gem className="h-4 w-4" /> },
+                            { ...packages[3], icon: <Crown className="h-4 w-4" /> }
+                        ].map((pkg) => {
+                            const isSelected = !isCustom && credits === pkg.amount;
+                            return (
+                                <button
+                                    key={pkg.id}
+                                    onClick={() => { setIsCustom(false); setCredits(pkg.amount) }}
+                                    className={`relative p-5 rounded-3xl border transition-all duration-300 text-left group overflow-hidden ${isSelected
+                                        ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.3)] ring-1 ring-blue-500/50'
+                                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/[0.08] backdrop-blur-md'
+                                        }`}
+                                >
+                                    {/* Glass Highlight */}
+                                    <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+
+                                    <div className="relative z-10">
+                                        <div className={`mb-3 flex items-center gap-2 ${isSelected ? 'text-blue-400' : 'text-gray-400'}`}>
+                                            <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-blue-500/20' : 'bg-white/5'}`}>
+                                                {pkg.icon}
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{pkg.label}</span>
+                                            {pkg.amount === Number(pricing.PACKAGE_4_AMOUNT) && (
+                                                <Sparkles className="h-3 w-3 text-yellow-500 animate-pulse ml-auto" />
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <span className="text-2xl font-black text-white tracking-tighter">
+                                                {pkg.amount.toLocaleString()}
+                                                <span className="text-xs font-medium text-gray-400 ml-1.5 uppercase tracking-tighter">Images</span>
+                                            </span>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className={`text-sm font-black ${isSelected ? 'text-blue-400' : 'text-blue-500/80'}`}>
+                                                    ${pkg.price.toFixed(2)}
+                                                </span>
+                                                {isSelected && <Check className="h-4 w-4 text-blue-400" />}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Selection Glow */}
+                                    {isSelected && (
+                                        <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/20 blur-2xl rounded-full" />
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <button
                         onClick={() => setIsCustom(true)}
-                        className={`w-full p-4 rounded-xl border text-center transition-all ${isCustom ? 'bg-blue-600/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-[#13171F] border-gray-800 hover:border-gray-600'}`}
+                        className={`w-full p-4 rounded-2xl border transition-all duration-300 backdrop-blur-md ${isCustom
+                            ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
+                            : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/[0.08]'
+                            }`}
                     >
-                        <span className="text-sm font-bold text-white">Custom Amount</span>
-                        <span className="text-[10px] font-bold text-gray-500 block">(${pricing.CUSTOM_CREDIT_PRICE}/img)</span>
+                        <div className="flex items-center justify-center gap-3">
+                            <span className="text-sm font-black text-white uppercase tracking-widest">Custom Amount</span>
+                            <span className="text-[10px] font-bold text-gray-500 px-2 py-0.5 rounded-full bg-white/5">
+                                ${pricing.CUSTOM_CREDIT_PRICE}/img
+                            </span>
+                        </div>
                     </button>
                 </div>
 
@@ -172,9 +221,11 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                     <div className="border-t border-gray-800 pt-4 flex justify-between items-center">
                         <div className="flex flex-col">
                             <span className="text-white font-bold">Total Payment</span>
-                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Stripe Secure</span>
+                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
+                                {credits} {credits === 1 ? 'Image' : 'Images'} {activePackage?.label ? `(${activePackage.label})` : ''}
+                            </span>
                         </div>
-                        <span className="text-5xl font-black text-white tracking-tighter">{credits} Images{!isCustom && selectedPackage?.label ? ` (${selectedPackage.label})` : ''}</span>
+                        <span className="text-3xl font-black text-white tracking-tighter">${totalCost}</span>
                     </div>
                 </div>
 
