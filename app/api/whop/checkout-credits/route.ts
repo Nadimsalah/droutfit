@@ -55,7 +55,7 @@ export async function POST(request: Request) {
                     user_id: user_id,
                     credits: credits
                 },
-                redirect_url: `${(request.headers.get('origin') || '').replace('http://localhost', 'https://localhost')}/api/whop/process?user_id=${user_id}&credits=${credits}`
+                redirect_url: `${(request.headers.get('origin') || '').replace('http://localhost', 'https://localhost')}/api/whop/process?user_id=${user_id}&credits=${credits}&tx_id=${crypto.randomUUID()}`
             })
         })
 

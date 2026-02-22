@@ -13,6 +13,8 @@ export async function GET(request: Request) {
     const user_id = searchParams.get('user_id')
     const credits = parseInt(searchParams.get('credits') || '0')
 
+    const tx_id = searchParams.get('tx_id') || ''
+
     if (!user_id || !credits) {
         return NextResponse.redirect(`${baseUrl}/dashboard?error=invalid_params`)
     }
@@ -35,14 +37,14 @@ export async function GET(request: Request) {
         if (updateError) {
             // Fallback: server update failed (likely missing service_role key getting blocked by RLS)
             // We pass it to the frontend which can securely run it using the user's active session!
-            return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}`)
+            return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
         }
 
         // Server update succeeded!
-        return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}`)
+        return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
     } catch (e: any) {
         console.error("Whop process error:", e)
         // Even on full error, we pass it to frontend as fallback
-        return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}`)
+        return NextResponse.redirect(`${baseUrl}/dashboard?payment_successful=true&added=${credits}&tx_id=${tx_id}`)
     }
 }

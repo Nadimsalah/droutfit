@@ -24,6 +24,10 @@ create policy "Authenticated users can insert transactions"
     on public.transactions for insert
     with check (auth.role() = 'authenticated');
 
+create policy "Users can update own transactions"
+    on public.transactions for update
+    using (auth.uid() = user_id);
+
 -- Admins can read all (simpler rule for now given our context)
 create policy "Authenticated users can view all transactions"
     on public.transactions for select

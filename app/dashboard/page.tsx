@@ -41,8 +41,12 @@ export default function OverviewPage() {
                 const searchParams = new URLSearchParams(window.location.search)
                 const addedCredits = parseInt(searchParams.get('added') || '0')
                 const isSuccess = searchParams.get('payment_successful') === 'true'
+                const txId = searchParams.get('tx_id')
 
-                if (isSuccess && addedCredits > 0) {
+                // Security check to avoid duplicate top-ups on page refresh/back
+                const isProcessed = txId ? localStorage.getItem(`whop_tx_${txId}`) === 'true' : false;
+
+                if (isSuccess && addedCredits > 0 && !isProcessed) {
                     try {
                         const { data: { user } } = await supabase.auth.getUser()
                         if (user) {
@@ -62,12 +66,18 @@ export default function OverviewPage() {
                                 .update({ credits: newCredits })
                                 .eq('id', user.id)
 
-                            // 3. Clean up the URL so it doesn't trigger again on refresh
+                            // 3. Mark processed in local storage and clean up the URL
+                            if (txId) {
+                                localStorage.setItem(`whop_tx_${txId}`, 'true')
+                            }
                             window.history.replaceState({}, '', '/dashboard')
                         }
                     } catch (e) {
                         console.error("Frontend credit update failed:", e)
                     }
+                } else if (isSuccess && addedCredits > 0 && isProcessed) {
+                    // Still clear the URL if they somehow kept the params
+                    window.history.replaceState({}, '', '/dashboard')
                 }
             }
 
