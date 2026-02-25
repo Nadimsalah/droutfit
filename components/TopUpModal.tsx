@@ -198,6 +198,11 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                                 Images
                             </div>
                         </div>
+                        {credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1) && (
+                            <p className="mt-2 text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" /> Minimum order: {pricing.MINIMUM_CUSTOM_AMOUNT} images
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -231,7 +236,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
 
                 <button
                     onClick={handleCheckout}
-                    disabled={isLoading || credits < 100}
+                    disabled={isLoading || credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1)}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 active:scale-95 group"
                 >
                     {isLoading ? (

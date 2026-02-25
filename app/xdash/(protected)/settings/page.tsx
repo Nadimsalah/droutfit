@@ -194,22 +194,41 @@ export default function SettingsPage() {
 
                     <div className="my-8 border-t border-gray-800" />
 
-                    <div className="max-w-md space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-green-500" />
-                            Custom Amount Base Price
-                        </label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-3 text-gray-500">$</span>
-                            <input
-                                type="number"
-                                step="0.001"
-                                value={config.CUSTOM_CREDIT_PRICE}
-                                onChange={(e) => handleChange('CUSTOM_CREDIT_PRICE', e.target.value)}
-                                className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 pl-8 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono"
-                            />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-green-500" />
+                                Custom Amount Base Price
+                            </label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-3 text-gray-500">$</span>
+                                <input
+                                    type="number"
+                                    step="0.001"
+                                    value={config.CUSTOM_CREDIT_PRICE}
+                                    onChange={(e) => handleChange('CUSTOM_CREDIT_PRICE', e.target.value)}
+                                    className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 pl-8 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-500">Price per image when user selects a custom quantity not matching a package.</p>
                         </div>
-                        <p className="text-xs text-gray-500">Price per image when user selects a custom quantity not matching a package.</p>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <RefreshCw className="h-4 w-4 text-blue-500" />
+                                Minimum Custom Amount Order
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    step="1"
+                                    value={config.MINIMUM_CUSTOM_AMOUNT}
+                                    onChange={(e) => handleChange('MINIMUM_CUSTOM_AMOUNT', e.target.value)}
+                                    className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-500">Minimum number of images a user must order when selecting a custom amount.</p>
+                        </div>
                     </div>
                 </div>
 
