@@ -227,12 +227,12 @@ export default async function AdminDashboard() {
                             Refill Requirement
                         </h3>
                         {(() => {
-                            const totalNeededCredits = stats.totalUserCredits * 4;
                             const currentCredits = nbCredits.credits || 0;
-                            const missingCredits = Math.max(0, totalNeededCredits - currentCredits);
-                            const refillCost = missingCredits * (0.02 / 4);
                             const imageCapacity = Math.floor(currentCredits / 4);
-                            const isHealthy = currentCredits >= totalNeededCredits;
+                            const missingImages = Math.max(0, stats.totalUserCredits - imageCapacity);
+                            const requiredAPICredits = missingImages * 4;
+                            const refillCost = missingImages * 0.02;
+                            const isHealthy = imageCapacity >= stats.totalUserCredits;
 
                             return (
                                 <div className="space-y-4">
@@ -247,7 +247,7 @@ export default async function AdminDashboard() {
                                                 <div className="flex justify-between items-center text-xs">
                                                     <span className="text-gray-400 font-bold uppercase tracking-wider">Required API Credits</span>
                                                     <span className="text-white font-black">
-                                                        {missingCredits.toLocaleString('de-DE')}
+                                                        {requiredAPICredits.toLocaleString('de-DE')}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-xs">
@@ -262,14 +262,14 @@ export default async function AdminDashboard() {
                                         <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full transition-all duration-1000 ${isHealthy ? 'bg-green-500' : 'bg-red-500'}`}
-                                                style={{ width: `${Math.min(100, (currentCredits / (totalNeededCredits || 1)) * 100)}%` }}
+                                                style={{ width: `${Math.min(100, (imageCapacity / (stats.totalUserCredits || 1)) * 100)}%` }}
                                             />
                                         </div>
 
                                         <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
                                             {isHealthy
-                                                ? `Inventory sufficient. API stock (${currentCredits.toLocaleString('de-DE')} credits) covers all user liabilities.`
-                                                : `Shortage: You are missing ${missingCredits.toLocaleString('de-DE')} credits to cover user holdings.`
+                                                ? `Balance sufficient. Capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user holdings.`
+                                                : `Shortage: ${stats.totalUserCredits.toLocaleString('de-DE')} (Balance) - ${imageCapacity.toLocaleString('de-DE')} (Capacity) = ${missingImages.toLocaleString('de-DE')} images missing (${requiredAPICredits.toLocaleString('de-DE')} credits).`
                                             }
                                         </p>
                                     </div>
