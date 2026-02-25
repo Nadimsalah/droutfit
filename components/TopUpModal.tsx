@@ -163,7 +163,10 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                     </div>
 
                     <button
-                        onClick={() => setIsCustom(true)}
+                        onClick={() => {
+                            setIsCustom(true);
+                            if (credits < 100000) setCredits(100000);
+                        }}
                         className={`w-full p-4 rounded-2xl border transition-all duration-300 backdrop-blur-md ${isCustom
                             ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
                             : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/[0.08]'
@@ -179,8 +182,36 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                 </div>
 
                 {isCustom && (
-                    <div className="animate-in fade-in slide-in-from-top-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 block ml-1">Custom Amount</label>
+                    <div className="animate-in fade-in slide-in-from-top-2 space-y-6">
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-end mb-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block ml-1">Custom Amount</label>
+                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded-md">
+                                    {credits >= 1000000 ? '1M MAX' : credits >= 1000 ? `${(credits / 1000).toFixed(0)}K` : credits} Images
+                                </span>
+                            </div>
+
+                            {/* Slider Selection */}
+                            <div className="relative h-12 flex items-center px-2 bg-white/5 rounded-2xl border border-white/10">
+                                <input
+                                    type="range"
+                                    min="100000"
+                                    max="1000000"
+                                    step="10000"
+                                    value={Math.max(100000, Math.min(1000000, credits))}
+                                    onChange={(e) => setCredits(parseInt(e.target.value))}
+                                    className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
+                                />
+                            </div>
+                            <div className="flex justify-between px-1 text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
+                                <span>100K</span>
+                                <span>250K</span>
+                                <span>500K</span>
+                                <span>750K</span>
+                                <span>1M</span>
+                            </div>
+                        </div>
+
                         <div className="flex items-center bg-[#0B0E14] border border-gray-800 rounded-2xl overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all">
                             <input
                                 type="number"
