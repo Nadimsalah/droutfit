@@ -204,7 +204,7 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 mb-16">
                     <div className="space-y-6 max-w-sm">
                         <Link href="/" className="flex items-center gap-2 group">
-                            <img src="/logo-black.png" alt="Droutfit" className="h-10 w-auto object-contain" />
+                            <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />
                         </Link>
                         <p className="text-gray-500 text-sm leading-relaxed">
                             The enterprise standard for API-driven virtual try-on. Increase conversions and reduce returns with realistic AI.

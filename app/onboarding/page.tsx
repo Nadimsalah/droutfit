@@ -64,7 +64,7 @@ export default function OnboardingPage() {
 
             <div className="w-full max-w-lg relative z-10">
                 <div className="text-center mb-10">
-                    <img src="/logo-black.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain mb-6" />
+                    <img src="/logo.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain mb-6" />
                     <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
                         {step === 1 ? "Tell us about yourself" : "Setup your store"}
                     </h1>

@@ -61,8 +61,8 @@ export default function PricingSection() {
                         </div>
 
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-300 overflow-hidden p-2">
-                                <img src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png" alt="Droutfit" className="w-full h-auto object-contain" />
+                            <div className="h-16 w-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                                <Zap className="h-8 w-8 text-blue-500" />
                             </div>
                             <div>
                                 <h3 className="text-2xl font-bold text-white">Pro Merchant Access</h3>
