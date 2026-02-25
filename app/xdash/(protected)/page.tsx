@@ -1,16 +1,17 @@
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@supabase/supabase-js"
 import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
 
+// Admin client to bypass RLS for dashboard stats
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 async function getStats() {
-    // Determine counts directly (using RLS bypass if possible, here using standard client assuming admin privileges or public RLS for counts)
-    // Note: Since we are using standard client, we might be limited by RLS.
-    // Ideally we would use service_role client here, but for now let's try standard.
-    // If standard fails to see all users, we need to add service role key to env.
+    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
+    const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-    const { count: activeSubs } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
-
-    const { data: profiles } = await supabase.from('profiles').select('credits')
+    const { data: profiles } = await supabaseAdmin.from('profiles').select('credits')
     const totalUserCredits = profiles?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
     return { totalUsers, activeSubs, totalUserCredits }
