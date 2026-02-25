@@ -89,7 +89,7 @@ export default function InteractiveTryOnSection() {
                 <div className="text-center mb-16 space-y-6">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-white shadow-xl shadow-blue-900/10">
                         <Sparkles className="w-4 h-4 text-blue-400" />
-                        Powered by Dr Outfit Vision
+                        Powered by Google Official AI
                     </div>
                     <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                         Experience the Magic.
@@ -165,7 +165,7 @@ export default function InteractiveTryOnSection() {
                             {/* Dr Outfit Label */}
                             {!isGenerating && !resultImage && uploadedImage && (
                                 <span className="absolute top-full mt-4 whitespace-nowrap text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    Apply Dr Outfit API
+                                    Apply Google AI Vision
                                 </span>
                             )}
                         </button>

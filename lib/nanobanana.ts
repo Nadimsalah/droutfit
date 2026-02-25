@@ -32,8 +32,7 @@ Replace the clothing on the uploaded person with the provided garment image.
 Keep the person's body shape, face, pose, and proportions exactly the same.
 Only change the clothing.
 Ensure the new outfit fits naturally with realistic fabric, lighting, and shadows.
-Do not alter the background or the character's identity.
-            `.trim(),
+Do not alter the background or the character's identity. `.trim(),
                 type: 'IMAGETOIAMGE', // API expects this typo "IAMGE"
                 numImages: 1,
                 imageUrls: [faceImageUrl, garmentUrl],
