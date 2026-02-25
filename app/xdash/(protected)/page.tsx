@@ -226,55 +226,70 @@ export default async function AdminDashboard() {
                     <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                             <DollarSign className="h-5 w-5 text-yellow-500" />
-                            Refill Requirement
+                            Inventory Audit
                         </h3>
                         {(() => {
                             const currentCredits = nbCredits.credits || 0;
                             const imageCapacity = Math.floor(currentCredits / 4);
-                            const missingImages = Math.max(0, stats.totalUserCredits - imageCapacity);
+                            const userLiabilities = stats.totalUserCredits || 0;
+                            const missingImages = Math.max(0, userLiabilities - imageCapacity);
                             const requiredAPICredits = missingImages * 4;
                             const refillCost = missingImages * 0.02;
-                            const isHealthy = imageCapacity >= stats.totalUserCredits;
+                            const isHealthy = imageCapacity >= userLiabilities;
 
                             return (
-                                <div className="space-y-4">
-                                    <div className={`p-4 rounded-xl border space-y-3 transition-all ${isHealthy ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
-                                        {isHealthy ? (
-                                            <div className="flex items-center gap-3 text-green-500 pb-2">
-                                                <ShieldCheck className="h-5 w-5" />
-                                                <span className="text-xs font-black uppercase tracking-widest italic">Healthy Status</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Required API Credits</span>
-                                                    <span className="text-white font-black">
-                                                        {requiredAPICredits.toLocaleString('de-DE')}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
-                                                    <span className="text-yellow-500 font-black">
-                                                        ${refillCost.toFixed(2)}
-                                                    </span>
-                                                </div>
-                                            </>
-                                        )}
-
-                                        <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full transition-all duration-1000 ${isHealthy ? 'bg-green-500' : 'bg-red-500'}`}
-                                                style={{ width: `${Math.min(100, (imageCapacity / (stats.totalUserCredits || 1)) * 100)}%` }}
-                                            />
+                                <div className="space-y-5">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center text-[11px] font-bold">
+                                            <span className="text-gray-500 uppercase tracking-wider">Current Capacity</span>
+                                            <span className="text-blue-400">{imageCapacity.toLocaleString('de-DE')} Images</span>
                                         </div>
-
-                                        <p className="text-[9px] text-gray-400 font-medium leading-tight lowercase italic">
-                                            {isHealthy
-                                                ? `Inventory healthy. Current capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user liabilities.`
-                                                : `Refill Goal: Add ${requiredAPICredits.toLocaleString('de-DE')} credits ($${refillCost.toFixed(2)}) to maintain service.`
-                                            }
-                                        </p>
+                                        <div className="flex justify-between items-center text-[11px] font-bold">
+                                            <span className="text-gray-500 uppercase tracking-wider">User Holdings</span>
+                                            <span className="text-white">{userLiabilities.toLocaleString('de-DE')} Images</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[11px] font-bold border-t border-gray-800/50 pt-2">
+                                            <span className="text-gray-500 uppercase tracking-wider">Total Deficit</span>
+                                            <span className={isHealthy ? "text-green-500" : "text-red-500"}>
+                                                {isHealthy ? "None (Healthy)" : `${missingImages.toLocaleString('de-DE')} Images`}
+                                            </span>
+                                        </div>
                                     </div>
+
+                                    {!isHealthy && (
+                                        <div className="p-4 rounded-xl border bg-red-500/5 border-red-500/10 space-y-3 transition-all">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-bold uppercase tracking-wider">Required Credits</span>
+                                                <span className="text-white font-black">
+                                                    {requiredAPICredits.toLocaleString('de-DE')}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
+                                                <span className="text-yellow-500 font-black">
+                                                    ${refillCost.toFixed(2)}
+                                                </span>
+                                            </div>
+
+                                            <div className="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-red-500 transition-all duration-1000"
+                                                    style={{ width: `${Math.min(100, (imageCapacity / (userLiabilities || 1)) * 100)}%` }}
+                                                />
+                                            </div>
+
+                                            <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
+                                                Refill Goal: Purchase {requiredAPICredits.toLocaleString('de-DE')} credits to cover user holdings.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {isHealthy && (
+                                        <div className="flex items-center gap-3 text-green-500 pb-2 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
+                                            <ShieldCheck className="h-4 w-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest italic">Inventory Healthy</span>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })()}
