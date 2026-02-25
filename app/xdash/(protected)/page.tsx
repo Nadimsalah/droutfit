@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase"
-import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck } from "lucide-react"
+import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
 
 async function getStats() {
     // Determine counts directly (using RLS bypass if possible, here using standard client assuming admin privileges or public RLS for counts)
@@ -83,13 +83,14 @@ export default async function AdminDashboard() {
 
                 <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Activity className="h-24 w-24 text-purple-500" />
+                        <ImageIcon className="h-24 w-24 text-purple-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Subscribers</p>
-                        <h2 className="text-4xl font-black text-white">{stats.activeSubs || 0}</h2>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Image Capacity</p>
+                        <h2 className="text-4xl font-black text-white">{Math.floor((nbCredits.credits || 0) / 4).toLocaleString('de-DE')}</h2>
                         <div className="flex items-center gap-2 mt-4 text-xs font-bold text-purple-500 bg-purple-500/10 w-fit px-2 py-1 rounded-lg">
-                            {(stats.totalUsers && stats.activeSubs) ? ((stats.activeSubs / stats.totalUsers) * 100).toFixed(0) : 0}% Conv
+                            <Activity className="h-3 w-3" />
+                            ~4 Credits / Image
                         </div>
                     </div>
                 </div>
