@@ -78,20 +78,22 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     return (
         <div className="space-y-8">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link
-                    href="/xdash/users"
-                    className="p-2 rounded-xl bg-white/5 border border-gray-800 text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-                >
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">{profile.full_name || 'User'}</h1>
-                    <p className="text-gray-400 mt-1">{profile.email || 'No email'}</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <Link
+                        href="/xdash/users"
+                        className="p-2 rounded-xl bg-white/5 border border-gray-800 text-gray-400 hover:text-white hover:bg-white/10 transition-all shrink-0"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-3xl font-bold text-white tracking-tight truncate">{profile.full_name || 'User'}</h1>
+                        <p className="text-gray-400 mt-1 truncate">{profile.email || 'No email'}</p>
+                    </div>
                 </div>
                 {profile.is_subscribed && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase tracking-wider">
-                        <ShieldCheck className="h-3.5 w-3.5" /> Pro
+                    <span className="sm:ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase tracking-wider">
+                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Pro
                     </span>
                 )}
             </div>
