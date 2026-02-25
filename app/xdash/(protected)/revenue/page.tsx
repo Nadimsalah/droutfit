@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { DollarSign, TrendingUp, CreditCard, Calendar, BarChart3, ArrowUpRight, ArrowDownRight, Loader2, ImageIcon } from "lucide-react"
 
+import { getRevenueData, type Period } from "./actions"
+
 // Types
-type Period = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all'
 type RevenueStats = {
     gross: number
     net: number
@@ -27,41 +28,11 @@ export default function RevenuePage() {
     const fetchRevenueData = async (selectedPeriod: Period) => {
         setLoading(true)
 
-        // Calculate date range
-        const now = new Date()
-        let startDate = new Date()
+        // Fetch Transactions via Server Action
+        const data = await getRevenueData(selectedPeriod)
 
-        switch (selectedPeriod) {
-            case 'today':
-                startDate.setHours(0, 0, 0, 0)
-                break
-            case 'yesterday':
-                startDate.setDate(now.getDate() - 1)
-                startDate.setHours(0, 0, 0, 0)
-                break
-            case 'week':
-                startDate.setDate(now.getDate() - 7)
-                break
-            case 'month':
-                startDate.setDate(1) // Start of this month
-                break
-            case 'year':
-                startDate.setMonth(0, 1) // Start of this year
-                break
-            case 'all':
-                startDate = new Date(0) // Epoch
-                break
-        }
-
-        // Fetch Transactions
-        const { data, error } = await supabase
-            .from('transactions')
-            .select('*')
-            .gte('created_at', startDate.toISOString())
-            .order('created_at', { ascending: false })
-
-        if (error) {
-            console.error('Error fetching revenue:', error)
+        if (!data) {
+            console.error('Error fetching revenue')
             setLoading(false)
             return
         }
@@ -84,19 +55,8 @@ export default function RevenuePage() {
         const imageCost = totalImages * 0.02
         const net = gross - imageCost
 
-        const userIds = [...new Set(data.map(t => t.user_id))].filter(Boolean)
-        const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .in('id', userIds)
-
-        const enrichedTransactions = data.map(t => ({
-            ...t,
-            user_name: profiles?.find(p => p.id === t.user_id)?.full_name || 'No Name'
-        }))
-
         setStats({ gross, net, imageCost, totalImages, period: selectedPeriod })
-        setTransactions(enrichedTransactions)
+        setTransactions(data)
         setLoading(false)
     }
 
