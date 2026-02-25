@@ -138,7 +138,6 @@ export default function RevenuePage() {
                                 <BarChart3 className="h-5 w-5 text-gray-500" />
                                 Recent Transactions
                             </h3>
-                            <button className="text-xs font-bold text-blue-500 hover:text-blue-400 uppercase tracking-wider">Export CSV</button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
