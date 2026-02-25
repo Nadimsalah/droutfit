@@ -16,10 +16,7 @@ export default function AdminSidebar() {
         <>
             {/* Mobile Header */}
             <div className="md:hidden flex items-center justify-between p-4 bg-[#0B0E14] border-b border-gray-800">
-                <div className="flex items-center gap-2 font-bold text-lg tracking-tight text-white">
-                    <div className="h-7 w-7 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xs">SA</div>
-                    Super Admin
-                </div>
+                <img src="/logo.png" alt="Droutfit" className="h-8 w-auto object-contain brightness-0 invert" />
                 <button onClick={() => setIsOpen(!isOpen)} className="text-gray-400 hover:text-white">
                     {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
@@ -31,10 +28,7 @@ export default function AdminSidebar() {
                 ${isOpen ? "translate-x-0" : "-translate-x-full"}
             `}>
                 <div className="p-6 border-b border-gray-800/50 hidden md:block">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
-                        <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xs">SA</div>
-                        Super Admin
-                    </div>
+                    <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain brightness-0 invert" />
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
