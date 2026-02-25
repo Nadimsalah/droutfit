@@ -9,23 +9,34 @@ import {
 export const dynamic = 'force-dynamic'
 
 async function getUserDetail(id: string) {
+    // Validate UUID format before calling Supabase Auth
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(id)) return null
+
     const adminClient = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const [profileRes, authRes, txRes] = await Promise.all([
+    const [profileRes, txRes] = await Promise.all([
         adminClient.from('profiles').select('*').eq('id', id).single(),
-        adminClient.auth.admin.getUserById(id),
         adminClient.from('transactions').select('*').eq('user_id', id).order('created_at', { ascending: false })
     ])
 
     if (!profileRes.data) return null
 
-    const email = authRes.data?.user?.email || null
+    // Fetch email safely after validating the profile exists
+    let email: string | null = null
+    try {
+        const authRes = await adminClient.auth.admin.getUserById(id)
+        email = authRes.data?.user?.email || null
+    } catch {
+        email = null
+    }
+
     const transactions = txRes.data || []
-    const totalSpent = transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
-    const succeededTx = transactions.filter(t => t.status === 'succeeded')
+    const totalSpent = transactions.reduce((sum: number, t: any) => sum + (t.amount || 0), 0)
+    const succeededTx = transactions.filter((t: any) => t.status === 'succeeded')
 
     return {
         profile: { ...profileRes.data, email },
@@ -35,8 +46,9 @@ async function getUserDetail(id: string) {
     }
 }
 
-export default async function UserDetailPage({ params }: { params: { id: string } }) {
-    const data = await getUserDetail(params.id)
+export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const data = await getUserDetail(id)
     if (!data) notFound()
 
     const { profile, transactions, succeededTx, totalSpent } = data
