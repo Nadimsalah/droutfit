@@ -165,7 +165,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                     <button
                         onClick={() => {
                             setIsCustom(true);
-                            if (credits < 100000) setCredits(100000);
+                            if (credits < 50000) setCredits(50000);
                         }}
                         className={`w-full p-4 rounded-2xl border transition-all duration-300 backdrop-blur-md ${isCustom
                             ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
@@ -195,16 +195,16 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                             <div className="relative h-12 flex items-center px-2 bg-white/5 rounded-2xl border border-white/10">
                                 <input
                                     type="range"
-                                    min="100000"
+                                    min="50000"
                                     max="1000000"
                                     step="10000"
-                                    value={Math.max(100000, Math.min(1000000, credits))}
+                                    value={Math.max(50000, Math.min(1000000, credits))}
                                     onChange={(e) => setCredits(parseInt(e.target.value))}
                                     className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                                 />
                             </div>
                             <div className="flex justify-between px-1 text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
-                                <span>100K</span>
+                                <span>50K</span>
                                 <span>250K</span>
                                 <span>500K</span>
                                 <span>750K</span>
