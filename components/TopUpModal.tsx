@@ -187,7 +187,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                             <div className="flex justify-between items-end mb-2">
                                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block ml-1">Volume selection</label>
                                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded-md">
-                                    {credits >= 1000000 ? '1M MAX' : credits >= 1000 ? `${(credits / 1000).toFixed(0)}K` : credits} Images
+                                    {credits >= 1000000 ? '1.000.000' : credits.toLocaleString('de-DE')} Images
                                 </span>
                             </div>
 
@@ -224,7 +224,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
 
                 <div className="bg-[#13171F] rounded-2xl p-6 border border-gray-800/50 space-y-4">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400 font-medium">{credits} AI Images Cost</span>
+                        <span className="text-gray-400 font-medium">{credits.toLocaleString('de-DE')} AI Images Cost</span>
                         <span className="text-white font-medium">${creditsCost.toFixed(2)}</span>
                     </div>
 
@@ -234,7 +234,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                         <div className="flex flex-col">
                             <span className="text-white font-bold">Total Payment</span>
                             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
-                                {credits} {credits === 1 ? 'Image' : 'Images'} {activePackage?.label ? `(${activePackage.label})` : ''}
+                                {credits.toLocaleString('de-DE')} {credits === 1 ? 'Image' : 'Images'} {activePackage?.label ? `(${activePackage.label})` : ''}
                             </span>
                         </div>
                         <span className="text-3xl font-black text-white tracking-tighter">${totalCost}</span>
