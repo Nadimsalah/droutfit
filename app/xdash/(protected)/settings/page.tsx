@@ -87,7 +87,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="1"
-                                    value={config.PACKAGE_1_AMOUNT}
+                                    value={config.PACKAGE_1_AMOUNT ?? ''}
                                     onChange={(e) => handleChange('PACKAGE_1_AMOUNT', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                 />
@@ -99,7 +99,7 @@ export default function SettingsPage() {
                                     <input
                                         type="number"
                                         step="0.01"
-                                        value={config.PACKAGE_1_PRICE}
+                                        value={config.PACKAGE_1_PRICE ?? ''}
                                         onChange={(e) => handleChange('PACKAGE_1_PRICE', e.target.value)}
                                         className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 pl-7 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                     />
@@ -115,7 +115,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="1"
-                                    value={config.PACKAGE_2_AMOUNT}
+                                    value={config.PACKAGE_2_AMOUNT ?? ''}
                                     onChange={(e) => handleChange('PACKAGE_2_AMOUNT', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                 />
@@ -127,7 +127,7 @@ export default function SettingsPage() {
                                     <input
                                         type="number"
                                         step="0.01"
-                                        value={config.PACKAGE_2_PRICE}
+                                        value={config.PACKAGE_2_PRICE ?? ''}
                                         onChange={(e) => handleChange('PACKAGE_2_PRICE', e.target.value)}
                                         className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 pl-7 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                     />
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="1"
-                                    value={config.PACKAGE_3_AMOUNT}
+                                    value={config.PACKAGE_3_AMOUNT ?? ''}
                                     onChange={(e) => handleChange('PACKAGE_3_AMOUNT', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                 />
@@ -155,7 +155,7 @@ export default function SettingsPage() {
                                     <input
                                         type="number"
                                         step="0.01"
-                                        value={config.PACKAGE_3_PRICE}
+                                        value={config.PACKAGE_3_PRICE ?? ''}
                                         onChange={(e) => handleChange('PACKAGE_3_PRICE', e.target.value)}
                                         className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 pl-7 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                     />
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="1"
-                                    value={config.PACKAGE_4_AMOUNT}
+                                    value={config.PACKAGE_4_AMOUNT ?? ''}
                                     onChange={(e) => handleChange('PACKAGE_4_AMOUNT', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                 />
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                                     <input
                                         type="number"
                                         step="0.01"
-                                        value={config.PACKAGE_4_PRICE}
+                                        value={config.PACKAGE_4_PRICE ?? ''}
                                         onChange={(e) => handleChange('PACKAGE_4_PRICE', e.target.value)}
                                         className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 pl-7 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
                                     />
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="0.001"
-                                    value={config.CUSTOM_CREDIT_PRICE}
+                                    value={config.CUSTOM_CREDIT_PRICE ?? ''}
                                     onChange={(e) => handleChange('CUSTOM_CREDIT_PRICE', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 pl-8 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono"
                                 />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     step="1"
-                                    value={config.MINIMUM_CUSTOM_AMOUNT}
+                                    value={config.MINIMUM_CUSTOM_AMOUNT ?? ''}
                                     onChange={(e) => handleChange('MINIMUM_CUSTOM_AMOUNT', e.target.value)}
                                     className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono"
                                 />
