@@ -20,14 +20,14 @@ async function getStats() {
 async function getNanoBananaCredits() {
     try {
         const apiKey = process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
-        const response = await fetch("https://api.nanobananaapi.ai/api/v1/common/get-account-credits", {
+        const response = await fetch("https://api.nanobananaapi.ai/api/v1/common/credit", {
             headers: {
                 "Authorization": `Bearer ${apiKey}`
             },
             next: { revalidate: 300 } // Cache for 5 mins
         });
         const data = await response.json();
-        return data.data || { credits: 0 };
+        return { credits: data.data || 0 };
     } catch (e) {
         console.error("Failed to fetch NanoBanana credits:", e);
         return { credits: 0 };
