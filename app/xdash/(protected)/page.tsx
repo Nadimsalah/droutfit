@@ -10,11 +10,10 @@ async function getStats() {
     const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
     const { count: activeSubs } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    const { data: transactions } = await supabase.from('transactions').select('amount').eq('status', 'succeeded')
-    const totalRev = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0
-    const totalImagesSold = Math.floor(totalRev / 0.028)
+    const { data: profiles } = await supabase.from('profiles').select('credits')
+    const totalUserCredits = profiles?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
-    return { totalUsers, activeSubs, totalImagesSold, totalRev }
+    return { totalUsers, activeSubs, totalUserCredits }
 }
 
 async function getNanoBananaCredits() {
@@ -70,13 +69,14 @@ export default async function AdminDashboard() {
 
                 <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <DollarSign className="h-24 w-24 text-green-500" />
+                        <TrendingUp className="h-24 w-24 text-green-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Images Sold</p>
-                        <h2 className="text-4xl font-black text-white">{stats.totalImagesSold?.toLocaleString('de-DE')}</h2>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">User Credits Balance</p>
+                        <h2 className="text-4xl font-black text-white">{stats.totalUserCredits?.toLocaleString('de-DE')}</h2>
                         <div className="flex items-center gap-2 mt-4 text-xs font-bold text-green-500 bg-green-500/10 w-fit px-2 py-1 rounded-lg">
-                            ${stats.totalRev?.toFixed(2)} Total Revenue
+                            <Activity className="h-3 w-3" />
+                            Total User Holdings
                         </div>
                     </div>
                 </div>
