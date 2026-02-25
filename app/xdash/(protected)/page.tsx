@@ -7,28 +7,40 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+export const dynamic = 'force-dynamic'
+
 async function getStats() {
-    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
-    const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
+    try {
+        const { count: totalUsers, error: err1 } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
+        const { count: activeSubs, error: err2 } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    const { data: profilesData } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
-    const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
+        const { data: profilesData, error: err3 } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
 
-    // Fetch recent transactions
-    const { data: transactions } = await supabaseAdmin
-        .from('transactions')
-        .select('*')
-        .eq('status', 'succeeded')
-        .order('created_at', { ascending: false })
-        .limit(10)
+        if (err1 || err2 || err3) {
+            console.error("Dashboard Stats Error:", { err1, err2, err3 })
+        }
 
-    // Manually hydrate profile data since there is no DB relationship
-    const recentTransactions = transactions?.map(tx => ({
-        ...tx,
-        profiles: profilesData?.find(p => p.id === tx.user_id) || null
-    })) || []
+        const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
-    return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
+        // Fetch recent transactions
+        const { data: transactions } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .eq('status', 'succeeded')
+            .order('created_at', { ascending: false })
+            .limit(10)
+
+        // Manually hydrate profile data since there is no DB relationship
+        const recentTransactions = transactions?.map(tx => ({
+            ...tx,
+            profiles: profilesData?.find(p => p.id === tx.user_id) || null
+        })) || []
+
+        return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
+    } catch (e) {
+        console.error("Critical Dashboard Error:", e)
+        return { totalUsers: 0, activeSubs: 0, totalUserCredits: 0, recentTransactions: [] }
+    }
 }
 
 async function getNanoBananaCredits() {
