@@ -48,20 +48,13 @@ export default async function UsersPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-5">
                     <div className="flex items-center gap-3 mb-2">
                         <Users className="h-5 w-5 text-blue-500" />
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Users</span>
                     </div>
                     <p className="text-3xl font-black text-white">{users.length}</p>
-                </div>
-                <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <ShieldCheck className="h-5 w-5 text-purple-500" />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Subscribed</span>
-                    </div>
-                    <p className="text-3xl font-black text-white">{users.filter(u => u.is_subscribed).length}</p>
                 </div>
                 <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-5">
                     <div className="flex items-center gap-3 mb-2">
