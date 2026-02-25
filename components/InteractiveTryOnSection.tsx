@@ -105,7 +105,7 @@ export default function InteractiveTryOnSection() {
                     <div className="w-full md:w-[400px] aspect-[4/5] bg-[#10141d] rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative group">
                         {uploadedImage ? (
                             <>
-                                <img src={uploadedImage} alt="User Upload" className="w-full h-full object-cover" />
+                                <img src={uploadedImage} alt="User Upload" className="w-full h-full object-contain" />
                                 {!isGenerating && !resultImage && (
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                         <button
@@ -204,7 +204,7 @@ export default function InteractiveTryOnSection() {
                             </div>
                         ) : (
                             <div className="w-full h-full relative border border-purple-500/50">
-                                <img src={resultImage!} alt="AI Try-On Result" className="w-full h-full object-cover" />
+                                <img src={resultImage!} alt="AI Try-On Result" className="w-full h-full object-contain" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
 
                                 <div className="absolute top-4 right-4 bg-purple-600 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg flex items-center gap-1">
