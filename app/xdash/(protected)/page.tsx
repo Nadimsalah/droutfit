@@ -220,23 +220,26 @@ export default async function AdminDashboard() {
                         <div className="space-y-4">
                             <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 space-y-3">
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Required Credits</span>
-                                    <span className="text-white font-black">{Math.max(0, stats.totalUserCredits - (nbCredits.credits || 0)).toLocaleString('de-DE')}</span>
+                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Required API Credits</span>
+                                    <span className="text-white font-black">
+                                        {Math.max(0, (stats.totalUserCredits * 4) - (nbCredits.credits || 0)).toLocaleString('de-DE')}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
                                     <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
                                     <span className="text-yellow-500 font-black">
-                                        ${(Math.max(0, stats.totalUserCredits - (nbCredits.credits || 0)) * (0.02 / 4)).toFixed(2)}
+                                        ${(Math.max(0, (stats.totalUserCredits * 4) - (nbCredits.credits || 0)) * (0.02 / 4)).toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full transition-all duration-1000 ${nbCredits.credits >= stats.totalUserCredits ? 'bg-green-500 w-full' : 'bg-red-500 w-[40%]'}`}
-                                        style={{ width: `${Math.min(100, (nbCredits.credits / stats.totalUserCredits) * 100)}%` }}
+                                        className={`h-full transition-all duration-1000 ${nbCredits.credits >= (stats.totalUserCredits * 4) ? 'bg-green-500 w-full' : 'bg-red-500'}`}
+                                        style={{ width: `${Math.min(100, (nbCredits.credits / (stats.totalUserCredits * 4 || 1)) * 100)}%` }}
                                     />
                                 </div>
                                 <p className="text-[9px] text-gray-500 font-medium leading-tight">
-                                    Calculation based on $0.02 per 4 credits ratio to cover {stats.totalUserCredits.toLocaleString('de-DE')} user liabilities.
+                                    Based on {stats.totalUserCredits.toLocaleString('de-DE')} images held by users.
+                                    Each image requires 4 API credits ($0.02). Total API stock needs to be {(stats.totalUserCredits * 4).toLocaleString('de-DE')} credits.
                                 </p>
                             </div>
                         </div>
