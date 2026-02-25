@@ -16,7 +16,16 @@ async function getStats() {
     const { data: creditsData } = await adminClient.from('profiles').select('credits')
     const totalUserCredits = creditsData?.reduce((sum: number, p: any) => sum + (p.credits || 0), 0) || 0
 
-    const { data: profilesMapping } = await adminClient.from('profiles').select('id, full_name, email')
+    // Merge profile names with auth emails for complete mapping
+    const [profilesRes, usersRes] = await Promise.all([
+        adminClient.from('profiles').select('id, full_name'),
+        adminClient.auth.admin.listUsers()
+    ])
+
+    const profilesMapping = profilesRes.data?.map(p => ({
+        ...p,
+        email: usersRes.data.users.find(u => u.id === p.id)?.email || null
+    })) || []
 
     const { data: transactions } = await adminClient
         .from('transactions')
