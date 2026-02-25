@@ -139,14 +139,23 @@ export async function POST(req: NextRequest) {
                             "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
                         },
                         body: JSON.stringify({
-                            prompt: prompt || "Put the provided clothing item onto the uploaded person. Keep the original face, body shape, pose, and background unchanged. Only replace the outfit. Make it realistic, properly fitted, and naturally blended with correct lighting and shadows.",
+                            prompt: prompt || "high quality fashion photography, realistic lighting",
                             type: type || "IMAGETOIAMGE",
                             numImages: numImages || 1,
                             imageUrls: imageUrls, // [face, garment]
                         }),
                     });
 
-                    const taskResult = await taskResponse.json();
+                    const taskText = await taskResponse.text();
+                    let taskResult;
+                    try {
+                        taskResult = JSON.parse(taskText);
+                    } catch (e) {
+                        if (taskResponse.status === 413 || taskText.includes("Request Entity Too Large")) {
+                            throw new Error("L'image téléchargée est trop volumineuse pour notre processeur IA. Veuillez utiliser une image plus petite (< 5Mo).");
+                        }
+                        throw new Error(`Erreur API: ${taskText.slice(0, 100)}`);
+                    }
 
                     if (!taskResponse.ok || taskResult.code !== 200) {
                         throw new Error(taskResult.msg || "Failed to submit generation task");
@@ -192,7 +201,8 @@ export async function POST(req: NextRequest) {
             if (logEntryId) {
                 await supabase.from("usage_logs").update({
                     status: 200,
-                    latency: `${Date.now() - startTime}ms`
+                    latency: `${Date.now() - startTime}ms`,
+                    error_message: JSON.stringify({ taskId, result_url: resultUrl, credits_used: 4, channel: "Nano Banana" })
                 }).eq("id", logEntryId);
             }
 
@@ -217,7 +227,8 @@ export async function POST(req: NextRequest) {
             if (logEntryId) {
                 await supabase.from("usage_logs").update({
                     status: 500,
-                    latency: `${Date.now() - startTime}ms`
+                    latency: `${Date.now() - startTime}ms`,
+                    error_message: JSON.stringify({ error: (error as Error).message, taskId, credits_used: 0, channel: "Nano Banana" })
                 }).eq("id", logEntryId);
             }
             throw error;

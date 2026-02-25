@@ -27,12 +27,6 @@ export async function generateTryOn(garmentUrl: string, faceImageUrl: string, pr
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                prompt: `
-Replace the clothing on the uploaded person with the provided garment image.
-Keep the person's body shape, face, pose, and proportions exactly the same.
-Only change the clothing.
-Ensure the new outfit fits naturally with realistic fabric, lighting, and shadows.
-Do not alter the background or the character's identity. `.trim(),
                 type: 'IMAGETOIAMGE', // API expects this typo "IAMGE"
                 numImages: 1,
                 imageUrls: [faceImageUrl, garmentUrl],
@@ -40,10 +34,20 @@ Do not alter the background or the character's identity. `.trim(),
             }),
         });
 
-        const result = await response.json();
+        const responseText = await response.text();
+        let result;
+
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            if (response.status === 413 || responseText.includes("Request Entity Too Large")) {
+                throw new Error("L'image téléchargée est trop volumineuse. Veuillez utiliser une image plus petite (< 5Mo).");
+            }
+            throw new Error(`Erreur serveur: ${responseText.slice(0, 100)}`);
+        }
 
         if (!response.ok) {
-            throw new Error(result.error || "Generation failed");
+            throw new Error(result?.error || "Generation failed");
         }
 
         return {
