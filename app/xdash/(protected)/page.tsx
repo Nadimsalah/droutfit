@@ -14,7 +14,15 @@ async function getStats() {
     const { data: profiles } = await supabaseAdmin.from('profiles').select('credits')
     const totalUserCredits = profiles?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
-    return { totalUsers, activeSubs, totalUserCredits }
+    // Fetch recent transactions with profile info
+    const { data: recentTransactions } = await supabaseAdmin
+        .from('transactions')
+        .select('*, profiles(full_name, email)')
+        .eq('status', 'succeeded')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+    return { totalUsers, activeSubs, totalUserCredits, recentTransactions: recentTransactions || [] }
 }
 
 async function getNanoBananaCredits() {
@@ -116,19 +124,60 @@ export default async function AdminDashboard() {
                 <div className="lg:col-span-2 bg-[#0B0E14] border border-gray-800 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                         <Activity className="h-5 w-5 text-blue-500" />
-                        System Logs
+                        Recent Transactions
                     </h3>
-                    <div className="bg-orange-500/10 border border-orange-500/20 text-orange-500 p-4 rounded-xl text-sm font-bold flex items-center gap-3">
-                        <Activity className="h-4 w-4" />
-                        Log feed active
-                    </div>
-                    <div className="mt-4 space-y-2 opacity-50">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="flex justify-between p-3 border-b border-gray-800/50 text-xs text-gray-400">
-                                <span>/api/virtual-try-on</span>
-                                <span>200 OK</span>
-                            </div>
-                        ))}
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-800">
+                                    <th className="pb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest px-2">User</th>
+                                    <th className="pb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest px-2">Qty Images</th>
+                                    <th className="pb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 text-right">Price</th>
+                                    <th className="pb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 text-right">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800/50">
+                                {stats.recentTransactions.map((tx: any) => {
+                                    const qtyMatch = tx.description?.match(/(\d[\d.]*)/)
+                                    const qty = qtyMatch ? qtyMatch[0] : '-'
+                                    return (
+                                        <tr key={tx.id} className="group hover:bg-white/[0.02] transition-colors">
+                                            <td className="py-4 px-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
+                                                        {tx.profiles?.full_name || tx.profiles?.email?.split('@')[0] || 'Unknown'}
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-600 font-medium">{tx.profiles?.email || 'No email'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                    <span className="text-xs font-black text-gray-300">{qty.toLocaleString('de-DE')}</span>
+                                                    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-tight">Images</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-2 text-right">
+                                                <span className="text-xs font-black text-green-500">${tx.amount?.toFixed(2)}</span>
+                                            </td>
+                                            <td className="py-4 px-2 text-right">
+                                                <span className="text-[10px] font-bold text-gray-600">
+                                                    {new Date(tx.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                                {stats.recentTransactions.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="py-12 text-center text-xs font-bold text-gray-600 uppercase tracking-[0.2em]">
+                                            No successfull transactions found
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
