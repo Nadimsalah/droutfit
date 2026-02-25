@@ -9,7 +9,7 @@ export const DEFAULT_PRICING = {
     PACKAGE_3_PRICE: 50,
     PACKAGE_4_AMOUNT: 5000,
     PACKAGE_4_PRICE: 150,
-    CUSTOM_CREDIT_PRICE: 0.035
+    CUSTOM_CREDIT_PRICE: 0.028
 }
 
 export type PricingConfig = typeof DEFAULT_PRICING
