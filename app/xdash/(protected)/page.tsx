@@ -2,56 +2,33 @@ import { createClient } from "@supabase/supabase-js"
 import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
 
 
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
-    try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
+    const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-        if (!supabaseUrl || !serviceKey) {
-            console.error("Dashboard Environment Missing:", { url: !!supabaseUrl, key: !!serviceKey })
-            return { totalUsers: 0, activeSubs: 0, totalUserCredits: 0, recentTransactions: [] }
-        }
+    const { data: profilesData } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
+    const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
-        // Use a local client to ensure fresh env loading
-        const adminClient = createClient(supabaseUrl, serviceKey);
+    const { data: transactions } = await supabaseAdmin
+        .from('transactions')
+        .select('*')
+        .eq('status', 'succeeded')
+        .order('created_at', { ascending: false })
+        .limit(10)
 
-        const { count: totalUsers, error: err1 } = await adminClient.from('profiles').select('*', { count: 'exact', head: true })
-        const { count: activeSubs, error: err2 } = await adminClient.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
+    const recentTransactions = transactions?.map(tx => ({
+        ...tx,
+        profiles: profilesData?.find(p => p.id === tx.user_id) || null
+    })) || []
 
-        const { data: profilesData, error: err3 } = await adminClient.from('profiles').select('id, credits, full_name, email')
-
-        if (err1 || err2 || err3) {
-            console.error("Dashboard Stats Error Details:", {
-                totalUsersErr: err1?.message || err1,
-                activeSubsErr: err2?.message || err2,
-                profilesDataErr: err3?.message || err3,
-                timestamp: new Date().toISOString()
-            })
-        }
-
-        const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
-
-        // Fetch recent transactions
-        const { data: transactions } = await adminClient
-            .from('transactions')
-            .select('*')
-            .eq('status', 'succeeded')
-            .order('created_at', { ascending: false })
-            .limit(10)
-
-        // Manually hydrate profile data since there is no DB relationship
-        const recentTransactions = transactions?.map(tx => ({
-            ...tx,
-            profiles: profilesData?.find(p => p.id === tx.user_id) || null
-        })) || []
-
-        return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
-    } catch (e) {
-        console.error("Critical Dashboard Error:", e)
-        return { totalUsers: 0, activeSubs: 0, totalUserCredits: 0, recentTransactions: [] }
-    }
+    return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
 }
 
 async function getNanoBananaCredits() {
