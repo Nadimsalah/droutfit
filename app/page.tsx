@@ -78,7 +78,7 @@ export default function Home() {
                         {/* YouTube Embed */}
                         <iframe
                             className="w-full h-full relative z-0"
-                            src="https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=0&controls=1&rel=0&modestbranding=1"
+                            src="https://www.youtube.com/embed/rp6U-FWZLIE?autoplay=0&controls=1&rel=0&modestbranding=1"
                             title="Virtual Try-On Platform Demo"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
