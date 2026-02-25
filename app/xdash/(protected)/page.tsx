@@ -227,15 +227,16 @@ export default async function AdminDashboard() {
                             Refill Requirement
                         </h3>
                         {(() => {
-                            const imageCapacity = Math.floor((nbCredits.credits || 0) / 4);
-                            const missingImages = Math.max(0, stats.totalUserCredits - imageCapacity);
-                            const requiredAPICredits = missingImages * 4;
-                            const refillCost = missingImages * 0.02;
-                            const isHealthy = imageCapacity >= stats.totalUserCredits;
+                            const totalNeededCredits = stats.totalUserCredits * 4;
+                            const currentCredits = nbCredits.credits || 0;
+                            const missingCredits = Math.max(0, totalNeededCredits - currentCredits);
+                            const refillCost = missingCredits * (0.02 / 4);
+                            const imageCapacity = Math.floor(currentCredits / 4);
+                            const isHealthy = currentCredits >= totalNeededCredits;
 
                             return (
                                 <div className="space-y-4">
-                                    <div className={`p-4 rounded-xl border space-y-3 transition-all ${isHealthy ? 'bg-green-500/5 border-green-500/10' : 'bg-yellow-500/5 border-yellow-500/10'}`}>
+                                    <div className={`p-4 rounded-xl border space-y-3 transition-all ${isHealthy ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
                                         {isHealthy ? (
                                             <div className="flex items-center gap-3 text-green-500 pb-2">
                                                 <ShieldCheck className="h-5 w-5" />
@@ -246,7 +247,7 @@ export default async function AdminDashboard() {
                                                 <div className="flex justify-between items-center text-xs">
                                                     <span className="text-gray-400 font-bold uppercase tracking-wider">Required API Credits</span>
                                                     <span className="text-white font-black">
-                                                        {requiredAPICredits.toLocaleString('de-DE')}
+                                                        {missingCredits.toLocaleString('de-DE')}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-xs">
@@ -261,14 +262,14 @@ export default async function AdminDashboard() {
                                         <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full transition-all duration-1000 ${isHealthy ? 'bg-green-500' : 'bg-red-500'}`}
-                                                style={{ width: `${Math.min(100, (imageCapacity / (stats.totalUserCredits || 1)) * 100)}%` }}
+                                                style={{ width: `${Math.min(100, (currentCredits / (totalNeededCredits || 1)) * 100)}%` }}
                                             />
                                         </div>
 
                                         <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
                                             {isHealthy
-                                                ? `Balance sufficient. Capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user holdings.`
-                                                : `Shortage: (User Balance - Capacity) * 4 = ${requiredAPICredits.toLocaleString('de-DE')} missing credits.`
+                                                ? `Inventory sufficient. API stock (${currentCredits.toLocaleString('de-DE')} credits) covers all user liabilities.`
+                                                : `Shortage: You are missing ${missingCredits.toLocaleString('de-DE')} credits to cover user holdings.`
                                             }
                                         </p>
                                     </div>
