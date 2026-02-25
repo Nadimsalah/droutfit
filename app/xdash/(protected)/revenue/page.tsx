@@ -84,8 +84,19 @@ export default function RevenuePage() {
         const imageCost = totalImages * 0.02
         const net = gross - imageCost
 
+        const userIds = [...new Set(data.map(t => t.user_id))].filter(Boolean)
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', userIds)
+
+        const enrichedTransactions = data.map(t => ({
+            ...t,
+            user_name: profiles?.find(p => p.id === t.user_id)?.full_name || 'No Name'
+        }))
+
         setStats({ gross, net, imageCost, totalImages, period: selectedPeriod })
-        setTransactions(data)
+        setTransactions(enrichedTransactions)
         setLoading(false)
     }
 
@@ -173,17 +184,15 @@ export default function RevenuePage() {
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-white/5 text-[10px] uppercase font-black tracking-widest text-gray-500 border-b border-gray-800">
                                     <tr>
-                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">User</th>
                                         <th className="px-6 py-4">Description</th>
-                                        <th className="px-6 py-4 text-right">Images</th>
-                                        <th className="px-6 py-4">Date</th>
                                         <th className="px-6 py-4 text-right">Gross</th>
                                         <th className="px-6 py-4 text-right">Net</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800/60">
                                     {transactions.length === 0 ? (
-                                        <tr><td colSpan={6} className="p-16 text-center text-gray-600 font-bold uppercase tracking-widest text-xs">No transactions found for this period.</td></tr>
+                                        <tr><td colSpan={4} className="p-16 text-center text-gray-600 font-bold uppercase tracking-widest text-xs">No transactions found for this period.</td></tr>
                                     ) : (
                                         transactions.map((t) => {
                                             const amount = Number(t.amount) || 0
@@ -196,31 +205,43 @@ export default function RevenuePage() {
                                             return (
                                                 <tr key={t.id} className="hover:bg-white/[0.02] transition-colors group">
                                                     <td className="px-6 py-4">
-                                                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${isSuccess ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                                                            }`}>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 font-black text-xs shrink-0">
+                                                                {t.user_name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div className="font-bold text-white text-sm">
+                                                                {t.user_name}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest mr-2 ${isSuccess ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                                                             {t.status}
                                                         </span>
+                                                        <span className="text-gray-300 font-bold text-xs">{t.description || 'Payment'}</span>
+                                                        <div className="text-gray-500 text-[10px] mt-1 font-medium">
+                                                            {new Date(t.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-300 font-bold text-xs">{t.description || 'Payment'}</td>
                                                     <td className="px-6 py-4 text-right">
-                                                        {qty > 0 && isSuccess ? (
-                                                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                                                                {qty} <ImageIcon className="h-3 w-3 text-gray-600" />
+                                                        <span className="block font-black text-gray-300 text-sm">
+                                                            ${isSuccess ? amount.toFixed(2) : '0.00'}
+                                                        </span>
+                                                        {qty > 0 && isSuccess && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 mt-0.5">
+                                                                ({qty} <ImageIcon className="h-2.5 w-2.5" />)
                                                             </span>
-                                                        ) : (
-                                                            <span className="text-gray-700">—</span>
                                                         )}
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-500 text-[11px] font-medium">
-                                                        {new Date(t.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right font-black text-gray-300">
-                                                        ${isSuccess ? amount.toFixed(2) : '0.00'}
-                                                    </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <span className={`font-black ${isSuccess ? 'text-blue-400' : 'text-gray-600'}`}>
-                                                            ${txNet.toFixed(2)}
+                                                        <span className={`font-black text-sm ${isSuccess ? 'text-blue-400' : 'text-gray-600'}`}>
+                                                            ${isSuccess ? txNet.toFixed(2) : '0.00'}
                                                         </span>
+                                                        {isSuccess && (
+                                                            <div className="text-[9px] font-bold text-gray-600 mt-0.5 uppercase tracking-widest">
+                                                                Profit
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             )
