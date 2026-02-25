@@ -10,11 +10,11 @@ async function getStats() {
     const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
     const { count: activeSubs } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    // Revenue is tricky without a payments table, let's estimate based on Subs
-    // Mock Logic: activeSubs * $5
-    const monthlyRevenue = (activeSubs || 0) * 5
+    const { data: transactions } = await supabase.from('transactions').select('amount').eq('status', 'succeeded')
+    const totalRev = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0
+    const totalImagesSold = Math.floor(totalRev / 0.028)
 
-    return { totalUsers, activeSubs, monthlyRevenue }
+    return { totalUsers, activeSubs, totalImagesSold, totalRev }
 }
 
 async function getNanoBananaCredits() {
@@ -73,10 +73,10 @@ export default async function AdminDashboard() {
                         <DollarSign className="h-24 w-24 text-green-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Monthly Rev</p>
-                        <h2 className="text-4xl font-black text-white">${stats.monthlyRevenue?.toFixed(2)}</h2>
-                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-gray-500 bg-white/5 w-fit px-2 py-1 rounded-lg">
-                            Estimated
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Images Sold</p>
+                        <h2 className="text-4xl font-black text-white">{stats.totalImagesSold?.toLocaleString('de-DE')}</h2>
+                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-green-500 bg-green-500/10 w-fit px-2 py-1 rounded-lg">
+                            ${stats.totalRev?.toFixed(2)} Total Revenue
                         </div>
                     </div>
                 </div>
