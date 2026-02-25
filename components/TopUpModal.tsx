@@ -239,15 +239,26 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                         </div>
                         <span className="text-3xl font-black text-white tracking-tighter">${totalCost}</span>
                     </div>
+
+                    {Number(totalCost) > 2500 && (
+                        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest leading-relaxed">
+                                Whop allows a maximum of $2.500 per order. Please reduce the volume or contact us for enterprise billing.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <button
                     onClick={handleCheckout}
-                    disabled={isLoading || (isCustom && credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1))}
+                    disabled={isLoading || (isCustom && credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1)) || Number(totalCost) > 2500}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 active:scale-95 group"
                 >
                     {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : Number(totalCost) > 2500 ? (
+                        "Amount Exceeds $2,500 Limit"
                     ) : (
                         <>
                             Checkout Now

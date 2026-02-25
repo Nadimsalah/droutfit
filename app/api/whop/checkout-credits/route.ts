@@ -32,8 +32,11 @@ export async function POST(request: Request) {
         } else {
             creditsCost = credits * pricing.CUSTOM_CREDIT_PRICE;
         }
-        const processingFee = (creditsCost * 0.027) + 0.30;
-        const totalCost = creditsCost + processingFee;
+        const totalCost = creditsCost;
+
+        if (totalCost > 2500) {
+            return NextResponse.json({ error: 'Order exceeds $2,500 limit. Please contact support or reduce volume.' }, { status: 400 })
+        }
 
         // Create Whop Checkout Session
         const whopResponse = await fetch('https://api.whop.com/v2/checkout_sessions', {
