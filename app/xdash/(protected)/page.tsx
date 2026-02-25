@@ -164,15 +164,35 @@ export default async function AdminDashboard() {
                     </div>
 
                     <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-white mb-6">Admin Actions</h3>
-                        <div className="space-y-3">
-                            <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors border border-gray-800 text-left px-4 flex justify-between items-center group">
-                                Settings
-                                <span className="text-gray-500 group-hover:text-white">→</span>
-                            </button>
-                            <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors border border-gray-800 text-left px-4 flex justify-between items-center group">
-                                Support
-                                <span className="text-gray-500 group-hover:text-white">→</span>
+                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <DollarSign className="h-5 w-5 text-yellow-500" />
+                            Refill Requirement
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 space-y-3">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Required Credits</span>
+                                    <span className="text-white font-black">{Math.max(0, stats.totalUserCredits - (nbCredits.credits || 0)).toLocaleString('de-DE')}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
+                                    <span className="text-yellow-500 font-black">
+                                        ${(Math.max(0, stats.totalUserCredits - (nbCredits.credits || 0)) * (0.02 / 4)).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full transition-all duration-1000 ${nbCredits.credits >= stats.totalUserCredits ? 'bg-green-500 w-full' : 'bg-red-500 w-[40%]'}`}
+                                        style={{ width: `${Math.min(100, (nbCredits.credits / stats.totalUserCredits) * 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-[9px] text-gray-500 font-medium leading-tight">
+                                    Calculation based on $0.02 per 4 credits ratio to cover {stats.totalUserCredits.toLocaleString('de-DE')} user liabilities.
+                                </p>
+                            </div>
+
+                            <button className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-yellow-600/20 active:scale-95 uppercase tracking-widest">
+                                Purchase API Credits
                             </button>
                         </div>
                     </div>
