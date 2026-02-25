@@ -75,7 +75,6 @@ export default async function UsersPage() {
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Store</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Image Qty</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Spent</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Plan</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Action</th>
                             </tr>
                         </thead>
@@ -120,17 +119,7 @@ export default async function UsersPage() {
                                         </span>
                                         <span className="text-[10px] text-gray-600 ml-1">({user.txCount} orders)</span>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        {user.is_subscribed ? (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase tracking-wider">
-                                                <ShieldCheck className="h-3 w-3" /> Pro
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-black bg-gray-800 text-gray-500 uppercase tracking-wider">
-                                                Free
-                                            </span>
-                                        )}
-                                    </td>
+
                                     <td className="px-6 py-4 text-right">
                                         <Link
                                             href={`/xdash/users/${user.id}`}
@@ -144,7 +133,7 @@ export default async function UsersPage() {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="py-16 text-center text-gray-600 text-sm font-bold uppercase tracking-widest">
+                                    <td colSpan={5} className="py-16 text-center text-gray-600 text-sm font-bold uppercase tracking-widest">
                                         No users found
                                     </td>
                                 </tr>
