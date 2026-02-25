@@ -58,7 +58,7 @@ export default function SettingsPage() {
         <div className="space-y-8 max-w-4xl">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">System Settings</h1>
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Set pricing</h1>
                     <p className="text-gray-400 mt-1">Manage global pricing and configuration.</p>
                 </div>
                 <button

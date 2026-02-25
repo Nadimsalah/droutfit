@@ -42,8 +42,8 @@ export default function AdminSidebar() {
                         href="/xdash"
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash')
-                                ? 'bg-white/5 text-white'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
                             }`}
                     >
                         <LayoutDashboard className={`h-5 w-5 ${isActive('/xdash') ? 'text-blue-500' : 'text-gray-500'}`} />
@@ -53,8 +53,8 @@ export default function AdminSidebar() {
                         href="/xdash/users"
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/users')
-                                ? 'bg-white/5 text-white'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
                             }`}
                     >
                         <Users className={`h-5 w-5 ${isActive('/xdash/users') ? 'text-blue-500' : 'text-gray-500'}`} />
@@ -64,8 +64,8 @@ export default function AdminSidebar() {
                         href="/xdash/revenue"
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/revenue')
-                                ? 'bg-white/5 text-white'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
                             }`}
                     >
                         <div className="h-5 w-5 flex items-center justify-center">
@@ -77,12 +77,12 @@ export default function AdminSidebar() {
                         href="/xdash/settings"
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/settings')
-                                ? 'bg-white/5 text-white'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
                             }`}
                     >
                         <Settings className={`h-5 w-5 ${isActive('/xdash/settings') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        System Settings
+                        Set pricing
                     </Link>
                 </nav>
 
