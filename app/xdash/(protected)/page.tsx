@@ -13,8 +13,11 @@ async function getStats() {
     const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
     const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    const { data: profilesData } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
-    const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
+    // Split fetch to ensure balance isn't affected by other field errors
+    const { data: creditsData } = await supabaseAdmin.from('profiles').select('credits')
+    const totalUserCredits = creditsData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
+
+    const { data: profilesMapping } = await supabaseAdmin.from('profiles').select('id, full_name, email')
 
     const { data: transactions } = await supabaseAdmin
         .from('transactions')
@@ -25,7 +28,7 @@ async function getStats() {
 
     const recentTransactions = transactions?.map(tx => ({
         ...tx,
-        profiles: profilesData?.find(p => p.id === tx.user_id) || null
+        profiles: profilesMapping?.find(p => p.id === tx.user_id) || null
     })) || []
 
     return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
