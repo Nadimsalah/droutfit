@@ -61,55 +61,32 @@ export default function Home() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
-                        <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-white/10">
+                        <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.1)]">
                             Start in Minutes
                             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
-                        <a href="#demo" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group backdrop-blur-sm">
-                            <Play className="h-5 w-5 fill-current" />
-                            Watch Demo
-                        </a>
                     </div>
                 </div>
 
-                {/* Before and After Visual */}
-                <div className="max-w-6xl w-full mx-auto relative z-10 mt-20 flex flex-col md:flex-row items-center justify-center gap-8 px-4">
+                {/* Video Demo Frame */}
+                <div className="max-w-5xl w-full mx-auto relative z-10 mt-20 px-4">
+                    <div className="relative w-full aspect-video rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] bg-[#0B0E14] group">
+                        {/* Modern decorative elements */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none z-10"></div>
+                        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent z-10 opacity-50"></div>
 
-                    {/* Before Image */}
-                    <div className="flex flex-col items-center group">
-                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 shadow-2xl transition-transform duration-500 group-hover:-translate-y-2">
-                            <img
-                                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=800&fit=crop"
-                                alt="Shopper before Virtual Try-On"
-                                className="w-full h-full object-cover filter saturate-50"
-                            />
-                        </div>
+                        {/* YouTube Embed */}
+                        <iframe
+                            className="w-full h-full relative z-0"
+                            src="https://www.youtube.com/embed/T60m2sSntXY?autoplay=0&controls=1&rel=0&modestbranding=1"
+                            title="Virtual Try-On Platform Demo"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
                     </div>
 
-                    {/* Arrow Divider */}
-                    <div className="hidden md:flex flex-col items-center justify-center">
-                        <div className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-                            <ArrowRight className="h-6 w-6 text-white" />
-                        </div>
-                        <div className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-3 tracking-widest uppercase">
-                            AI Magic
-                        </div>
-                    </div>
-
-                    {/* After Image */}
-                    <div className="flex flex-col items-center group">
-                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.2)] transition-transform duration-500 group-hover:-translate-y-2">
-                            <img
-                                src="/kaftan-after.png"
-                                alt="Shopper wearing selected apparel via Virtual Try-On"
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-4 right-4 bg-blue-600 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                AFTER
-                            </div>
-                        </div>
-                    </div>
-
+                    {/* Glowing shadow effect under the video */}
+                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[60%] h-20 bg-gradient-to-r from-blue-600/20 to-purple-600/20 blur-[80px] pointer-events-none -z-10"></div>
                 </div>
             </section>
 
