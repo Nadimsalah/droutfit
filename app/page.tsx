@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar";
-import PricingSection from "@/components/PricingSection";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -151,9 +150,6 @@ export default function Home() {
             {/* Interactive Try-On Demonstration Area */}
             <InteractiveTryOnSection />
 
-            {/* Pricing Section (SEO Optimized inside) */}
-            <PricingSection />
-
             {/* CTA */}
             <section className="py-24 px-6 overflow-hidden">
                 <div className="max-w-5xl mx-auto border border-blue-500/20 rounded-[3rem] p-12 md:p-24 text-center relative bg-gradient-to-tr from-[#131720] to-[#0a0d14]">
@@ -215,7 +211,6 @@ export default function Home() {
                             <h4 className="font-bold text-white mb-6">Product</h4>
                             <ul className="space-y-4 text-sm text-gray-400">
                                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                                 <li><Link href="#demo" className="hover:text-white transition-colors">Live Demo</Link></li>
                             </ul>
                         </nav>
