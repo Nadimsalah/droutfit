@@ -1,25 +1,24 @@
 import { createClient } from "@supabase/supabase-js"
 import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
 
-
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
-    const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
-    const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
+    const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { count: totalUsers } = await adminClient.from('profiles').select('*', { count: 'exact', head: true })
+    const { count: activeSubs } = await adminClient.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
     // Split fetch to ensure balance isn't affected by other field errors
-    const { data: creditsData } = await supabaseAdmin.from('profiles').select('credits')
-    const totalUserCredits = creditsData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
+    const { data: creditsData } = await adminClient.from('profiles').select('credits')
+    const totalUserCredits = creditsData?.reduce((sum: number, p: any) => sum + (p.credits || 0), 0) || 0
 
-    const { data: profilesMapping } = await supabaseAdmin.from('profiles').select('id, full_name, email')
+    const { data: profilesMapping } = await adminClient.from('profiles').select('id, full_name, email')
 
-    const { data: transactions } = await supabaseAdmin
+    const { data: transactions } = await adminClient
         .from('transactions')
         .select('*')
         .eq('status', 'succeeded')
@@ -56,6 +55,9 @@ export default async function AdminDashboard() {
         getStats(),
         getNanoBananaCredits()
     ]);
+
+    // Debugging balance on the server
+    console.log(`[Dashboard] Users: ${stats.totalUsers}, Balance: ${stats.totalUserCredits}, API: ${nbCredits.credits}`);
 
     return (
         <div className="space-y-8">
@@ -266,10 +268,10 @@ export default async function AdminDashboard() {
                                             />
                                         </div>
 
-                                        <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
+                                        <p className="text-[9px] text-gray-400 font-medium leading-tight lowercase italic">
                                             {isHealthy
-                                                ? `Balance sufficient. Capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user holdings.`
-                                                : `Shortage: ${stats.totalUserCredits.toLocaleString('de-DE')} (Balance) - ${imageCapacity.toLocaleString('de-DE')} (Capacity) = ${missingImages.toLocaleString('de-DE')} images missing (${requiredAPICredits.toLocaleString('de-DE')} credits).`
+                                                ? `Inventory healthy. Current capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user liabilities.`
+                                                : `Refill Goal: Add ${requiredAPICredits.toLocaleString('de-DE')} credits ($${refillCost.toFixed(2)}) to maintain service.`
                                             }
                                         </p>
                                     </div>
@@ -280,5 +282,5 @@ export default async function AdminDashboard() {
                 </div>
             </div>
         </div>
-    )
+    );
 }
