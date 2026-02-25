@@ -11,18 +11,24 @@ async function getStats() {
     const { count: totalUsers } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
     const { count: activeSubs } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
 
-    const { data: profiles } = await supabaseAdmin.from('profiles').select('credits')
-    const totalUserCredits = profiles?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
+    const { data: profilesData } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
+    const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
-    // Fetch recent transactions with profile info
-    const { data: recentTransactions } = await supabaseAdmin
+    // Fetch recent transactions
+    const { data: transactions } = await supabaseAdmin
         .from('transactions')
-        .select('*, profiles(full_name, email)')
+        .select('*')
         .eq('status', 'succeeded')
         .order('created_at', { ascending: false })
         .limit(10)
 
-    return { totalUsers, activeSubs, totalUserCredits, recentTransactions: recentTransactions || [] }
+    // Manually hydrate profile data since there is no DB relationship
+    const recentTransactions = transactions?.map(tx => ({
+        ...tx,
+        profiles: profilesData?.find(p => p.id === tx.user_id) || null
+    })) || []
+
+    return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
 }
 
 async function getNanoBananaCredits() {
