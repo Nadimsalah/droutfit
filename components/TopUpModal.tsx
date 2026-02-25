@@ -57,8 +57,8 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
         ? activePackage.price
         : Number(credits) * (Number(pricing.CUSTOM_CREDIT_PRICE) || 0.035);
 
-    const processingFee = credits > 0 ? (creditsCost * 0.027) + 0.30 : 0;
-    const totalCost = (creditsCost + processingFee).toFixed(2)
+    const processingFee = 0;
+    const totalCost = creditsCost.toFixed(2)
 
     const handleCheckout = async () => {
         setIsLoading(true)
@@ -173,7 +173,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                             }`}
                     >
                         <div className="flex items-center justify-center gap-3">
-                            <span className="text-sm font-black text-white uppercase tracking-widest">Custom Amount</span>
+                            <span className="text-sm font-black text-white uppercase tracking-widest">Big Volume Selection</span>
                             <span className="text-[10px] font-bold text-gray-500 px-2 py-0.5 rounded-full bg-white/5">
                                 ${pricing.CUSTOM_CREDIT_PRICE}/img
                             </span>
@@ -185,7 +185,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                     <div className="animate-in fade-in slide-in-from-top-2 space-y-6">
                         <div className="space-y-4">
                             <div className="flex justify-between items-end mb-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block ml-1">Custom Amount</label>
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block ml-1">Volume selection</label>
                                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded-md">
                                     {credits >= 1000000 ? '1M MAX' : credits >= 1000 ? `${(credits / 1000).toFixed(0)}K` : credits} Images
                                 </span>
@@ -212,23 +212,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                             </div>
                         </div>
 
-                        <div className="flex items-center bg-[#0B0E14] border border-gray-800 rounded-2xl overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all">
-                            <input
-                                type="number"
-                                value={credits || ''}
-                                onChange={(e) => {
-                                    const val = e.target.value
-                                    setCredits(val === '' ? 0 : Math.max(0, parseInt(val)))
-                                }}
-                                className="w-full bg-transparent border-none text-white text-2xl font-black p-5 focus:ring-0 outline-none"
-                                placeholder="0"
-                                min="0"
-                                step="100"
-                            />
-                            <div className="px-6 text-xs font-black text-gray-500 border-l border-gray-800 bg-white/5 h-full flex items-center py-5 uppercase tracking-tighter">
-                                Images
-                            </div>
-                        </div>
+                        {/* Manual input removed as per user request */}
                         {credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1) && (
                             <p className="mt-2 text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1">
                                 <AlertCircle className="h-3 w-3" /> Minimum order: {pricing.MINIMUM_CUSTOM_AMOUNT} images
@@ -244,15 +228,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                         <span className="text-white font-medium">${creditsCost.toFixed(2)}</span>
                     </div>
 
-                    {credits > 0 && (
-                        <div className="flex justify-between items-center text-sm border-t border-gray-800/30 pt-4">
-                            <div className="flex flex-col">
-                                <span className="text-gray-400 font-medium">Processing Fee</span>
-                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">2.7% + 30¢</span>
-                            </div>
-                            <span className="text-white font-medium">${processingFee.toFixed(2)}</span>
-                        </div>
-                    )}
+                    {/* Processing Fee row removed */}
 
                     <div className="border-t border-gray-800 pt-4 flex justify-between items-center">
                         <div className="flex flex-col">
