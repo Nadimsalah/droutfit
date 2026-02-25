@@ -80,7 +80,7 @@ export default function LoginPage() {
             <div className="w-full max-w-md relative z-10">
                 <div className="text-center mb-10">
                     <Link href="/" className="inline-block mb-6 hover:scale-105 transition-transform">
-                        <img src="/logo.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain" />
+                        <img src="/logo-black.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain" />
                     </Link>
                     <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Welcome Back</h1>
                     <p className="text-gray-400 text-sm">Sign in to your dashboard to manage your store.</p>

@@ -101,7 +101,12 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Topup Pro Generation Credits">
+        <Modal isOpen={isOpen} onClose={onClose}>
+            <div className="flex flex-col items-center mb-6 pt-2">
+                <img src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png" alt="Droutfit" className="h-10 w-auto object-contain mb-4" />
+                <h2 className="text-2xl font-black text-white tracking-tight text-center">Topup Pro Credits</h2>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Purchase AI Generation Credits</p>
+            </div>
             <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
 
                 <div className="space-y-4">

@@ -65,7 +65,7 @@ export default function Navbar() {
             <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14] border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/80 backdrop-blur-xl border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between pointer-events-auto">
                     <Link href="/" className="flex items-center gap-2 group relative z-50">
-                        <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />
+                        <img src="/logo-black.png" alt="Droutfit" className="h-10 w-auto object-contain" />
                     </Link>
 
                     {/* Desktop Navigation */}

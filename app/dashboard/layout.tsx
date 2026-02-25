@@ -31,7 +31,7 @@ export default function DashboardLayout({
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
+                        <img src="/logo-black.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
                     </div>
                     <button
                         onClick={() => setIsSidebarOpen(true)}
