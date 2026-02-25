@@ -226,6 +226,8 @@ export default async function AdminDashboard() {
                         {(() => {
                             const imageCapacity = Math.floor((nbCredits.credits || 0) / 4);
                             const missingImages = Math.max(0, stats.totalUserCredits - imageCapacity);
+                            const requiredAPICredits = missingImages * 4;
+                            const refillCost = missingImages * 0.02;
                             const isHealthy = imageCapacity >= stats.totalUserCredits;
 
                             return (
@@ -241,13 +243,13 @@ export default async function AdminDashboard() {
                                                 <div className="flex justify-between items-center text-xs">
                                                     <span className="text-gray-400 font-bold uppercase tracking-wider">Required API Credits</span>
                                                     <span className="text-white font-black">
-                                                        {(missingImages * 4).toLocaleString('de-DE')}
+                                                        {requiredAPICredits.toLocaleString('de-DE')}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-xs">
                                                     <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
                                                     <span className="text-yellow-500 font-black">
-                                                        ${(missingImages * 0.02).toFixed(2)}
+                                                        ${refillCost.toFixed(2)}
                                                     </span>
                                                 </div>
                                             </>
@@ -263,7 +265,7 @@ export default async function AdminDashboard() {
                                         <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
                                             {isHealthy
                                                 ? `Balance sufficient. Capacity (${imageCapacity.toLocaleString('de-DE')} images) covers all user holdings.`
-                                                : `Shortage detected. You need to cover ${missingImages.toLocaleString('de-DE')} more images. 1 image = 4 credits ($0.02).`
+                                                : `Shortage: (User Balance - Capacity) * 4 = ${requiredAPICredits.toLocaleString('de-DE')} missing credits.`
                                             }
                                         </p>
                                     </div>
