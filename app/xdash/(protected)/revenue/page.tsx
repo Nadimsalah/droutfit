@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { DollarSign, TrendingUp, CreditCard, Calendar, BarChart3, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react"
+import { DollarSign, TrendingUp, CreditCard, Calendar, BarChart3, ArrowUpRight, ArrowDownRight, Loader2, ImageIcon } from "lucide-react"
 
 // Types
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all'
 type RevenueStats = {
-    total: number
-    subscription: number
-    credits: number
+    gross: number
+    net: number
+    imageCost: number
+    totalImages: number
     period: Period
 }
 
 export default function RevenuePage() {
     const [period, setPeriod] = useState<Period>('month')
-    const [stats, setStats] = useState<RevenueStats>({ total: 0, subscription: 0, credits: 0, period: 'month' })
+    const [stats, setStats] = useState<RevenueStats>({ gross: 0, net: 0, imageCost: 0, totalImages: 0, period: 'month' })
     const [loading, setLoading] = useState(true)
     const [transactions, setTransactions] = useState<any[]>([])
 
@@ -37,8 +38,6 @@ export default function RevenuePage() {
             case 'yesterday':
                 startDate.setDate(now.getDate() - 1)
                 startDate.setHours(0, 0, 0, 0)
-                // Need end date for yesterday? Logic below simplifies to >= startDate
-                // For yesterday specific, we might need a subtle range check, but let's do "Last 24h" style or "Since Yesterday Start" for simplicity first
                 break
             case 'week':
                 startDate.setDate(now.getDate() - 7)
@@ -68,11 +67,24 @@ export default function RevenuePage() {
         }
 
         // Calculate Aggregates
-        const total = data.reduce((acc, curr) => acc + Number(curr.amount), 0)
-        const subscription = data.filter(t => t.type === 'SUBSCRIPTION').reduce((acc, curr) => acc + Number(curr.amount), 0)
-        const credits = data.filter(t => t.type === 'CREDITS').reduce((acc, curr) => acc + Number(curr.amount), 0)
+        let gross = 0
+        let totalImages = 0
 
-        setStats({ total, subscription, credits, period: selectedPeriod })
+        data.forEach(curr => {
+            const amount = Number(curr.amount) || 0
+            if (curr.status === 'succeeded') {
+                gross += amount
+                const qtyMatch = curr.description?.match(/(\d+)/)
+                if (qtyMatch) {
+                    totalImages += parseInt(qtyMatch[1], 10)
+                }
+            }
+        })
+
+        const imageCost = totalImages * 0.02
+        const net = gross - imageCost
+
+        setStats({ gross, net, imageCost, totalImages, period: selectedPeriod })
         setTransactions(data)
         setLoading(false)
     }
@@ -82,7 +94,7 @@ export default function RevenuePage() {
             <div className="flex flex-col md:flex-row justify-between items-end gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Revenue Analytics</h1>
-                    <p className="text-gray-400 mt-1"> detailed breakdown of your platform's income.</p>
+                    <p className="text-gray-400 mt-1">Detailed breakdown of gross vs net income.</p>
                 </div>
 
                 {/* Time Range Selector */}
@@ -109,50 +121,41 @@ export default function RevenuePage() {
             ) : (
                 <>
                     {/* Big Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-gradient-to-br from-blue-600/20 to-blue-900/10 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between h-48">
                             <div className="relative z-10">
-                                <p className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-2">Total Revenue</p>
-                                <h2 className="text-4xl font-black text-white">${stats.total.toFixed(2)}</h2>
-                                <div className="mt-4 flex items-center gap-2 text-xs text-blue-300/80">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>{period === 'all' ? 'All time' : `Since ${period} start`}</span>
+                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Gross Revenue</p>
+                                <h2 className="text-5xl font-black text-white">${stats.gross.toFixed(2)}</h2>
+                                <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 font-bold uppercase tracking-widest">
+                                    <TrendingUp className="h-4 w-4 text-green-500" /> All Customer Payments
                                 </div>
                             </div>
-                            <div className="absolute right-0 bottom-0 opacity-10">
-                                <DollarSign className="h-32 w-32 -mr-6 -mb-6" />
-                            </div>
-                        </div>
-
-                        <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden">
-                            <div className="relative z-10">
-                                <p className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-2">Subscriptions</p>
-                                <h2 className="text-4xl font-black text-white">${stats.subscription.toFixed(2)}</h2>
-                                <div className="w-full bg-gray-800 h-1.5 mt-4 rounded-full overflow-hidden">
-                                    <div
-                                        className="bg-purple-500 h-full rounded-full transition-all duration-1000"
-                                        style={{ width: `${stats.total > 0 ? (stats.subscription / stats.total) * 100 : 0}%` }}
-                                    />
-                                </div>
-                                <p className="text-[10px] text-gray-500 mt-2 text-right">
-                                    {stats.total > 0 ? ((stats.subscription / stats.total) * 100).toFixed(1) : 0}% of total
-                                </p>
+                            <div className="absolute right-[-20px] bottom-[-20px] opacity-5">
+                                <DollarSign className="h-48 w-48 text-white" />
                             </div>
                         </div>
 
-                        <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden">
-                            <div className="relative z-10">
-                                <p className="text-sm font-bold text-green-400 uppercase tracking-wider mb-2">Credit Top-ups</p>
-                                <h2 className="text-4xl font-black text-white">${stats.credits.toFixed(2)}</h2>
-                                <div className="w-full bg-gray-800 h-1.5 mt-4 rounded-full overflow-hidden">
-                                    <div
-                                        className="bg-green-500 h-full rounded-full transition-all duration-1000"
-                                        style={{ width: `${stats.total > 0 ? (stats.credits / stats.total) * 100 : 0}%` }}
-                                    />
+                        <div className="bg-gradient-to-br from-blue-600/20 to-blue-900/10 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between h-48">
+                            <div className="relative z-10 w-full flex justify-between items-start">
+                                <div>
+                                    <p className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-1">Net Revenue</p>
+                                    <h2 className="text-5xl font-black text-white">${stats.net.toFixed(2)}</h2>
+                                    <div className="mt-2 flex items-center gap-2 text-xs text-blue-300/80 font-bold uppercase tracking-widest">
+                                        <ArrowUpRight className="h-4 w-4 text-blue-400" /> Profit After API Costs
+                                    </div>
                                 </div>
-                                <p className="text-[10px] text-gray-500 mt-2 text-right">
-                                    {stats.total > 0 ? ((stats.credits / stats.total) * 100).toFixed(1) : 0}% of total
-                                </p>
+
+                                <div className="text-right flex flex-col gap-1 mt-1">
+                                    <div className="text-[10px] uppercase font-black tracking-widest text-red-400 bg-red-500/10 px-2 py-1 rounded inline-flex items-center gap-1 self-end">
+                                        -{stats.imageCost.toFixed(2)}$ API Cost
+                                    </div>
+                                    <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                                        ({stats.totalImages.toLocaleString()} imgs × $0.02)
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="absolute right-10 bottom-4 opacity-10">
+                                <BarChart3 className="h-24 w-24 text-blue-500" />
                             </div>
                         </div>
                     </div>
@@ -168,34 +171,60 @@ export default function RevenuePage() {
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="bg-white/5 text-gray-400 font-medium border-b border-gray-800">
+                                <thead className="bg-white/5 text-[10px] uppercase font-black tracking-widest text-gray-500 border-b border-gray-800">
                                     <tr>
-                                        <th className="px-6 py-4">Type</th>
+                                        <th className="px-6 py-4">Status</th>
                                         <th className="px-6 py-4">Description</th>
+                                        <th className="px-6 py-4 text-right">Images</th>
                                         <th className="px-6 py-4">Date</th>
-                                        <th className="px-6 py-4 text-right">Amount</th>
+                                        <th className="px-6 py-4 text-right">Gross</th>
+                                        <th className="px-6 py-4 text-right">Net</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-800">
+                                <tbody className="divide-y divide-gray-800/60">
                                     {transactions.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-8 text-center text-gray-500">No transactions found for this period.</td></tr>
+                                        <tr><td colSpan={6} className="p-16 text-center text-gray-600 font-bold uppercase tracking-widest text-xs">No transactions found for this period.</td></tr>
                                     ) : (
-                                        transactions.map((t) => (
-                                            <tr key={t.id} className="hover:bg-white/5 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${t.type === 'SUBSCRIPTION'
-                                                        ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                                        : 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                        }`}>
-                                                        {t.type === 'SUBSCRIPTION' ? <CreditCard className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                                                        {t.type}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-gray-300 font-medium">{t.description || 'Payment'}</td>
-                                                <td className="px-6 py-4 text-gray-500 text-xs font-mono">{new Date(t.created_at).toLocaleString()}</td>
-                                                <td className="px-6 py-4 text-right font-bold text-white font-mono">+${Number(t.amount).toFixed(2)}</td>
-                                            </tr>
-                                        ))
+                                        transactions.map((t) => {
+                                            const amount = Number(t.amount) || 0
+                                            const isSuccess = t.status === 'succeeded'
+                                            const qtyMatch = t.description?.match(/(\d+)/)
+                                            const qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 0
+                                            const cost = qty * 0.02
+                                            const txNet = isSuccess ? amount - cost : 0
+
+                                            return (
+                                                <tr key={t.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${isSuccess ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                                                            }`}>
+                                                            {t.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-300 font-bold text-xs">{t.description || 'Payment'}</td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {qty > 0 && isSuccess ? (
+                                                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                                                                {qty} <ImageIcon className="h-3 w-3 text-gray-600" />
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-700">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-500 text-[11px] font-medium">
+                                                        {new Date(t.created_at).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-black text-gray-300">
+                                                        ${isSuccess ? amount.toFixed(2) : '0.00'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <span className={`font-black ${isSuccess ? 'text-blue-400' : 'text-gray-600'}`}>
+                                                            ${txNet.toFixed(2)}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })
                                     )}
                                 </tbody>
                             </table>
