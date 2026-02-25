@@ -136,7 +136,7 @@ export default function RevenuePage() {
                         <div className="p-6 border-b border-gray-800 flex justify-between items-center">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <BarChart3 className="h-5 w-5 text-gray-500" />
-                                Recent Transactions
+                                All Transactions
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
