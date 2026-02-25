@@ -1,29 +1,40 @@
 import { createClient } from "@supabase/supabase-js"
 import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
 
-// Admin client to bypass RLS for dashboard stats
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
     try {
-        const { count: totalUsers, error: err1 } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true })
-        const { count: activeSubs, error: err2 } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-        const { data: profilesData, error: err3 } = await supabaseAdmin.from('profiles').select('id, credits, full_name, email')
+        if (!supabaseUrl || !serviceKey) {
+            console.error("Dashboard Environment Missing:", { url: !!supabaseUrl, key: !!serviceKey })
+            return { totalUsers: 0, activeSubs: 0, totalUserCredits: 0, recentTransactions: [] }
+        }
+
+        // Use a local client to ensure fresh env loading
+        const adminClient = createClient(supabaseUrl, serviceKey);
+
+        const { count: totalUsers, error: err1 } = await adminClient.from('profiles').select('*', { count: 'exact', head: true })
+        const { count: activeSubs, error: err2 } = await adminClient.from('profiles').select('*', { count: 'exact', head: true }).eq('is_subscribed', true)
+
+        const { data: profilesData, error: err3 } = await adminClient.from('profiles').select('id, credits, full_name, email')
 
         if (err1 || err2 || err3) {
-            console.error("Dashboard Stats Error:", { err1, err2, err3 })
+            console.error("Dashboard Stats Error Details:", {
+                totalUsersErr: err1?.message || err1,
+                activeSubsErr: err2?.message || err2,
+                profilesDataErr: err3?.message || err3,
+                timestamp: new Date().toISOString()
+            })
         }
 
         const totalUserCredits = profilesData?.reduce((sum, p) => sum + (p.credits || 0), 0) || 0
 
         // Fetch recent transactions
-        const { data: transactions } = await supabaseAdmin
+        const { data: transactions } = await adminClient
             .from('transactions')
             .select('*')
             .eq('status', 'succeeded')
