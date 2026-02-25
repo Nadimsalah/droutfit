@@ -190,10 +190,6 @@ export default async function AdminDashboard() {
                                     Calculation based on $0.02 per 4 credits ratio to cover {stats.totalUserCredits.toLocaleString('de-DE')} user liabilities.
                                 </p>
                             </div>
-
-                            <button className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-yellow-600/20 active:scale-95 uppercase tracking-widest">
-                                Purchase API Credits
-                            </button>
                         </div>
                     </div>
                 </div>
