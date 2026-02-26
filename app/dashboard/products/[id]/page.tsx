@@ -39,19 +39,12 @@ export default function ProductDetailsPage() {
             const { data, error } = await supabase
                 .from('usage_logs')
                 .select('*')
-                .eq('path', '/api/virtual-try-on')
+                .eq('product_id', params.id as string)
                 .order('created_at', { ascending: false })
                 .limit(50);
 
             if (!error && data) {
-                // Filter logs that have this product_id in the error_message JSON
-                const filtered = data.filter(log => {
-                    try {
-                        const meta = JSON.parse(log.error_message || '{}');
-                        return true; // show all for now, TODO: store product_id separately
-                    } catch { return true; }
-                });
-                setTryonLogs(filtered);
+                setTryonLogs(data);
             }
             setLogsLoading(false);
         };
@@ -240,7 +233,7 @@ export default function ProductDetailsPage() {
                             <button
                                 onClick={() => {
                                     setLogsLoading(true);
-                                    supabase.from('usage_logs').select('*').eq('path', '/api/virtual-try-on').order('created_at', { ascending: false }).limit(50)
+                                    supabase.from('usage_logs').select('*').eq('product_id', product.id).order('created_at', { ascending: false }).limit(50)
                                         .then(({ data }) => { if (data) setTryonLogs(data); setLogsLoading(false); });
                                 }}
                                 className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"

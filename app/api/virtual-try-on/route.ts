@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
                 path: "/api/virtual-try-on",
                 status: 202, // 202 Accepted (Pending)
                 latency: null,
+                product_id: productId,
                 // Only include ip_address if we know it won't crash (dynamic fallback)
                 ...((profile as any).ip_limit ? { ip_address: ip } : {})
             }]).select().single();
