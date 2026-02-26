@@ -13,6 +13,7 @@ export default function InteractiveTryOnSection() {
     const [view, setView] = useState<"details" | "tryon">("details");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const scrollTargetRef = useRef<HTMLDivElement>(null);
 
     const product = {
         name: "Alaska Puffer Jacket",
@@ -41,6 +42,11 @@ export default function InteractiveTryOnSection() {
             setView("tryon");
             setStatus("processing");
             handleTryOn(file);
+
+            // On mobile, scroll up to see the processing frame
+            setTimeout(() => {
+                scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
     };
 
@@ -129,7 +135,7 @@ export default function InteractiveTryOnSection() {
                     </p>
                 </div>
 
-                <div className="bg-[#0D1117]/60 backdrop-blur-3xl rounded-[32px] md:rounded-[48px] border border-white/5 overflow-hidden shadow-2xl">
+                <div ref={scrollTargetRef} className="bg-[#0D1117]/60 backdrop-blur-3xl rounded-[32px] md:rounded-[48px] border border-white/5 overflow-hidden shadow-2xl">
                     <div className="flex flex-col lg:flex-row min-h-[500px] md:min-h-[600px]">
 
                         {/* Display Area (Left) */}
@@ -169,7 +175,7 @@ export default function InteractiveTryOnSection() {
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
                                                         exit={{ opacity: 0 }}
-                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 transition-all"
+                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 transition-all rounded-[24px] md:rounded-[32px] overflow-hidden"
                                                     >
                                                         <div className="relative w-24 h-24 md:w-32 md:h-32 mb-8 scale-110 md:scale-100">
                                                             <svg className="w-full h-full transform -rotate-90">
