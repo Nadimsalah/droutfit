@@ -36,16 +36,27 @@ export default function ProductDetailsPage() {
         const fetchLogs = async () => {
             if (!params.id) return;
             setLogsLoading(true);
-            const { data, error } = await supabase
+
+            // First try filtering by product_id (works after SQL migration)
+            let { data, error } = await supabase
                 .from('usage_logs')
                 .select('*')
                 .eq('product_id', params.id as string)
                 .order('created_at', { ascending: false })
                 .limit(50);
 
-            if (!error && data) {
-                setTryonLogs(data);
+            // Fallback: if column missing or no results, show all user try-on logs
+            if (error || !data || data.length === 0) {
+                const fallback = await supabase
+                    .from('usage_logs')
+                    .select('*')
+                    .eq('path', '/api/virtual-try-on')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                data = fallback.data;
             }
+
+            if (data) setTryonLogs(data);
             setLogsLoading(false);
         };
         fetchLogs();
@@ -231,10 +242,15 @@ export default function ProductDetailsPage() {
                                 Try-On Activity Logs
                             </h3>
                             <button
-                                onClick={() => {
+                                onClick={async () => {
                                     setLogsLoading(true);
-                                    supabase.from('usage_logs').select('*').eq('product_id', product.id).order('created_at', { ascending: false }).limit(50)
-                                        .then(({ data }) => { if (data) setTryonLogs(data); setLogsLoading(false); });
+                                    let { data } = await supabase.from('usage_logs').select('*').eq('product_id', product.id).order('created_at', { ascending: false }).limit(50);
+                                    if (!data || data.length === 0) {
+                                        const fallback = await supabase.from('usage_logs').select('*').eq('path', '/api/virtual-try-on').order('created_at', { ascending: false }).limit(50);
+                                        data = fallback.data;
+                                    }
+                                    if (data) setTryonLogs(data);
+                                    setLogsLoading(false);
                                 }}
                                 className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
                                 title="Refresh"
