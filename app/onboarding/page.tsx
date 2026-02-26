@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Building, Globe, Loader2, Save, User as UserIcon } from "lucide-react"
 
 export default function OnboardingPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const [isFetchingUser, setIsFetchingUser] = useState(true)
     const [step, setStep] = useState(1)
     const [formData, setFormData] = useState({
         firstName: "",
@@ -15,6 +16,29 @@ export default function OnboardingPage() {
         website: ""
     })
     const router = useRouter()
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.user_metadata?.full_name) {
+                const parts = user.user_metadata.full_name.trim().split(' ')
+                const fetchedFirstName = parts[0] || ''
+                const fetchedLastName = parts.slice(1).join(' ') || ''
+
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: fetchedFirstName,
+                    lastName: fetchedLastName
+                }))
+
+                if (fetchedFirstName) {
+                    setStep(2)
+                }
+            }
+            setIsFetchingUser(false)
+        }
+        fetchUserData()
+    }, [])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -54,6 +78,14 @@ export default function OnboardingPage() {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    if (isFetchingUser) {
+        return (
+            <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+        )
     }
 
     return (

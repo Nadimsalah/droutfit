@@ -127,6 +127,10 @@ export async function POST(req: NextRequest) {
 
         try {
 
+            // Fetch custom prompt if defined
+            const { data: nbPromptData } = await supabase.from('system_settings').select('value').eq('key', 'NANOBANANA_PROMPT').single();
+            const defaultNbPrompt = nbPromptData?.value || "high quality fashion photography, realistic lighting";
+
             // 8. Generate with NanoBanana
             if (!resultUrl && NANOBANANA_API_KEY) {
                 console.log("Using NanoBanana Engine...");
@@ -139,7 +143,7 @@ export async function POST(req: NextRequest) {
                             "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
                         },
                         body: JSON.stringify({
-                            prompt: prompt || "high quality fashion photography, realistic lighting",
+                            prompt: prompt || defaultNbPrompt,
                             type: type || "IMAGETOIAMGE",
                             numImages: numImages || 1,
                             imageUrls: imageUrls, // [face, garment]
@@ -202,7 +206,7 @@ export async function POST(req: NextRequest) {
                 await supabase.from("usage_logs").update({
                     status: 200,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ taskId, result_url: resultUrl, credits_used: 4, channel: "Nano Banana" })
+                    error_message: JSON.stringify({ taskId, result_url: resultUrl, input_images: imageUrls, credits_used: 4, channel: "Nano Banana" })
                 }).eq("id", logEntryId);
             }
 
@@ -228,7 +232,7 @@ export async function POST(req: NextRequest) {
                 await supabase.from("usage_logs").update({
                     status: 500,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ error: (error as Error).message, taskId, credits_used: 0, channel: "Nano Banana" })
+                    error_message: JSON.stringify({ error: (error as Error).message, taskId, input_images: imageUrls, credits_used: 0, channel: "Nano Banana" })
                 }).eq("id", logEntryId);
             }
             throw error;

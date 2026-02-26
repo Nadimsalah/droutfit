@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X } from "lucide-react"
+import { LayoutDashboard, Users, Settings, LogOut, Menu, X, MessageSquare, ListTree } from "lucide-react"
 import { useState } from "react"
 import { logoutAction } from "../../actions"
 
@@ -77,6 +77,28 @@ export default function AdminSidebar() {
                     >
                         <Settings className={`h-5 w-5 ${isActive('/xdash/settings') ? 'text-blue-500' : 'text-gray-500'}`} />
                         Set pricing
+                    </Link>
+                    <Link
+                        href="/xdash/prompts"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/prompts')
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            }`}
+                    >
+                        <MessageSquare className={`h-5 w-5 ${isActive('/xdash/prompts') ? 'text-blue-500' : 'text-gray-500'}`} />
+                        Prompt Manager
+                    </Link>
+                    <Link
+                        href="/xdash/logs"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/logs')
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            }`}
+                    >
+                        <ListTree className={`h-5 w-5 ${isActive('/xdash/logs') ? 'text-blue-500' : 'text-gray-500'}`} />
+                        API Logs
                     </Link>
                 </nav>
 

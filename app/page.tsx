@@ -1,5 +1,7 @@
 import Navbar from "@/components/Navbar";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
+import PricingSection from "@/components/PricingSection";
+import StatsSection from "@/components/StatsSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import ContactPopup from "@/components/ContactPopup";
@@ -45,7 +47,7 @@ export default function Home() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </span>
-                        The AI Virtual Fitting Room API
+                        Built for Fashion E-Commerce Owners
                     </div>
 
                     <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
@@ -86,6 +88,46 @@ export default function Home() {
 
                     {/* Glowing shadow effect under the video */}
                     <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[60%] h-20 bg-gradient-to-r from-blue-600/20 to-purple-600/20 blur-[80px] pointer-events-none -z-10"></div>
+                </div>
+
+                {/* Before and After Visual */}
+                <div className="max-w-6xl w-full mx-auto relative z-10 mt-32 flex flex-col md:flex-row items-center justify-center gap-8 px-4">
+
+                    {/* Before Image */}
+                    <div className="flex flex-col items-center group">
+                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 shadow-2xl transition-transform duration-500 group-hover:-translate-y-2">
+                            <img
+                                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=800&fit=crop"
+                                alt="Shopper before Virtual Try-On"
+                                className="w-full h-full object-cover filter saturate-50"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Arrow Divider */}
+                    <div className="hidden md:flex flex-col items-center justify-center pb-8">
+                        <div className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                            <ArrowRight className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-3 tracking-widest uppercase">
+                            AI Magic
+                        </div>
+                    </div>
+
+                    {/* After Image */}
+                    <div className="flex flex-col items-center group">
+                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.2)] transition-transform duration-500 group-hover:-translate-y-2">
+                            <img
+                                src="/kaftan-after.png"
+                                alt="Shopper wearing selected apparel via Virtual Try-On"
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-4 right-4 bg-blue-600 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                AFTER
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
@@ -150,30 +192,35 @@ export default function Home() {
             {/* Interactive Try-On Demonstration Area */}
             <InteractiveTryOnSection />
 
-            {/* CTA */}
-            <section className="py-24 px-6 overflow-hidden">
-                <div className="max-w-5xl mx-auto border border-blue-500/20 rounded-[3rem] p-12 md:p-24 text-center relative bg-gradient-to-tr from-[#131720] to-[#0a0d14]">
-                    <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-[100px]"></div>
-                    <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px]"></div>
+            {/* Pricing Section (SEO Optimized inside) */}
+            <PricingSection />
 
-                    <div className="relative z-10 space-y-8">
-                        <h2 className="text-4xl md:text-6xl font-black tracking-tight">
-                            Elevate your store today.
-                        </h2>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            Don't let returns eat away at your margins. Equip your brand with tomorrow's AI tools.
-                        </p>
-                        <div className="flex justify-center pt-8">
-                            <Link href="/dashboard" className="px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-bold text-xl transition-all shadow-xl shadow-blue-500/20 scale-100 hover:scale-105">
-                                Start Free Integration
-                            </Link>
-                        </div>
-                    </div>
+            {/* Bye-bye buyer's remorse Section */}
+            <StatsSection />
+
+            <div className="bg-[#050608] pb-12 flex flex-col items-center justify-center gap-12 px-6">
+                <div className="max-w-4xl mx-auto w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                <div className="text-center space-y-6">
+                    <h3 className="text-3xl md:text-5xl font-black text-white tracking-tight">
+                        Ready to revolutionize <span className="text-blue-500">your brand?</span>
+                    </h3>
+                    <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
+                        Join the next generation of e-commerce. AI virtual try-on is the future of digital storefronts.
+                    </p>
                 </div>
-            </section>
+
+                <Link
+                    href="/dashboard"
+                    className="group px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-black text-xl transition-all shadow-xl shadow-blue-500/20 hover:scale-105 flex items-center gap-3"
+                >
+                    Start Free Integration
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+            </div>
 
             {/* Footer */}
-            <footer className="border-t border-white/10 bg-[#050608] pt-20 pb-10 px-6 mt-12">
+            <footer className="border-t border-white/10 bg-[#050608] pt-20 pb-10 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 mb-16">
                     <div className="space-y-6 max-w-sm">
                         <Link href="/" className="flex items-center gap-2 group">

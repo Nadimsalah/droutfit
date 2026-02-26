@@ -71,30 +71,43 @@ export async function getSystemLogsAction() {
         const userIds = [...new Set(logs.map(l => l.user_id))].filter(Boolean)
         const { data: profiles } = await supabaseAdmin
             .from('profiles')
-            .select('id, full_name, store_domain, email')
+            .select('id, full_name, store_name, store_domain')
             .in('id', userIds)
 
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || [])
 
         const enrichedLogs = logs.map(log => {
             let meta = { taskId: "—", result_url: "", credits_used: 0, channel: "Nano Banana", error: "" }
-            if (log.error_message) {
+            if (log.error_message && log.error_message.startsWith('{')) {
                 try {
                     const parsed = JSON.parse(log.error_message)
                     meta = { ...meta, ...parsed }
                 } catch (e) {
                     meta.error = log.error_message
                 }
-            } else if (log.status === 200) {
-                // For old records before we recorded taskId
-                meta.credits_used = 4
+            } else {
+                meta.error = log.error_message || ""
+                // Fallback for demo logs that might be pending or missing taskId
+                if (log.path === '/api/generate-demo') {
+                    meta.taskId = "DEMO-LIVE"
+                }
+            }
+
+            if (!meta.taskId || meta.taskId === "—") {
+                if (log.path === '/api/generate-demo') meta.taskId = "DEMO-LIVE"
             }
 
             return {
                 id: log.id,
                 created_at: log.created_at,
                 status: log.status,
-                user: profilesMap.get(log.user_id) || { full_name: 'Unknown', store_domain: null, email: null },
+                path: log.path,
+                user: profilesMap.get(log.user_id) || {
+                    full_name: 'Guest User',
+                    store_name: log.path === '/api/generate-demo' ? 'Landing Page Demo' : 'Guest System Login',
+                    store_domain: null,
+                    email: null
+                },
                 meta
             }
         })

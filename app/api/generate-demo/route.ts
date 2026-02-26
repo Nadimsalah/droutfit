@@ -43,6 +43,7 @@ async function uploadToImgBB(base64Image: string): Promise<string> {
 
 
 export async function POST(req: NextRequest) {
+    const startTime = Date.now();
     try {
         const { userImageUrl, garmentUrl } = await req.json();
 
@@ -69,7 +70,14 @@ export async function POST(req: NextRequest) {
         console.log("Images ready:", finalUserImageUrl, absoluteGarmentUrl);
 
 
-        // 2. Call AI Provider (Prioritize Google Official AI)
+        // 2. Fetch System Prompts
+        const { data: geminiPromptData } = await supabaseAdmin.from('system_settings').select('value').eq('key', 'GEMINI_PROMPT').single();
+        const geminiPrompt = geminiPromptData?.value || "Analyze these images for virtual try-on suitability. Return 'READY'.";
+
+        const { data: nbPromptData } = await supabaseAdmin.from('system_settings').select('value').eq('key', 'NANOBANANA_PROMPT').single();
+        const nbPrompt = nbPromptData?.value || "high quality fashion photography, realistic lighting";
+
+        // 3. Call AI Provider (Prioritize Google Official AI)
         let resultUrl = null;
 
         if (GEMINI_API_KEY && genAI) {
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest) {
                 ]);
 
                 const result = await model.generateContent([
-                    "Analyze these images for virtual try-on suitability. Return 'READY'.",
+                    geminiPrompt,
                     personData,
                     garmentData
                 ]);
@@ -121,7 +129,7 @@ export async function POST(req: NextRequest) {
                     "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
                 },
                 body: JSON.stringify({
-                    prompt: "Put the provided clothing item onto the uploaded person.",
+                    prompt: nbPrompt,
                     type: "IMAGETOIAMGE",
                     numImages: 1,
                     imageUrls: [finalUserImageUrl, absoluteGarmentUrl],
@@ -151,6 +159,28 @@ export async function POST(req: NextRequest) {
 
         if (!resultUrl) {
             resultUrl = absoluteGarmentUrl;
+        }
+
+        const latency = `${Date.now() - startTime}ms`;
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '::1';
+
+        // Attempt to log entry (we omit user_id for guest/demo attempts)
+        try {
+            await supabaseAdmin.from('usage_logs').insert([{
+                user_id: null, // This requires a nullable user_id column
+                method: "POST",
+                path: "/api/generate-demo",
+                status: 200,
+                latency: latency,
+                ip_address: ip,
+                error_message: JSON.stringify({
+                    taskId: "LIVE-DEMO",
+                    result_url: resultUrl,
+                    input_images: [finalUserImageUrl, absoluteGarmentUrl]
+                })
+            }]);
+        } catch (logErr) {
+            console.error("Failed to log demo request:", logErr);
         }
 
         return NextResponse.json({
