@@ -7,6 +7,7 @@ import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
 export default function PricingSection() {
     const [images, setImages] = useState(500)
     const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING)
+    const [activeIndex, setActiveIndex] = useState(0)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const popularCardRef = useRef<HTMLDivElement>(null)
 
@@ -21,18 +22,22 @@ export default function PricingSection() {
         getPricing().then(p => {
             setPricing(p)
             setImages(p.PACKAGE_3_AMOUNT)
-
-            // On mobile, scroll to the popular plan after data is loaded
-            setTimeout(() => {
-                if (window.innerWidth < 768 && popularCardRef.current && scrollContainerRef.current) {
-                    const container = scrollContainerRef.current;
-                    const card = popularCardRef.current;
-                    const scrollPos = card.offsetLeft - (container.offsetWidth / 2) + (card.offsetWidth / 2);
-                    container.scrollTo({ left: scrollPos, behavior: 'smooth' });
-                }
-            }, 500);
         })
     }, [])
+
+    // Track active dot on mobile scroll
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const handleScroll = () => {
+            const scrollLeft = container.scrollLeft;
+            const containerWidth = container.offsetWidth;
+            const index = Math.round(scrollLeft / (containerWidth * 0.78));
+            setActiveIndex(Math.max(0, Math.min(index, 3)));
+        };
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const getImagesCost = (amount: number) => {
         if (amount === pricing.PACKAGE_1_AMOUNT) return pricing.PACKAGE_1_PRICE;
@@ -62,17 +67,24 @@ export default function PricingSection() {
                     </p>
                 </header>
 
+                {/* Mobile scroll hint: drag arrows */}
+                <div className="flex md:hidden items-center justify-center gap-2 mb-6 text-gray-500">
+                    <span className="text-lg animate-bounce">←</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Swipe to explore plans</span>
+                    <span className="text-lg animate-bounce">→</span>
+                </div>
+
                 <div
                     ref={scrollContainerRef}
-                    className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 overflow-x-auto pb-20 pt-10 snap-x snap-mandatory px-12 md:overflow-visible md:pb-0 md:px-0 md:mx-0 no-scrollbar scroll-smooth"
+                    className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 mb-8 md:mb-16 overflow-x-auto pb-6 pt-10 snap-x snap-mandatory md:overflow-visible md:pb-0 no-scrollbar scroll-smooth -mx-4 px-[12%] md:mx-0 md:px-0"
                 >
                     {packages.map((pkg) => (
                         <div
                             key={pkg.id}
                             ref={pkg.popular ? popularCardRef : null}
-                            className={`flex-shrink-0 w-[85vw] max-w-[320px] md:w-auto snap-center rounded-[32px] transition-all duration-500 ${pkg.popular
-                                    ? 'bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-[2px] scale-105 md:scale-110 z-20 shadow-[0_40px_80px_-15px_rgba(59,130,246,0.4)]'
-                                    : 'bg-white/5 shadow-xl hover:bg-white/10 p-[1px] md:hover:scale-[1.02]'
+                            className={`flex-shrink-0 w-[76vw] max-w-[320px] md:w-auto snap-center rounded-[32px] transition-all duration-500 ${pkg.popular
+                                ? 'bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-[2px] scale-[1.03] md:scale-110 z-20 shadow-[0_40px_80px_-15px_rgba(59,130,246,0.4)]'
+                                : 'bg-white/5 shadow-xl hover:bg-white/10 p-[1px] md:hover:scale-[1.02]'
                                 }`}
                         >
                             <article className={`h-full rounded-[30px] p-8 flex flex-col items-center bg-[#0d1117]/95 backdrop-blur-sm transition-all duration-300 relative overflow-hidden`}>
@@ -130,6 +142,25 @@ export default function PricingSection() {
                                 </div>
                             </article>
                         </div>
+                    ))}
+                </div>
+
+                {/* Mobile dot indicators */}
+                <div className="flex md:hidden items-center justify-center gap-2 mb-8">
+                    {packages.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => {
+                                const container = scrollContainerRef.current;
+                                if (container) {
+                                    container.scrollTo({ left: i * container.offsetWidth * 0.78, behavior: 'smooth' });
+                                }
+                            }}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${activeIndex === i
+                                    ? 'w-6 bg-blue-500'
+                                    : 'w-1.5 bg-white/20'
+                                }`}
+                        />
                     ))}
                 </div>
 
