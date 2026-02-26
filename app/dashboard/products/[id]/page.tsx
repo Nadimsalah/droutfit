@@ -186,10 +186,11 @@ export default function ProductDetailsPage() {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Store Link Card */}
                     <div className="bg-[#13171F] border border-gray-800/40 rounded-2xl p-6 shadow-xl">
-                        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                        <h3 className="text-white font-bold mb-1 flex items-center gap-2">
                             <ShoppingBag className="h-4 w-4 text-purple-500" />
                             Store Connection
                         </h3>
+                        <p className="text-gray-500 text-xs mb-4">Your DrOutfit product Try-On widget URL — embed this link into your store product page.</p>
                         <div className="bg-[#0B0E14] border border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center">
                             <div className="flex-1 w-full relative">
                                 <div className="absolute left-3 top-3 text-gray-500">
@@ -198,19 +199,26 @@ export default function ProductDetailsPage() {
                                 <input
                                     type="text"
                                     readOnly
-                                    value={product.storeUrl || "No store URL linked"}
-                                    className="w-full bg-[#1A1F29] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-300 focus:outline-none"
+                                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${product.id}`}
+                                    className="w-full bg-[#1A1F29] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-300 focus:outline-none cursor-pointer"
+                                    onClick={(e) => (e.target as HTMLInputElement).select()}
                                 />
                             </div>
-                            {product.storeUrl && (
-                                <a
-                                    href={product.storeUrl}
-                                    target="_blank"
-                                    className="w-full sm:w-auto px-4 py-2.5 bg-white text-black hover:bg-gray-200 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <button
+                                    onClick={() => handleCopy(`${window.location.origin}/widget/${product.id}`)}
+                                    className="flex-1 sm:flex-none px-4 py-2.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                                 >
-                                    Visit Store <ExternalLink className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" /> Copy
+                                </button>
+                                <a
+                                    href={`/widget/${product.id}`}
+                                    target="_blank"
+                                    className="flex-1 sm:flex-none px-4 py-2.5 bg-white text-black hover:bg-gray-200 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                                >
+                                    Preview <ExternalLink className="h-3 w-3" />
                                 </a>
-                            )}
+                            </div>
                         </div>
                     </div>
 
