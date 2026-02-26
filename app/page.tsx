@@ -1,7 +1,6 @@
 import Navbar from "@/components/Navbar";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
-import StatsSection from "@/components/StatsSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import ContactPopup from "@/components/ContactPopup";
@@ -194,9 +193,6 @@ export default function Home() {
 
             {/* Pricing Section (SEO Optimized inside) */}
             <PricingSection />
-
-            {/* Bye-bye buyer's remorse Section */}
-            <StatsSection />
 
             <div className="bg-[#050608] pb-12 flex flex-col items-center justify-center gap-12 px-6">
                 <div className="max-w-4xl mx-auto w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
