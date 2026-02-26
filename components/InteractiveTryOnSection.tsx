@@ -311,7 +311,7 @@ export default function InteractiveTryOnSection() {
                                             <motion.div
                                                 className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"
                                                 initial={{ scaleX: 0 }}
-                                                animate={{ scaleX: isGenerating ? progress / 100 : 0 }}
+                                                animate={{ scaleX: status === "processing" ? progress / 100 : 0 }}
                                                 transition={{ duration: 0.1 }}
                                             />
                                         </button>
