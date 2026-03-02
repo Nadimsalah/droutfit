@@ -62,7 +62,7 @@ export default function SwipeableDemo() {
             </div>
 
             {/* Slider Container (Right on Desktop) */}
-            <div className="relative w-full lg:w-3/5 h-[65vh] lg:h-auto lg:aspect-video flex justify-center items-center mt-2 lg:mt-0">
+            <div className="relative w-full lg:w-3/5 aspect-[4/3] md:aspect-video flex justify-center items-center mt-6 lg:mt-0">
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={page}
