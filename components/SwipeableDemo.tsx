@@ -62,7 +62,7 @@ export default function SwipeableDemo() {
             </div>
 
             {/* Slider Container (Right on Desktop) */}
-            <div className="relative w-full lg:w-3/5 aspect-[4/3] md:aspect-video flex justify-center items-center mt-6 lg:mt-0">
+            <div className="relative w-[85%] max-w-md md:max-w-2xl lg:max-w-none lg:w-3/5 aspect-video flex justify-center items-center mt-6 lg:mt-0 mx-auto">
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={page}
@@ -87,7 +87,7 @@ export default function SwipeableDemo() {
                                 paginate(-1)
                             }
                         }}
-                        className="absolute w-full h-full md:w-[95%] md:h-[95%] rounded-3xl md:rounded-[2rem] overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing bg-transparent"
+                        className="absolute w-full h-full rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing bg-transparent"
                     >
                         <img
                             src={images[imageIndex].src}
