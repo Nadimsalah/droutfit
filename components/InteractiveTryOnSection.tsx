@@ -127,8 +127,11 @@ export default function InteractiveTryOnSection() {
                     >
                         <ShoppingCart className="h-3 w-3" /> Digital Storefront
                     </motion.div>
-                    <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-                        Experience the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Magic.</span>
+                    <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                        Imagine your store with <br className="md:hidden" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                            Feature Try-On
+                        </span>
                     </h2>
                     <p className="text-gray-500 text-sm max-w-xl mx-auto font-medium px-4">
                         Test our hyper-realistic AI try-on technology instantly. Upload a photo and see the future of fashion.
@@ -140,6 +143,19 @@ export default function InteractiveTryOnSection() {
 
                         {/* Display Area (Left) */}
                         <div className="lg:w-1/2 relative bg-black/20 flex items-center justify-center p-4 md:p-8 lg:p-12 overflow-hidden lg:border-r border-white/5 min-h-[400px] lg:min-h-0">
+                            <motion.div
+                                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 20 }}
+                                className="absolute top-10 md:top-14 left-1/2 -translate-x-1/2 bg-[#050608]/80 backdrop-blur-2xl border border-white/10 text-white text-xs md:text-sm font-medium pl-4 pr-5 py-2.5 rounded-full flex items-center gap-3 z-30 whitespace-nowrap shadow-[0_10px_40px_-10px_rgba(59,130,246,0.3)] pointer-events-none"
+                            >
+                                <div className="relative flex h-2.5 w-2.5 items-center justify-center">
+                                    <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-blue-500 opacity-40"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,1)]"></span>
+                                </div>
+                                <span className="tracking-wide text-gray-200">Test product to see</span>
+                            </motion.div>
+
                             <AnimatePresence mode="wait">
                                 {view === "details" ? (
                                     <motion.div

@@ -3,7 +3,7 @@ import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-
+import SwipeableDemo from "@/components/SwipeableDemo";
 
 export default function Home() {
     const jsonLd = {
@@ -86,49 +86,10 @@ export default function Home() {
                     </div>
 
                     {/* Glowing shadow effect under the video */}
-                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[60%] h-20 bg-gradient-to-r from-blue-600/20 to-purple-600/20 blur-[80px] pointer-events-none -z-10"></div>
-                </div>
-
-                {/* Before and After Visual */}
-                <div className="max-w-6xl w-full mx-auto relative z-10 mt-32 flex flex-col md:flex-row items-center justify-center gap-8 px-4">
-
-                    {/* Before Image */}
-                    <div className="flex flex-col items-center group">
-                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 shadow-2xl transition-transform duration-500 group-hover:-translate-y-2">
-                            <img
-                                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=800&fit=crop"
-                                alt="Shopper before Virtual Try-On"
-                                className="w-full h-full object-cover filter saturate-50"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Arrow Divider */}
-                    <div className="hidden md:flex flex-col items-center justify-center pb-8">
-                        <div className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-                            <ArrowRight className="h-6 w-6 text-white" />
-                        </div>
-                        <div className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-3 tracking-widest uppercase">
-                            AI Magic
-                        </div>
-                    </div>
-
-                    {/* After Image */}
-                    <div className="flex flex-col items-center group">
-                        <div className="relative w-full md:w-[350px] aspect-[3/4] rounded-3xl overflow-hidden border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.2)] transition-transform duration-500 group-hover:-translate-y-2">
-                            <img
-                                src="/kaftan-after.png"
-                                alt="Shopper wearing selected apparel via Virtual Try-On"
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-4 right-4 bg-blue-600 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                AFTER
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </section>
+
+            <SwipeableDemo />
 
             {/* Features SEO Section */}
             <section id="features" className="py-24 px-6 max-w-7xl mx-auto flex flex-col items-center relative z-10">
