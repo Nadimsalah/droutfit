@@ -166,7 +166,7 @@ export default function WidgetPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-4 font-sans text-gray-800">
+        <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-4 font-sans text-gray-800">
             {/* Main Glass Card */}
             <div className="w-full max-w-[480px] bg-white/70 backdrop-blur-2xl rounded-[32px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden transition-all duration-500">
 
