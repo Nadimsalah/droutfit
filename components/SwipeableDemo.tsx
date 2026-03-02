@@ -62,7 +62,7 @@ export default function SwipeableDemo() {
             </div>
 
             {/* Slider Container (Right on Desktop) */}
-            <div className="relative w-full lg:w-3/5 aspect-[4/3] md:aspect-video max-h-[60vh] flex justify-center items-center px-4 md:px-0">
+            <div className="relative w-full lg:w-3/5 aspect-[16/9] flex justify-center items-center mt-8 lg:mt-0">
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={page}
@@ -87,12 +87,12 @@ export default function SwipeableDemo() {
                                 paginate(-1)
                             }
                         }}
-                        className="absolute w-full h-full md:w-[95%] md:h-[95%] rounded-3xl md:rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-900/10 cursor-grab active:cursor-grabbing bg-black/40 backdrop-blur-sm"
+                        className="absolute w-full h-full md:w-[95%] md:h-[95%] rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-900/10 cursor-grab active:cursor-grabbing bg-transparent"
                     >
                         <img
                             src={images[imageIndex].src}
                             alt={images[imageIndex].alt}
-                            className="absolute inset-0 w-full h-full object-contain pointer-events-none filter drop-shadow-2xl"
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none filter drop-shadow-2xl"
                         />
                     </motion.div>
                 </AnimatePresence>

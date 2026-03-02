@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
                 console.log("Using Google Gemini Engine...");
                 try {
                     const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-                    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
+                    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
                     const [personData, garmentData] = await Promise.all([
                         (async () => {
@@ -185,12 +185,12 @@ export async function POST(req: NextRequest) {
                     }
 
                     if (base64Result) {
-                        console.log(`Google AI Success (3.1-Preview). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
+                        console.log(`Google AI Success (2.5-Preview). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
                         resultUrl = await uploadBase64Image(base64Result);
                     } else {
                         const analysisText = result.response.text();
-                        console.error("Google AI 3.1 did not return an image. Response text:", analysisText);
-                        throw new Error("The AI 3.1 did not generate an image: " + analysisText);
+                        console.error("Google AI 2.5 did not return an image. Response text:", analysisText);
+                        throw new Error("The AI 2.5 did not generate an image: " + analysisText);
                     }
 
                     const usageMetadata = {
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
                     return NextResponse.json({ status: "success", result_url: resultUrl, taskId, tokens: totalTokens });
 
                 } catch (gemError) {
-                    console.error("Google AI 3.1 Error:", gemError);
+                    console.error("Google AI 2.5 Error:", gemError);
                     throw gemError;
                 }
             } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {

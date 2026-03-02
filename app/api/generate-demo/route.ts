@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
             console.log("Using Google Official AI for Demo...");
             try {
                 const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
                 const [personData, garmentData] = await Promise.all([
                     (async () => {
@@ -123,12 +123,12 @@ export async function POST(req: NextRequest) {
                 }
 
                 if (base64Result) {
-                    console.log(`Google AI Success (Demo 3.1). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
+                    console.log(`Google AI Success (Demo 2.5). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
                     resultUrl = await uploadToImgBB(base64Result);
                 } else {
                     const analysisText = result.response.text();
-                    console.error("Google AI 3.1 (Demo) did not return an image. Response text:", analysisText);
-                    throw new Error("The AI 3.1 did not generate an image: " + analysisText);
+                    console.error("Google AI 2.5 (Demo) did not return an image. Response text:", analysisText);
+                    throw new Error("The AI 2.5 did not generate an image: " + analysisText);
                 }
 
                 // Add usage metadata to result
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
 
                 await new Promise(resolve => setTimeout(resolve, 3000));
             } catch (err) {
-                console.error("Google AI Demo 3.1 Error:", err);
+                console.error("Google AI Demo 2.5 Error:", err);
                 throw err;
             }
         } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {
