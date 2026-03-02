@@ -16,6 +16,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
     const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING)
     const [isLoading, setIsLoading] = useState(false)
     const [isCheckingSubscription, setIsCheckingSubscription] = useState(true)
+    const [isContactSalesOpen, setIsContactSalesOpen] = useState(false)
 
     // Fetch pricing on mount
     useEffect(() => {
@@ -37,9 +38,8 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
 
     const packages = [
         { id: 'package_1', amount: Number(pricing.PACKAGE_1_AMOUNT), price: Number(pricing.PACKAGE_1_PRICE), label: "Starter Pack" },
-        { id: 'package_2', amount: Number(pricing.PACKAGE_2_AMOUNT), price: Number(pricing.PACKAGE_2_PRICE), label: "Popular" },
-        { id: 'package_3', amount: Number(pricing.PACKAGE_3_AMOUNT), price: Number(pricing.PACKAGE_3_PRICE), label: "Pro Value" },
-        { id: 'package_4', amount: Number(pricing.PACKAGE_4_AMOUNT), price: Number(pricing.PACKAGE_4_PRICE), label: "Max Value" }
+        { id: 'package_2', amount: Number(pricing.PACKAGE_2_AMOUNT), price: Number(pricing.PACKAGE_2_PRICE), label: "Growth Pack" },
+        { id: 'package_3', amount: Number(pricing.PACKAGE_3_AMOUNT), price: Number(pricing.PACKAGE_3_PRICE), label: "Elite Value" }
     ]
 
     const [isCustom, setIsCustom] = useState(false);
@@ -112,8 +112,7 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                         {[
                             { ...packages[0], icon: <Box className="h-4 w-4" /> },
                             { ...packages[1], icon: <Zap className="h-4 w-4" /> },
-                            { ...packages[2], icon: <Gem className="h-4 w-4" /> },
-                            { ...packages[3], icon: <Crown className="h-4 w-4" /> }
+                            { ...packages[2], icon: <Gem className="h-4 w-4" /> }
                         ].map((pkg) => {
                             const isSelected = !isCustom && credits === pkg.amount;
                             return (
@@ -240,25 +239,31 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
                         <span className="text-3xl font-black text-white tracking-tighter">${totalCost}</span>
                     </div>
 
-                    {Number(totalCost) > 2500 && (
-                        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest leading-relaxed">
-                                Whop allows a maximum of $2.500 per order. Please reduce the volume or contact us for enterprise billing.
+                    {credits > 80000 && (
+                        <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                            <Info className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+                                For volumes over 80,000 images, we offer custom enterprise pricing and dedicated support.
                             </p>
                         </div>
                     )}
                 </div>
 
                 <button
-                    onClick={handleCheckout}
-                    disabled={isLoading || (isCustom && credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1)) || Number(totalCost) > 2500}
+                    onClick={() => {
+                        if (credits > 80000) {
+                            window.location.href = `/contact?type=sales`;
+                        } else {
+                            handleCheckout();
+                        }
+                    }}
+                    disabled={isLoading || (isCustom && credits < (Number(pricing.MINIMUM_CUSTOM_AMOUNT) || 1))}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 active:scale-95 group"
                 >
                     {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : Number(totalCost) > 2500 ? (
-                        "Amount Exceeds $2,500 Limit"
+                    ) : credits > 80000 ? (
+                        "Contact Sales"
                     ) : (
                         <>
                             Checkout Now

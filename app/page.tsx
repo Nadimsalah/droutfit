@@ -3,7 +3,7 @@ import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import ContactPopup from "@/components/ContactPopup";
+
 
 export default function Home() {
     const jsonLd = {
@@ -206,6 +206,11 @@ export default function Home() {
                     </p>
                 </div>
 
+                <div className="mt-8 flex flex-col items-center gap-4">
+                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                        Need higher volume? <Link href="/contact" className="text-blue-500 hover:underline">Contact Sales</Link>
+                    </p>
+                </div>
                 <Link
                     href="/dashboard"
                     className="group px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-black text-xl transition-all shadow-xl shadow-blue-500/20 hover:scale-105 flex items-center gap-3"
@@ -272,7 +277,7 @@ export default function Home() {
                             <ul className="space-y-4 text-sm text-gray-400">
                                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                                 <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                                <li><ContactPopup /></li>
+                                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
                             </ul>
                         </nav>
                     </div>

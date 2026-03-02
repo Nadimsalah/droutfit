@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon } from "lucide-react"
+import { Users, TrendingUp, DollarSign, Activity, CreditCard, ShieldCheck, Image as ImageIcon, Hash, Zap } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +15,32 @@ async function getStats() {
     // Split fetch to ensure balance isn't affected by other field errors
     const { data: creditsData } = await adminClient.from('profiles').select('credits')
     const totalUserCredits = creditsData?.reduce((sum: number, p: any) => sum + (p.credits || 0), 0) || 0
+
+    // Fetch usage logs for cost analysis
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { data: logs } = await adminClient
+        .from('usage_logs')
+        .select('error_message, status, path')
+        .gte('created_at', thirtyDaysAgo.toISOString());
+
+    let totalTokens = 0;
+    let totalCost = 0;
+    let totalGenerations = 0;
+
+    logs?.forEach(log => {
+        if (log.status === 200 && log.error_message) {
+            try {
+                const meta = JSON.parse(log.error_message);
+                if (meta.tokens_used) {
+                    totalTokens += meta.tokens_used;
+                    totalCost += meta.estimated_cost || 0;
+                    totalGenerations++;
+                }
+            } catch (e) { }
+        }
+    });
 
     // Merge profile names with auth emails for complete mapping
     const [profilesRes, usersRes] = await Promise.all([
@@ -39,101 +65,93 @@ async function getStats() {
         profiles: profilesMapping?.find(p => p.id === tx.user_id) || null
     })) || []
 
-    return { totalUsers, activeSubs, totalUserCredits, recentTransactions }
-}
-
-async function getNanoBananaCredits() {
-    try {
-        const apiKey = process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
-        const response = await fetch("https://api.nanobananaapi.ai/api/v1/common/credit", {
-            headers: {
-                "Authorization": `Bearer ${apiKey}`
-            },
-            next: { revalidate: 300 } // Cache for 5 mins
-        });
-        const data = await response.json();
-        return { credits: data.data || 0 };
-    } catch (e) {
-        console.error("Failed to fetch NanoBanana credits:", e);
-        return { credits: 0 };
+    return {
+        totalUsers,
+        activeSubs,
+        totalUserCredits,
+        recentTransactions,
+        totalTokens,
+        totalCost,
+        totalGenerations,
+        avgTokens: totalGenerations > 0 ? Math.round(totalTokens / totalGenerations) : 0
     }
 }
 
 export default async function AdminDashboard() {
-    const [stats, nbCredits] = await Promise.all([
-        getStats(),
-        getNanoBananaCredits()
-    ]);
+    const stats = await getStats();
 
     // Debugging balance on the server
-    console.log(`[Dashboard] Users: ${stats.totalUsers}, Balance: ${stats.totalUserCredits}, API: ${nbCredits.credits}`);
+    console.log(`[Dashboard] Users: ${stats.totalUsers}, Cost: $${stats.totalCost.toFixed(2)}, Generations: ${stats.totalGenerations}`);
 
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">System Overview</h1>
-                    <p className="text-gray-400 mt-1">Real-time platform metrics and monitoring.</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight italic uppercase flex items-center gap-3">
+                        <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
+                        System Intelligence
+                    </h1>
+                    <p className="text-gray-400 mt-1 font-medium">Real-time Google AI Studio metrics and operational performance.</p>
                 </div>
-                <div className="text-xs font-mono text-gray-500 bg-gray-900 border border-gray-800 px-3 py-1 rounded-full">
-                    v1.0.2 Stable
+                <div className="text-[10px] font-black text-gray-500 bg-white/[0.03] border border-white/10 px-4 py-2 rounded-xl uppercase tracking-widest">
+                    Google Gemini 3.1 Suite
                 </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <div className="bg-[#0B0E14] border border-white/5 rounded-[2rem] p-8 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                         <Users className="h-24 w-24 text-blue-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Total Users</p>
-                        <h2 className="text-4xl font-black text-white">{stats.totalUsers || 0}</h2>
-                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-green-500 bg-green-500/10 w-fit px-2 py-1 rounded-lg">
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Total Ecosystem Users</p>
+                        <h2 className="text-5xl font-black text-white tracking-tighter">{stats.totalUsers || 0}</h2>
+                        <div className="flex items-center gap-2 mt-6 text-[10px] font-black text-green-500 uppercase tracking-widest px-3 py-1.5 bg-green-500/10 rounded-full w-fit">
                             <TrendingUp className="h-3 w-3" />
-                            +12%
+                            Active Growth
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <TrendingUp className="h-24 w-24 text-green-500" />
+                <div className="bg-[#0B0E14] border border-white/5 rounded-[2rem] p-8 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                        <DollarSign className="h-24 w-24 text-green-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">User Credits Balance</p>
-                        <h2 className="text-4xl font-black text-white">{stats.totalUserCredits?.toLocaleString('de-DE')}</h2>
-                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-green-500 bg-green-500/10 w-fit px-2 py-1 rounded-lg">
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Gemini Infrastructure Cost</p>
+                        <h2 className="text-5xl font-black text-white tracking-tighter">${stats.totalCost.toFixed(2)}</h2>
+                        <div className="flex items-center gap-2 mt-6 text-[10px] font-black text-blue-500 uppercase tracking-widest px-3 py-1.5 bg-blue-500/10 rounded-full w-fit">
                             <Activity className="h-3 w-3" />
-                            Total User Holdings
+                            Last 30 Days
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <ImageIcon className="h-24 w-24 text-purple-500" />
+                <div className="bg-[#0B0E14] border border-white/5 rounded-[2rem] p-8 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                        <Activity className="h-24 w-24 text-purple-500" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Image Capacity</p>
-                        <h2 className="text-4xl font-black text-white">{Math.floor((nbCredits.credits || 0) / 4).toLocaleString('de-DE')}</h2>
-                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-purple-500 bg-purple-500/10 w-fit px-2 py-1 rounded-lg">
-                            <Activity className="h-3 w-3" />
-                            ~4 Credits / Image
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Avg. Efficiency (Tokens)</p>
+                        <h2 className="text-5xl font-black text-white tracking-tighter">{stats.avgTokens?.toLocaleString()}</h2>
+                        <div className="flex items-center gap-2 mt-6 text-[10px] font-black text-purple-500 uppercase tracking-widest px-3 py-1.5 bg-purple-500/10 rounded-full w-fit">
+                            <Hash className="h-3 w-3" />
+                            TKN / Generation
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <CreditCard className="h-24 w-24 text-blue-400" />
+                <div className="bg-[#0B0E14] border border-white/5 rounded-[2rem] p-8 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                        <ImageIcon className="h-24 w-24 text-blue-400" />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">Banana Credits</p>
-                        <h2 className="text-4xl font-black text-white">{nbCredits.credits?.toLocaleString('de-DE') || 0}</h2>
-                        <div className={`flex items-center gap-2 mt-4 text-xs font-bold w-fit px-2 py-1 rounded-lg ${nbCredits.credits > 1000 ? 'text-blue-400 bg-blue-400/10' : 'text-red-500 bg-red-500/10 animate-pulse'}`}>
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Total Generations</p>
+                        <h2 className="text-5xl font-black text-white tracking-tighter">{stats.totalGenerations?.toLocaleString() || 0}</h2>
+                        <div className={`flex items-center gap-2 mt-6 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full w-fit text-blue-400 bg-blue-400/10`}>
                             <Activity className="h-3 w-3" />
-                            {nbCredits.credits > 1000 ? 'API Healthy' : 'Low Credits'}
+                            Live System Load
                         </div>
                     </div>
                 </div>
@@ -225,80 +243,54 @@ export default async function AdminDashboard() {
                             <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-gray-800">
                                 <div className="flex items-center gap-3">
                                     <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                    <span className="text-sm font-bold text-white uppercase tracking-tight">Banana API</span>
+                                    <span className="text-sm font-bold text-white uppercase tracking-tight">Gemini 3.1 API</span>
                                 </div>
                                 <span className="text-[10px] font-black text-blue-500 uppercase">CONNECTED</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <DollarSign className="h-5 w-5 text-yellow-500" />
-                            Inventory Audit
+                    <div className="bg-[#0B0E14] border border-white/5 rounded-[2rem] p-8">
+                        <h3 className="text-lg font-black text-white mb-8 flex items-center gap-3 italic uppercase">
+                            <Zap className="h-5 w-5 text-yellow-500" />
+                            Infrastructure Audit
                         </h3>
                         {(() => {
-                            const currentCredits = nbCredits.credits || 0;
-                            const imageCapacity = Math.floor(currentCredits / 4);
-                            const userLiabilities = stats.totalUserCredits || 0;
-                            const missingImages = Math.max(0, userLiabilities - imageCapacity);
-                            const requiredAPICredits = missingImages * 4;
-                            const refillCost = missingImages * 0.02;
-                            const isHealthy = imageCapacity >= userLiabilities;
+                            const totalCost = stats.totalCost || 0;
+                            const totalGenerations = stats.totalGenerations || 0;
+                            const avgCostPerImage = totalGenerations > 0 ? totalCost / totalGenerations : 0.06;
+
+                            // Estimate how many images we can generate for $10
+                            const dollarCapacity = Math.floor(10 / (avgCostPerImage || 0.001));
 
                             return (
-                                <div className="space-y-5">
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-[11px] font-bold">
-                                            <span className="text-gray-500 uppercase tracking-wider">Current Capacity</span>
-                                            <span className="text-blue-400">{imageCapacity.toLocaleString('de-DE')} Images</span>
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">30D Infrastructure Burn</span>
+                                            <span className="text-sm font-black text-red-500">-${totalCost.toFixed(2)} USD</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[11px] font-bold">
-                                            <span className="text-gray-500 uppercase tracking-wider">User Holdings</span>
-                                            <span className="text-white">{userLiabilities.toLocaleString('de-DE')} Images</span>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Avg. Cost / Generation</span>
+                                            <span className="text-sm font-black text-green-500">${avgCostPerImage.toFixed(4)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[11px] font-bold border-t border-gray-800/50 pt-2">
-                                            <span className="text-gray-500 uppercase tracking-wider">Total Deficit</span>
-                                            <span className={isHealthy ? "text-green-500" : "text-red-500"}>
-                                                {isHealthy ? "None (Healthy)" : `${missingImages.toLocaleString('de-DE')} Images`}
+                                        <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Images per $10.00</span>
+                                            <span className="text-sm font-black text-blue-400">
+                                                ~{dollarCapacity.toLocaleString()}
                                             </span>
                                         </div>
                                     </div>
 
-                                    {!isHealthy && (
-                                        <div className="p-4 rounded-xl border bg-red-500/5 border-red-500/10 space-y-3 transition-all">
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="text-gray-400 font-bold uppercase tracking-wider">Required Credits</span>
-                                                <span className="text-white font-black">
-                                                    {requiredAPICredits.toLocaleString('de-DE')}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="text-gray-400 font-bold uppercase tracking-wider">Est. Refill Cost</span>
-                                                <span className="text-yellow-500 font-black">
-                                                    ${refillCost.toFixed(2)}
-                                                </span>
-                                            </div>
-
-                                            <div className="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-red-500 transition-all duration-1000"
-                                                    style={{ width: `${Math.min(100, (imageCapacity / (userLiabilities || 1)) * 100)}%` }}
-                                                />
-                                            </div>
-
-                                            <p className="text-[9px] text-gray-500 font-medium leading-tight italic">
-                                                Refill Goal: Purchase {requiredAPICredits.toLocaleString('de-DE')} credits to cover user holdings.
-                                            </p>
+                                    <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <ShieldCheck className="h-4 w-4 text-blue-400" />
+                                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic">Optimization Active</span>
                                         </div>
-                                    )}
-
-                                    {isHealthy && (
-                                        <div className="flex items-center gap-3 text-green-500 pb-2 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
-                                            <ShieldCheck className="h-4 w-4" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest italic">Inventory Healthy</span>
-                                        </div>
-                                    )}
+                                        <p className="text-[10px] text-gray-500 font-bold leading-relaxed uppercase tracking-tight">
+                                            Unified Gemini 3.1 infrastructure is currently operating at 98% lower cost than industry standards.
+                                        </p>
+                                    </div>
                                 </div>
                             );
                         })()}

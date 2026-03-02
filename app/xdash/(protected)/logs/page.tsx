@@ -1,8 +1,7 @@
 "use client"
-
 import { useEffect, useState, useMemo } from "react"
 import { getSystemLogsAction } from "@/app/xdash/(protected)/settings/actions"
-import { Loader2, Server, CheckCircle2, XCircle, Clock, RefreshCw, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2, Server, CheckCircle2, XCircle, Clock, RefreshCw, Image as ImageIcon, Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, User, ShoppingBag, Hash } from "lucide-react"
 
 type Log = {
     id: string
@@ -17,6 +16,8 @@ type Log = {
         channel: string
         error: string
         input_images?: string[]
+        tokens_used?: number
+        estimated_cost?: number
     }
 }
 
@@ -26,7 +27,7 @@ export default function LogsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
 
-    const itemsPerPage = 10
+    const itemsPerPage = 15
 
     const fetchLogs = async () => {
         setLoading(true)
@@ -64,149 +65,195 @@ export default function LogsPage() {
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value)
-        setCurrentPage(1) // Reset to page 1 on search
+        setCurrentPage(1)
     }
 
     return (
-        <div className="space-y-6 max-w-[1400px] mx-auto pb-10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="space-y-8 max-w-[1600px] mx-auto pb-20">
+            {/* Header */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">API Transaction Logs</h1>
-                    <p className="text-gray-400 mt-1">Monitor real-time virtual try-on requests, inputs, and outcomes.</p>
+                    <h1 className="text-4xl font-black text-white tracking-tighter italic uppercase flex items-center gap-4">
+                        <div className="h-10 w-2 bg-blue-600 rounded-full" />
+                        Admin Command Center
+                    </h1>
+                    <p className="text-gray-500 font-bold mt-2 uppercase tracking-[0.3em] flex items-center gap-3 text-xs">
+                        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        Live Transactional Intelligence
+                    </p>
                 </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full xl:w-auto">
+                    <div className="relative group flex-1 sm:w-80">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 transition-colors group-focus-within:text-blue-500" />
                         <input
                             type="text"
-                            placeholder="Search by ID, name, email..."
+                            placeholder="Universal search: ID, Name, Task..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-full bg-[#13171F] border border-gray-800 text-white text-sm pl-10 pr-4 py-2.5 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-600"
+                            className="w-full bg-[#13171F] border border-gray-800 text-white text-sm pl-12 pr-4 py-3.5 rounded-2xl focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-gray-700 font-medium"
                         />
                     </div>
                     <button
                         onClick={fetchLogs}
-                        className="p-2.5 bg-[#13171F] border border-gray-800 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-colors flex-shrink-0"
-                        title="Refresh Logs"
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] rounded-2xl text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 disabled:opacity-50"
                     >
-                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-4 w-4 text-blue-500 ${loading ? 'animate-spin' : ''}`} />
+                        Sync Data
                     </button>
                 </div>
             </div>
 
-            <div className="bg-[#0B0E14] border border-gray-800 rounded-2xl shadow-xl overflow-hidden relative min-h-[500px] flex flex-col">
-                {loading ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#0B0E14]/80 backdrop-blur-sm z-10">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            {/* Table Container */}
+            <div className="bg-[#13171F] border border-white/5 rounded-[2.5rem] shadow-3xl overflow-hidden relative min-h-[600px] flex flex-col">
+                {loading && logs.length === 0 ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B0E14]/90 backdrop-blur-xl z-50">
+                        <div className="relative h-24 w-24">
+                            <div className="absolute inset-0 rounded-full border-b-2 border-l-2 border-blue-500 animate-spin" />
+                            <div className="absolute inset-4 rounded-full border-t-2 border-r-2 border-purple-500 animate-spin-reverse" />
+                        </div>
+                        <p className="mt-8 text-gray-500 font-black uppercase tracking-[0.4em] text-[10px] animate-pulse">Decrypting Logs...</p>
                     </div>
                 ) : paginatedLogs.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-gray-500 py-32">
-                        <Server className="h-12 w-12 mb-4 opacity-50" />
-                        <p className="font-medium text-white mb-1">No transactions found</p>
-                        <p className="text-sm">Try adjusting your search or wait for new API hits.</p>
+                        <div className="bg-[#0B0E14] p-8 rounded-[2rem] border border-white/5 flex flex-col items-center shadow-inner">
+                            <Server className="h-16 w-16 mb-6 text-gray-800" />
+                            <p className="font-black text-white uppercase tracking-widest mb-2">No data sequences found</p>
+                            <p className="text-sm font-medium opacity-60">Adjust your parameters or check system uplink.</p>
+                        </div>
                     </div>
                 ) : null}
 
                 <div className="flex-1 overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-[#13171F] border-b border-gray-800 sticky top-0 z-20">
+                    <table className="w-full text-left text-sm border-separate border-spacing-0">
+                        <thead className="bg-[#0B0E14] sticky top-0 z-20">
                             <tr>
-                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-xs">Date & Time</th>
-                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-xs">Account</th>
-                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-xs">Authored IDs</th>
-                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-xs">Status</th>
-                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-xs text-center">Result</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Sequence Date</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Entity Identity</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Task Metadata</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5 text-center">Resources</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Status</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5 text-center">Output</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-800/50">
-                            {paginatedLogs.map((log) => {
+                        <tbody className="divide-y divide-white/[0.02]">
+                            {paginatedLogs.map((log, i) => {
                                 const isSuccess = log.status === 200
                                 const isPending = log.status === 202
-                                const hasImages = log.meta.input_images && log.meta.input_images.length >= 2;
 
                                 const displayName = log.user.store_name && log.user.store_name !== 'Unknown'
                                     ? log.user.store_name
-                                    : (log.user.full_name !== 'Unknown' ? log.user.full_name : 'Guest User / Demo');
+                                    : (log.user.full_name !== 'Unknown' ? log.user.full_name : 'Guest User');
 
                                 const isDemo = log.user.full_name === 'Unknown' || log.user.full_name === 'Guest User';
 
                                 return (
-                                    <tr key={log.id} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="p-4 text-gray-400">
-                                            <span className="font-medium text-gray-300 block">
-                                                {new Date(log.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                            </span>
-                                            <span className="text-xs">
-                                                {new Date(log.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                            </span>
+                                    <tr key={log.id} className="hover:bg-white/[0.03] transition-all group border-b border-white/5">
+                                        <td className="p-6">
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex items-center gap-2 text-white font-bold tracking-tight">
+                                                    <Calendar className="h-3.5 w-3.5 text-blue-500/70" />
+                                                    {new Date(log.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono tracking-tighter">
+                                                    <Clock className="h-3 w-3" />
+                                                    {new Date(log.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td className="p-4">
-                                            <div className="font-bold text-white flex items-center gap-2">
-                                                {displayName}
-                                                {isDemo && (
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded border uppercase tracking-wider font-black ${log.path === '/api/generate-demo'
-                                                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                        : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                                                        }`}>
-                                                        {log.path === '/api/generate-demo' ? 'Live Demo' : 'Guest'}
-                                                    </span>
+                                        <td className="p-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10 flex items-center justify-center text-blue-500 font-black text-xs shadow-lg">
+                                                    {displayName.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="font-black text-white flex items-center gap-2 text-xs tracking-tight uppercase">
+                                                        {displayName}
+                                                        {isDemo && (
+                                                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-black">DEMO</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[10px] text-gray-500 font-medium flex items-center gap-2 italic">
+                                                        <ShoppingBag className="h-2.5 w-2.5" />
+                                                        {log.user.store_domain || log.user.email || "System Level Access"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex flex-col gap-2">
+                                                {log.meta.taskId && log.meta.taskId !== "—" ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10 text-blue-400 font-mono text-[10px] shadow-sm uppercase tracking-tighter" title={log.meta.taskId}>
+                                                            ID: {log.meta.taskId.replace("nanobanana-", "NB-").substring(0, 18)}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-700 font-mono text-xs">—</span>
+                                                )}
+                                                <div className="flex items-center gap-2 text-[9px] text-gray-600 font-black uppercase tracking-widest">
+                                                    <Hash className="h-2.5 w-2.5" />
+                                                    REF: {log.id.split('-')[0].toUpperCase()}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex flex-col items-center gap-1.5 ">
+                                                {log.meta.tokens_used ? (
+                                                    <>
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 text-blue-400 font-mono text-[10px]">
+                                                            <Hash className="h-3 w-3" />
+                                                            {log.meta.tokens_used.toLocaleString()} TKN
+                                                        </div>
+                                                        <div className="text-[10px] font-black text-green-500/80 uppercase tracking-widest">
+                                                            ${log.meta.estimated_cost?.toFixed(4)} USD
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-gray-700 font-mono text-xs">—</span>
                                                 )}
                                             </div>
-                                            {!isDemo && log.user.store_domain && (
-                                                <div className="text-xs text-gray-500 mt-0.5">{log.user.store_domain}</div>
-                                            )}
                                         </td>
-                                        <td className="p-4 font-mono text-xs text-gray-400">
-                                            {log.meta.taskId && log.meta.taskId !== "—" ? (
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="bg-white/5 px-2 py-1 rounded inline-block truncate max-w-[150px] border border-white/5 text-blue-400" title={log.meta.taskId}>
-                                                        {log.meta.taskId.replace("nanobanana-", "nb-").substring(0, 16)}...
-                                                    </span>
-                                                    <span className="text-[10px] text-gray-600">DB: {log.id.split('-')[0]}...</span>
-                                                </div>
-                                            ) : log.path === '/api/generate-demo' ? (
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="bg-blue-500/5 px-2 py-1 rounded inline-block border border-blue-500/20 text-blue-400 font-bold">LIVE-DEMO</span>
-                                                    <span className="text-[10px] text-gray-600">DB: {log.id.split('-')[0]}...</span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-600">—</span>
-                                            )}
-                                        </td>
-                                        <td className="p-4">
+                                        <td className="p-6">
                                             {isSuccess ? (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
-                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-black border border-green-500/20 uppercase tracking-widest shadow-lg shadow-green-500/5">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                                                     Success
-                                                </span>
+                                                </div>
                                             ) : isPending ? (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
-                                                    <Clock className="h-3.5 w-3.5" />
+                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 text-yellow-400 text-[10px] font-black border border-yellow-500/20 uppercase tracking-widest shadow-lg shadow-yellow-500/5">
+                                                    <Clock className="h-3 w-3 animate-spin" />
                                                     Pending
-                                                </span>
+                                                </div>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)] max-w-[150px]" title={log.meta.error}>
-                                                    <XCircle className="h-3.5 w-3.5 shrink-0" />
-                                                    <span className="truncate">Failed</span>
-                                                </span>
+                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black border border-red-500/20 uppercase tracking-widest shadow-lg shadow-red-500/5" title={log.meta.error}>
+                                                    <XCircle className="h-3 w-3" />
+                                                    Failure
+                                                </div>
                                             )}
                                         </td>
 
-                                        <td className="p-4 text-center">
-                                            {log.meta.result_url ? (
-                                                <a
-                                                    href={log.meta.result_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm shadow-blue-500/5 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:scale-105"
-                                                    title="View Generated Image"
-                                                >
-                                                    <ImageIcon className="h-5 w-5" />
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-700">—</span>
-                                            )}
+                                        <td className="p-6 text-center">
+                                            <div className="relative group/img inline-block h-16 w-12 rounded-2xl overflow-hidden bg-[#0B0E14] border border-white/10 shadow-2xl transition-transform group-hover:scale-110">
+                                                {log.meta.result_url ? (
+                                                    <>
+                                                        <img src={log.meta.result_url} alt="Result" className="h-full w-full object-cover transition-opacity group-hover/img:opacity-40" />
+                                                        <a
+                                                            href={log.meta.result_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                                        >
+                                                            <ExternalLink className="h-5 w-5 text-white" />
+                                                        </a>
+                                                    </>
+                                                ) : (
+                                                    <div className="h-full w-full flex items-center justify-center">
+                                                        <ImageIcon className="h-5 w-5 text-gray-800" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -215,54 +262,55 @@ export default function LogsPage() {
                     </table>
                 </div>
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                    <div className="border-t border-gray-800 bg-[#0B0E14] p-4 flex items-center justify-between">
-                        <div className="text-sm text-gray-400">
-                            Showing <span className="font-bold text-white">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-white">{Math.min(currentPage * itemsPerPage, filteredLogs.length)}</span> of <span className="font-bold text-white">{filteredLogs.length}</span> entries
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 bg-[#13171F] border border-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <div className="flex gap-1 items-center">
-                                {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-                                    // Complex logic for showing page numbers around current page
-                                    let pageNum = currentPage;
-                                    if (currentPage <= 3) pageNum = i + 1;
-                                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                                    else pageNum = currentPage - 2 + i;
-
-                                    if (pageNum <= 0 || pageNum > totalPages) return null;
-
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => setCurrentPage(pageNum)}
-                                            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${currentPage === pageNum
-                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                                : 'bg-[#13171F] border border-gray-800 text-gray-400 hover:bg-white/10 hover:text-white'
-                                                }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 bg-[#13171F] border border-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
-                        </div>
+                {/* Footer Pagination */}
+                <div className="p-8 bg-[#0B0E14] flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-white/5">
+                    <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-4">
+                        <div className="h-2 w-2 rounded-full bg-blue-500" />
+                        Showing <span className="text-white">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLogs.length)}</span> of <span className="text-white">{filteredLogs.length}</span> entries
                     </div>
-                )}
+
+                    <div className="flex gap-2 p-1 bg-[#13171F] rounded-2xl border border-white/5 shadow-inner">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-3 bg-white/[0.03] text-gray-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-20 rounded-xl transition-all"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+
+                        <div className="flex items-center px-4 space-x-2">
+                            {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
+                                let pageNum = currentPage;
+                                if (currentPage <= 2) pageNum = i + 1;
+                                else if (currentPage >= totalPages - 1) pageNum = totalPages - 2 + i;
+                                else pageNum = currentPage - 1 + i;
+
+                                if (pageNum <= 0 || pageNum > totalPages) return null;
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-xl text-[10px] font-black transition-all ${currentPage === pageNum
+                                            ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/40'
+                                            : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-3 bg-white/[0.03] text-gray-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-20 rounded-xl transition-all"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     )

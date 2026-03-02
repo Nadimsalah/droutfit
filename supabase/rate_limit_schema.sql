@@ -13,3 +13,7 @@ begin
     alter table public.usage_logs add column ip_address text;
   end if;
 end $$;
+
+
+
+

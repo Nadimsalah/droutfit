@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
 import { updateAllPricingAction } from "./actions"
-import { Save, Loader2, DollarSign, RefreshCw } from "lucide-react"
+import { Save, Loader2, DollarSign, RefreshCw, Cpu, Key } from "lucide-react"
 
 export default function SettingsPage() {
     const [config, setConfig] = useState<PricingConfig>(DEFAULT_PRICING)
@@ -40,9 +40,26 @@ export default function SettingsPage() {
     }
 
     const handleChange = (key: keyof PricingConfig, value: string) => {
-        const numValue = parseFloat(value)
-        if (!isNaN(numValue)) {
-            setConfig(prev => ({ ...prev, [key]: numValue }))
+        // Check if the key should be a number
+        const numberFields: Array<keyof PricingConfig> = [
+            'PACKAGE_1_AMOUNT', 'PACKAGE_1_PRICE',
+            'PACKAGE_2_AMOUNT', 'PACKAGE_2_PRICE',
+            'PACKAGE_3_AMOUNT', 'PACKAGE_3_PRICE',
+            'PACKAGE_4_AMOUNT', 'PACKAGE_4_PRICE',
+            'CUSTOM_CREDIT_PRICE', 'MINIMUM_CUSTOM_AMOUNT'
+        ]
+
+        if (numberFields.includes(key)) {
+            const numValue = parseFloat(value)
+            if (!isNaN(numValue)) {
+                setConfig(prev => ({ ...prev, [key]: numValue }))
+            } else if (value === '') {
+                // @ts-ignore
+                setConfig(prev => ({ ...prev, [key]: 0 }))
+            }
+        } else {
+            // String fields
+            setConfig(prev => ({ ...prev, [key]: value }))
         }
     }
 
@@ -78,10 +95,10 @@ export default function SettingsPage() {
                         Credit Pricing Packages
                     </h2>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* Package 1 */}
                         <div className="space-y-4 p-4 border border-gray-800 rounded-xl bg-white/5">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 1</h3>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 1 (Starter)</h3>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-400">Total Images</label>
                                 <input
@@ -109,7 +126,7 @@ export default function SettingsPage() {
 
                         {/* Package 2 */}
                         <div className="space-y-4 p-4 border border-gray-800 rounded-xl bg-white/5">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 2</h3>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 2 (Growth)</h3>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-400">Total Images</label>
                                 <input
@@ -137,7 +154,7 @@ export default function SettingsPage() {
 
                         {/* Package 3 */}
                         <div className="space-y-4 p-4 border border-gray-800 rounded-xl bg-white/5">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 3</h3>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 3 (Elite)</h3>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-400">Total Images</label>
                                 <input
@@ -163,29 +180,74 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        {/* Package 4 */}
-                        <div className="space-y-4 p-4 border border-gray-800 rounded-xl bg-white/5">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Package 4</h3>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400">Total Images</label>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    value={config.PACKAGE_4_AMOUNT ?? ''}
-                                    onChange={(e) => handleChange('PACKAGE_4_AMOUNT', e.target.value)}
-                                    className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
-                                />
+                    </div>
+
+                    <div className="my-8 border-t border-gray-800" />
+
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Cpu className="h-5 w-5 text-purple-500" />
+                            AI Provider Configuration
+                        </h2>
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+                                    Preferred AI Engine
+                                </label>
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('PREFERRED_AI_PROVIDER', 'nanobanana')}
+                                        className={`flex-1 py-3 px-4 rounded-xl border font-bold transition-all text-sm flex items-center justify-center ${String(config.PREFERRED_AI_PROVIDER) === 'nanobanana'
+                                            ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-lg shadow-purple-600/10'
+                                            : 'bg-[#1A1D24] border-gray-800 text-gray-500 hover:border-gray-700'
+                                            }`}
+                                    >
+                                        NanoBanana
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('PREFERRED_AI_PROVIDER', 'google')}
+                                        className={`flex-1 py-3 px-4 rounded-xl border font-bold transition-all text-sm flex items-center justify-center ${String(config.PREFERRED_AI_PROVIDER) === 'google'
+                                            ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-lg shadow-blue-600/10'
+                                            : 'bg-[#1A1D24] border-gray-800 text-gray-500 hover:border-gray-700'
+                                            }`}
+                                    >
+                                        Google Gemini
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500 italic">
+                                    Choose which AI engine will process the virtual try-on requests.
+                                </p>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400">Price ($)</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-gray-500 text-sm">$</span>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        <Key className="h-4 w-4" />
+                                        NanoBanana API Key
+                                    </label>
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        value={config.PACKAGE_4_PRICE ?? ''}
-                                        onChange={(e) => handleChange('PACKAGE_4_PRICE', e.target.value)}
-                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 pl-7 pr-4 focus:outline-none focus:border-green-500 transition-all font-mono text-sm"
+                                        type="password"
+                                        value={config.NANOBANANA_API_KEY || ''}
+                                        onChange={(e) => handleChange('NANOBANANA_API_KEY', e.target.value)}
+                                        placeholder="Enter NanoBanana Key"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-purple-500 transition-all font-mono"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        <Key className="h-4 w-4" />
+                                        Google (Gemini) API Key
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.GEMINI_API_KEY || ''}
+                                        onChange={(e) => handleChange('GEMINI_API_KEY', e.target.value)}
+                                        placeholder="Enter Gemini API Key"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono"
                                     />
                                 </div>
                             </div>

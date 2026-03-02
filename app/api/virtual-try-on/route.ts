@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Supabase Client (Service Role for Admin Access)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -12,23 +13,44 @@ if (!supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-const NANOBANANA_API_KEY = process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
 const NANOBANANA_BASE_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana";
+
+async function uploadBase64Image(base64Image: string): Promise<string> {
+    if (!supabaseServiceKey) throw new Error("Missing Supabase Service Key for upload");
+
+    // Remove data:image/jpeg;base64, prefix if present
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Generate random filename
+    const fileName = `vto_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+    const { data, error } = await supabase.storage
+        .from("tryimages")
+        .upload(fileName, buffer, {
+            contentType: "image/jpeg",
+            upsert: true
+        });
+
+    if (error) {
+        throw new Error("Failed to upload image to storage: " + error.message);
+    }
+
+    const { data: urlData } = supabase.storage
+        .from("tryimages")
+        .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const { prompt, type, numImages, imageUrls, productId } = body;
 
-        // 1. Get Client IP
-        // 1. Get Client IP
-        // distinct-id for localhost might be '::1' or '127.0.0.1'
         const ip = req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
-        // 2. Identify Merchant
         let merchantId: string;
-        let productIdToUse = productId;
-
-        // DEMO FALLBACK: If it's a demo or the product isn't found, we use a fallback to keep it working
         const { data: product, error: productError } = await supabase
             .from("products")
             .select("user_id")
@@ -36,12 +58,7 @@ export async function POST(req: NextRequest) {
             .single();
 
         if (productError || !product) {
-            console.warn("Product lookup failed or empty DB, using demo fallback:", productError);
-
-            // For the demo/landing page/widget to work even if DB is fresh
-            // We'll use the first available merchant or a systemic one
             const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-
             if (!firstMerchant) {
                 return NextResponse.json({ error: "System not initialized. Please sign up or check DB." }, { status: 500 });
             }
@@ -50,7 +67,6 @@ export async function POST(req: NextRequest) {
             merchantId = product.user_id;
         }
 
-        // 3. Get Merchant Profile (Credits & Limits)
         const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("credits, ip_limit")
@@ -61,11 +77,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Merchant profile not found" }, { status: 404 });
         }
 
-        // 4. Check Credits First
-        // Wrap in try-catch to handle potential missing columns or RLS issues
         try {
             if ((profile.credits || 0) <= 0) {
-                console.log(`[Credit Block] Merchant ${merchantId} has no credits left.`);
                 return NextResponse.json(
                     { error: "This merchant has an insufficient credit balance to process try-ons. Please top up in Billing." },
                     { status: 403 }
@@ -76,8 +89,6 @@ export async function POST(req: NextRequest) {
         }
 
         const limit = (profile as any).ip_limit || 5;
-
-        // 5. Check Rate Limit (IP based)
         let isAllowedByRateLimit = true;
         try {
             const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -92,17 +103,13 @@ export async function POST(req: NextRequest) {
                 isAllowedByRateLimit = false;
             }
         } catch (e) {
-            console.warn("Rate limiting column 'ip_address' might be missing, bypassing rate limit check:", e);
+            console.warn("Rate limiting bypass:", e);
         }
 
         if (!isAllowedByRateLimit) {
-            return NextResponse.json(
-                { error: "Daily try-on limit reached for this IP." },
-                { status: 429 }
-            );
+            return NextResponse.json({ error: "Daily try-on limit reached for this IP." }, { status: 429 });
         }
 
-        // 6. Log Usage (Pending)
         const startTime = Date.now();
         let logEntryId: string | null = null;
         try {
@@ -110,10 +117,9 @@ export async function POST(req: NextRequest) {
                 user_id: merchantId,
                 method: "POST",
                 path: "/api/virtual-try-on",
-                status: 202, // 202 Accepted (Pending)
+                status: 202,
                 latency: null,
                 product_id: productId,
-                // Only include ip_address if we know it won't crash (dynamic fallback)
                 ...((profile as any).ip_limit ? { ip_address: ip } : {})
             }]).select().single();
             if (logEntry) logEntryId = logEntry.id;
@@ -121,97 +127,157 @@ export async function POST(req: NextRequest) {
             console.warn("Failed to log usage pending status:", e);
         }
 
-
-        // 7. Call AI Provider (Use NanoBanana for generation)
         let resultUrl = null;
-        let taskId = "nanobanana-" + Date.now();
+        let taskId = "task-" + Date.now();
 
         try {
+            const { data: settingsData } = await supabase.from('system_settings').select('key, value');
+            const settings: Record<string, string> = {};
+            settingsData?.forEach(s => settings[s.key] = s.value);
 
-            // Fetch custom prompt if defined
-            const { data: nbPromptData } = await supabase.from('system_settings').select('value').eq('key', 'NANOBANANA_PROMPT').single();
-            const defaultNbPrompt = nbPromptData?.value || "high quality fashion photography, realistic lighting";
+            const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'google';
+            const NB_API_KEY = settings.NANOBANANA_API_KEY || process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
+            const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
-            // 8. Generate with NanoBanana
-            if (!resultUrl && NANOBANANA_API_KEY) {
-                console.log("Using NanoBanana Engine...");
+            const nbPrompt = settings.NANOBANANA_PROMPT || "high quality fashion photography, realistic lighting";
+            const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
+
+            if (PREFERRED_AI_PROVIDER === 'google') {
+                if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
+                console.log("Using Google Gemini Engine...");
                 try {
-                    // 6a. Submit Task
-                    const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
-                        },
-                        body: JSON.stringify({
-                            prompt: prompt || defaultNbPrompt,
-                            type: type || "IMAGETOIAMGE",
-                            numImages: numImages || 1,
-                            imageUrls: imageUrls, // [face, garment]
-                        }),
-                    });
+                    const genAI = new GoogleGenerativeAI(GEM_API_KEY);
+                    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
 
-                    const taskText = await taskResponse.text();
-                    let taskResult;
+                    const [personData, garmentData] = await Promise.all([
+                        (async () => {
+                            const resp = await fetch(imageUrls[0]);
+                            const buffer = await resp.arrayBuffer();
+                            return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                        })(),
+                        (async () => {
+                            const resp = await fetch(imageUrls[1]);
+                            const buffer = await resp.arrayBuffer();
+                            return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                        })()
+                    ]);
+
+                    const result = await model.generateContent([geminiPrompt, personData, garmentData]);
+
+                    // Extract usage metadata
+                    const usage = result.response.usageMetadata;
+                    const promptTokens = usage?.promptTokenCount || 0;
+                    const candidatesTokens = usage?.candidatesTokenCount || 0;
+                    const totalTokens = usage?.totalTokenCount || 0;
+
+                    // Estimate cost (3.1 Pricing): $0.10 per 1M input, $1.00 per 1M output
+                    const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
+
+                    // Extract image from response
+                    let base64Result = null;
+                    if (result.response.candidates && result.response.candidates[0].content.parts) {
+                        for (const part of result.response.candidates[0].content.parts) {
+                            if (part.inlineData) {
+                                base64Result = part.inlineData.data;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (base64Result) {
+                        console.log(`Google AI Success (3.1-Preview). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
+                        resultUrl = await uploadBase64Image(base64Result);
+                    } else {
+                        const analysisText = result.response.text();
+                        console.error("Google AI 3.1 did not return an image. Response text:", analysisText);
+                        throw new Error("The AI 3.1 did not generate an image: " + analysisText);
+                    }
+
+                    const usageMetadata = {
+                        tokens_used: totalTokens,
+                        estimated_cost: estimatedCost,
+                        prompt_tokens: promptTokens,
+                        candidates_tokens: candidatesTokens
+                    };
+
+                    // Final log and credits update
+                    const newCredits = Math.max(0, (profile.credits || 0) - 1);
                     try {
-                        taskResult = JSON.parse(taskText);
-                    } catch (e) {
-                        if (taskResponse.status === 413 || taskText.includes("Request Entity Too Large")) {
-                            throw new Error("L'image téléchargée est trop volumineuse pour notre processeur IA. Veuillez utiliser une image plus petite (< 5Mo).");
-                        }
-                        throw new Error(`Erreur API: ${taskText.slice(0, 100)}`);
+                        const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
+                        await Promise.all([
+                            supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
+                            supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId)
+                        ]);
+                    } catch (err) { console.error("Updates failed:", err); }
+
+                    if (logEntryId) {
+                        await supabase.from("usage_logs").update({
+                            status: 200,
+                            latency: `${Date.now() - startTime}ms`,
+                            error_message: JSON.stringify({
+                                taskId,
+                                result_url: resultUrl,
+                                input_images: imageUrls,
+                                credits_used: 1,
+                                channel: PREFERRED_AI_PROVIDER,
+                                ...usageMetadata
+                            })
+                        }).eq("id", logEntryId);
                     }
 
-                    if (!taskResponse.ok || taskResult.code !== 200) {
-                        throw new Error(taskResult.msg || "Failed to submit generation task");
-                    }
+                    return NextResponse.json({ status: "success", result_url: resultUrl, taskId, tokens: totalTokens });
 
-                    taskId = taskResult.data?.taskId || taskResult.taskId;
+                } catch (gemError) {
+                    console.error("Google AI 3.1 Error:", gemError);
+                    throw gemError;
+                }
+            } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {
+                if (!NB_API_KEY) throw new Error("NanoBanana API Key is missing.");
+                console.log("Using NanoBanana Engine...");
+                const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${NB_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt || nbPrompt,
+                        type: type || "IMAGETOIAMGE",
+                        numImages: numImages || 1,
+                        imageUrls: imageUrls,
+                    }),
+                });
 
-                    // 6b. Poll for Result
-                    let attempts = 0;
-                    const maxAttempts = 60; // 5 minutes
-                    while (attempts < maxAttempts) {
-                        attempts++;
-                        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5s
+                const taskResult = await taskResponse.json();
+                if (!taskResponse.ok || taskResult.code !== 200) throw new Error(taskResult.msg || "Failed to submit task");
+                taskId = taskResult.data?.taskId || taskResult.taskId;
 
-                        const statusResponse = await fetch(`${NANOBANANA_BASE_URL}/record-info?taskId=${taskId}`, {
-                            headers: { "Authorization": `Bearer ${NANOBANANA_API_KEY}` },
-                        });
-                        const statusData = await statusResponse.json();
-
-                        const successFlag = statusData.data?.successFlag !== undefined ? statusData.data.successFlag : statusData.successFlag;
-                        const resData = statusData.data?.response || statusData.response;
-
-                        if (successFlag === 1) {
-                            resultUrl = resData?.resultImageUrl || resData?.result_url;
-                            break;
-                        } else if (successFlag === 2 || successFlag === 3) {
-                            throw new Error(statusData.errorMessage || "Generation failed");
-                        }
-                    }
-                } catch (nbError) {
-                    console.error("NanoBanana fallback failed:", nbError);
+                let attempts = 0;
+                while (attempts < 60) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 5000));
+                    const stResp = await fetch(`${NANOBANANA_BASE_URL}/record-info?taskId=${taskId}`, {
+                        headers: { "Authorization": `Bearer ${NB_API_KEY}` },
+                    });
+                    const stData = await stResp.json();
+                    const successFlag = stData.data?.successFlag ?? stData.successFlag;
+                    if (successFlag === 1) {
+                        resultUrl = stData.data?.response?.resultImageUrl || stData.response?.result_url;
+                        break;
+                    } else if (successFlag === 2 || successFlag === 3) throw new Error(stData.errorMessage || "Generation failed");
                 }
             }
 
-            // 9. Final Fallback if everything failed
-            if (!resultUrl) {
-                // If no success, we'll return the garment as a mock success to avoid UI errors in demo
-                resultUrl = imageUrls[1];
-                console.warn("All AI providers failed. Returning mock result.");
-            }
+            if (!resultUrl) resultUrl = imageUrls[1]; // Final fallback
 
-            // Update log to success
             if (logEntryId) {
                 await supabase.from("usage_logs").update({
                     status: 200,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ taskId, result_url: resultUrl, input_images: imageUrls, credits_used: 4, channel: "Nano Banana" })
+                    error_message: JSON.stringify({ taskId, result_url: resultUrl, input_images: imageUrls, credits_used: 1, channel: PREFERRED_AI_PROVIDER })
                 }).eq("id", logEntryId);
             }
 
-            // Deduct credits
             const newCredits = Math.max(0, (profile.credits || 0) - 1);
             try {
                 const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
@@ -219,32 +285,23 @@ export async function POST(req: NextRequest) {
                     supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
                     supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId)
                 ]);
-            } catch (err) { console.error("Post-success updates failed:", err); }
+            } catch (err) { console.error("Updates failed:", err); }
 
-            return NextResponse.json({
-                status: "success",
-                result_url: resultUrl,
-                taskId
-            });
+            return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
 
         } catch (error) {
-            // Update log to error
             if (logEntryId) {
                 await supabase.from("usage_logs").update({
                     status: 500,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ error: (error as Error).message, taskId, input_images: imageUrls, credits_used: 0, channel: "Nano Banana" })
+                    error_message: JSON.stringify({ error: (error as Error).message, taskId, input_images: imageUrls })
                 }).eq("id", logEntryId);
             }
             throw error;
         }
-
     } catch (error) {
         console.error("API Error:", error);
-        return NextResponse.json(
-            { error: (error as Error).message || "Internal Server Error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: (error as Error).message || "Internal Server Error" }, { status: 500 });
     }
 }
 

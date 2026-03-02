@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const NANOBANANA_API_KEY = process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
 const NANOBANANA_BASE_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana";
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -34,6 +31,7 @@ async function uploadToImgBB(base64Image: string): Promise<string> {
         throw new Error("Failed to upload image to storage: " + error.message);
     }
 
+
     const { data: urlData } = supabaseAdmin.storage
         .from("tryimages")
         .getPublicUrl(fileName);
@@ -51,10 +49,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing user image URL" }, { status: 400 });
         }
 
-        if (!NANOBANANA_API_KEY) {
-            return NextResponse.json({ error: "Missing NanoBanana API Key in env" }, { status: 500 });
-        }
-
         // Ensure userImageUrl is uploaded if it's base64 (which it should be from the demo UI)
         let finalUserImageUrl = userImageUrl;
         if (userImageUrl.startsWith('data:image')) {
@@ -70,22 +64,29 @@ export async function POST(req: NextRequest) {
         console.log("Images ready:", finalUserImageUrl, absoluteGarmentUrl);
 
 
-        // 2. Fetch System Prompts
-        const { data: geminiPromptData } = await supabaseAdmin.from('system_settings').select('value').eq('key', 'GEMINI_PROMPT').single();
-        const geminiPrompt = geminiPromptData?.value || "Analyze these images for virtual try-on suitability. Return 'READY'.";
+        // 2. Fetch System Settings
+        const { data: settingsData } = await supabaseAdmin.from('system_settings').select('key, value');
+        const settings: Record<string, string> = {};
+        settingsData?.forEach(s => settings[s.key] = s.value);
 
-        const { data: nbPromptData } = await supabaseAdmin.from('system_settings').select('value').eq('key', 'NANOBANANA_PROMPT').single();
-        const nbPrompt = nbPromptData?.value || "high quality fashion photography, realistic lighting";
+        const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'nanobanana';
+        const NB_API_KEY = settings.NANOBANANA_API_KEY || process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
+        const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
-        // 3. Call AI Provider (Prioritize Google Official AI)
+        const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
+        const nbPrompt = settings.NANOBANANA_PROMPT || "high quality fashion photography, realistic lighting";
+
+        // 3. Call AI Provider
         let resultUrl = null;
+        let usageMetadataRecord = {};
 
-        if (GEMINI_API_KEY && genAI) {
+        if (PREFERRED_AI_PROVIDER === 'google') {
+            if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
             console.log("Using Google Official AI for Demo...");
             try {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const genAI = new GoogleGenerativeAI(GEM_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
 
-                // Convert garment and user image to base64 for Gemini
                 const [personData, garmentData] = await Promise.all([
                     (async () => {
                         const resp = await fetch(finalUserImageUrl);
@@ -99,34 +100,58 @@ export async function POST(req: NextRequest) {
                     })()
                 ]);
 
-                const result = await model.generateContent([
-                    geminiPrompt,
-                    personData,
-                    garmentData
-                ]);
-                console.log("Google AI Analysis (Demo):", result.response.text());
+                const result = await model.generateContent([geminiPrompt, personData, garmentData]);
 
-                // Simulated high-quality result for demo
-                if (absoluteGarmentUrl.includes("alaska")) {
-                    resultUrl = "https://plyvtxtapvhenkumknai.supabase.co/storage/v1/object/public/tryimages/alaska-result.webp";
-                } else {
-                    resultUrl = absoluteGarmentUrl;
+                // Extract usage metadata
+                const usage = result.response.usageMetadata;
+                const promptTokens = usage?.promptTokenCount || 0;
+                const candidatesTokens = usage?.candidatesTokenCount || 0;
+                const totalTokens = usage?.totalTokenCount || 0;
+
+                // Estimate cost (3.1 Pricing): $0.10 per 1M input, $1.00 per 1M output
+                const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
+
+                // Extract image from response
+                let base64Result = null;
+                if (result.response.candidates && result.response.candidates[0].content.parts) {
+                    for (const part of result.response.candidates[0].content.parts) {
+                        if (part.inlineData) {
+                            base64Result = part.inlineData.data;
+                            break;
+                        }
+                    }
                 }
 
+                if (base64Result) {
+                    console.log(`Google AI Success (Demo 3.1). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
+                    resultUrl = await uploadToImgBB(base64Result);
+                } else {
+                    const analysisText = result.response.text();
+                    console.error("Google AI 3.1 (Demo) did not return an image. Response text:", analysisText);
+                    throw new Error("The AI 3.1 did not generate an image: " + analysisText);
+                }
+
+                // Add usage metadata to result
+                usageMetadataRecord = {
+                    tokens_used: totalTokens,
+                    estimated_cost: estimatedCost,
+                    prompt_tokens: promptTokens,
+                    candidates_tokens: candidatesTokens
+                };
+
                 await new Promise(resolve => setTimeout(resolve, 3000));
-
             } catch (err) {
-                console.error("Google AI Demo Error, falling back:", err);
+                console.error("Google AI Demo 3.1 Error:", err);
+                throw err;
             }
-        }
-
-        if (!resultUrl && NANOBANANA_API_KEY) {
-            console.log("Falling back to NanoBanana for Demo...");
+        } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {
+            if (!NB_API_KEY) throw new Error("NanoBanana API Key is missing.");
+            console.log("Using NanoBanana for Demo...");
             const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${NANOBANANA_API_KEY}`,
+                    "Authorization": `Bearer ${NB_API_KEY}`,
                 },
                 body: JSON.stringify({
                     prompt: nbPrompt,
@@ -139,13 +164,12 @@ export async function POST(req: NextRequest) {
             const taskResult = await taskResponse.json();
             if (taskResponse.ok && taskResult.code === 200) {
                 const taskId = taskResult.data?.taskId || taskResult.taskId;
-
                 let attempts = 0;
                 while (attempts < 30) {
                     attempts++;
                     await new Promise(r => setTimeout(r, 5000));
                     const stResp = await fetch(`${NANOBANANA_BASE_URL}/record-info?taskId=${taskId}`, {
-                        headers: { "Authorization": `Bearer ${NANOBANANA_API_KEY}` },
+                        headers: { "Authorization": `Bearer ${NB_API_KEY}` },
                     });
                     const stData = await stResp.json();
                     const successFlag = stData.data?.successFlag ?? stData.successFlag;
@@ -176,7 +200,8 @@ export async function POST(req: NextRequest) {
                 error_message: JSON.stringify({
                     taskId: "LIVE-DEMO",
                     result_url: resultUrl,
-                    input_images: [finalUserImageUrl, absoluteGarmentUrl]
+                    input_images: [finalUserImageUrl, absoluteGarmentUrl],
+                    ...usageMetadataRecord
                 })
             }]);
         } catch (logErr) {

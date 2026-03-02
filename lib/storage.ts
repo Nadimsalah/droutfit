@@ -194,6 +194,7 @@ export async function getLogs() {
         path: log.path,
         status: log.status,
         latency: log.latency,
+        created_at: log.created_at,
         date: new Date(log.created_at).toLocaleString(),
         type: log.status < 400 ? "success" : "error",
         message: log.error_message

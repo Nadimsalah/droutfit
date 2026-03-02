@@ -21,7 +21,7 @@ export default function InteractiveTryOnSection() {
         originalPrice: "$65.00",
         description: "Engineered for excellence. High-loft synthetic insulation meets a weather-resistant shell for the ultimate urban explorer jacket.",
         image: "/alaska-jacket.webp",
-        garmentUrl: 'https://plyvtxtapvhenkumknai.supabase.co/storage/v1/object/public/tryimages/alaska-jacket.webp'
+        garmentUrl: "/alaska-jacket.webp"
     };
 
     // Auto-scroll logic if needed or just ensuring smooth transitions
