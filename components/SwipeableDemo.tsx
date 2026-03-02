@@ -47,7 +47,7 @@ export default function SwipeableDemo() {
     }
 
     return (
-        <section className="py-12 md:py-24 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between min-h-[90vh] relative z-10 overflow-hidden gap-12 lg:gap-8">
+        <section className="py-12 md:py-20 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between relative z-10 overflow-hidden gap-8">
             {/* Text Content (Left on Desktop) */}
             <div className="text-center lg:text-left lg:w-1/3 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-400 mb-6 uppercase tracking-widest">
@@ -62,7 +62,7 @@ export default function SwipeableDemo() {
             </div>
 
             {/* Slider Container (Right on Desktop) */}
-            <div className="relative w-full lg:w-3/5 aspect-[16/9] flex justify-center items-center mt-8 lg:mt-0">
+            <div className="relative w-full lg:w-3/5 aspect-[4/3] md:aspect-[3/2] lg:aspect-video flex justify-center items-center mt-6 lg:mt-0">
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={page}
@@ -87,7 +87,7 @@ export default function SwipeableDemo() {
                                 paginate(-1)
                             }
                         }}
-                        className="absolute w-full h-full md:w-[95%] md:h-[95%] rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-900/10 cursor-grab active:cursor-grabbing bg-transparent"
+                        className="absolute w-full h-full md:w-[95%] md:h-[95%] rounded-3xl md:rounded-[2rem] overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing bg-transparent"
                     >
                         <img
                             src={images[imageIndex].src}
