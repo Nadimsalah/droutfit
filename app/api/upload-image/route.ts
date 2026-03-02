@@ -9,10 +9,17 @@ export async function POST(req: NextRequest) {
     try {
         const { base64Image, bucketName = "tryimages" } = await req.json();
 
-        if (!base64Image) {
-            return NextResponse.json({ error: "Missing image data" }, { status: 400 });
+        // Security Patch: Restrict allowed buckets
+        const allowedBuckets = ["tryimages", "public_assets", "avatars", "logos"];
+        if (!allowedBuckets.includes(bucketName)) {
+            return NextResponse.json({ error: "Unauthorized bucket target" }, { status: 403 });
         }
 
+        if (!base64Image || typeof base64Image !== 'string') {
+            return NextResponse.json({ error: "Missing or invalid image data" }, { status: 400 });
+        }
+
+        // Security Patch: Sanitize input by strictly matching the base64 prefix mapping
         const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, "base64");
         const fileName = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;

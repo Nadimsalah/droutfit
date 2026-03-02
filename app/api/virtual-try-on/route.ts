@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { prompt, type, numImages, imageUrls, productId } = body;
 
-        const ip = req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
+        const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
         let merchantId: string;
         const { data: product, error: productError } = await supabase
@@ -314,7 +314,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Missing productId" }, { status: 400 });
         }
 
-        const ip = req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
+        const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
         // 1. Get Merchant ID
         let merchantId: string;

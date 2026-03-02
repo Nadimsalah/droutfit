@@ -63,6 +63,20 @@ export async function POST(req: NextRequest) {
 
         console.log("Images ready:", finalUserImageUrl, absoluteGarmentUrl);
 
+        // Security Patch: IP extraction & Demo limits
+        const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1';
+
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count } = await supabaseAdmin.from('usage_logs')
+            .select('*', { count: 'exact', head: true })
+            .eq('ip_address', ip)
+            .eq('path', '/api/generate-demo')
+            .gte('created_at', oneDayAgo);
+
+        if (count && count >= 10) {
+            return NextResponse.json({ error: "Daily free demo limit reached. Please sign up to continue using the service." }, { status: 429 });
+        }
+
 
         // 2. Fetch System Settings
         const { data: settingsData } = await supabaseAdmin.from('system_settings').select('key, value');
@@ -186,7 +200,6 @@ export async function POST(req: NextRequest) {
         }
 
         const latency = `${Date.now() - startTime}ms`;
-        const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '::1';
 
         // Attempt to log entry (we omit user_id for guest/demo attempts)
         try {
