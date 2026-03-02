@@ -92,7 +92,7 @@ export default function SwipeableDemo() {
                         <img
                             src={images[imageIndex].src}
                             alt={images[imageIndex].alt}
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none filter drop-shadow-2xl"
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none rounded-2xl md:rounded-[2rem]"
                         />
                     </motion.div>
                 </AnimatePresence>
