@@ -291,11 +291,6 @@ export default function WidgetPage() {
                                         )}
                                     </button>
 
-                                    {remainingTries !== null && (
-                                        <p className="text-center text-xs text-gray-400 font-medium animate-in fade-in">
-                                            {remainingTries} free try-ons remaining today
-                                        </p>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -359,10 +354,30 @@ export default function WidgetPage() {
                 </div>
 
             </div >
+
+            {/* Powered By Footer */}
+            <div className="mt-6 flex justify-center z-10">
+                <a
+                    href="https://droutfit.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-2 group cursor-pointer"
+                >
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] group-hover:text-gray-500 transition-colors">
+                        Powered by
+                    </span>
+                    <img
+                        src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
+                        alt="DrOutfit"
+                        className="h-4 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300"
+                    />
+                </a>
+            </div>
+
             <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[100px] opacity-50"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-100 rounded-full blur-[100px] opacity-50"></div>
             </div>
-        </div >
+        </div>
     )
 }
