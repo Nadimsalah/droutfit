@@ -369,7 +369,7 @@ export default function WidgetPage() {
                     <img
                         src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
                         alt="DrOutfit"
-                        className="h-4 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-300"
+                        className="h-4 w-auto opacity-70 group-hover:opacity-100 transition-all duration-300"
                     />
                 </a>
             </div>
