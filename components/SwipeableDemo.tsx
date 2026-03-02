@@ -47,7 +47,7 @@ export default function SwipeableDemo() {
     }
 
     return (
-        <section className="py-12 md:py-20 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between relative z-10 overflow-hidden gap-8">
+        <section className="py-6 md:py-20 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between relative z-10 overflow-hidden gap-6 lg:gap-8">
             {/* Text Content (Left on Desktop) */}
             <div className="text-center lg:text-left lg:w-1/3 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-400 mb-6 uppercase tracking-widest">
@@ -62,7 +62,7 @@ export default function SwipeableDemo() {
             </div>
 
             {/* Slider Container (Right on Desktop) */}
-            <div className="relative w-full lg:w-3/5 aspect-[4/3] md:aspect-[3/2] lg:aspect-video flex justify-center items-center mt-6 lg:mt-0">
+            <div className="relative w-full lg:w-3/5 h-[65vh] lg:h-auto lg:aspect-video flex justify-center items-center mt-2 lg:mt-0">
                 <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={page}
