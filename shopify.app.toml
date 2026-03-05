@@ -1,0 +1,27 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "Ai Try on"
+client_id = "74303bbd83d05928ebbc1ebf980450a3"
+application_url = "https://droutfit.com"
+embedded = true
+
+[webhooks]
+api_version = "2025-01"
+
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "https://droutfit.com/api/shopify/webhooks/customers/data_request"
+  customer_deletion_url = "https://droutfit.com/api/shopify/webhooks/customers/redact"
+  shop_deletion_url = "https://droutfit.com/api/shopify/webhooks/shop/redact"
+
+[access_scopes]
+scopes = "read_products,write_products"
+
+[auth]
+redirect_urls = [
+  "https://droutfit.com",
+  "https://droutfit.com/dashboard",
+  "https://droutfit.com/dashboard/shopify/connect"
+]
+
+[pos]
+embedded = false
