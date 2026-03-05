@@ -55,43 +55,46 @@ export async function POST(req: NextRequest) {
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
-        let merchantId: string;
+        let merchantId: string | null = null;
 
-        // 1. Try finding by productId
-        const isProdUuid = productId && isUUID(productId);
-        const { data: product, error: productError } = isProdUuid ? await supabase
-            .from("products")
-            .select("user_id")
-            .eq("id", productId)
-            .single() : { data: null, error: { message: "Not a UUID" } };
-
-        if (!productError && product) {
-            merchantId = product.user_id;
-        } else if (shop) {
-            // 2. Try finding by shop domain
-            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-
-            const { data: profileByShop } = await supabase
-                .from("profiles")
-                .select("id")
-                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
-                .limit(1)
+        // 1. Identify Merchant
+        // A. Try finding by productId (internal UUID)
+        if (productId && isUUID(productId)) {
+            const { data: product } = await supabase
+                .from("products")
+                .select("user_id")
+                .eq("id", productId)
                 .single();
+            if (product) merchantId = product.user_id;
+        }
 
-            if (profileByShop) {
-                merchantId = profileByShop.id;
+        // B. Try finding by shop domain (resilient lookup)
+        if (!merchantId && shop) {
+            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+            const { data: profiles } = await (supabase as any)
+                .from("profiles")
+                .select("id, credits")
+                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
+                .order('credits', { ascending: false })
+                .limit(1);
+
+            if (profiles && profiles.length > 0) {
+                merchantId = profiles[0].id;
             } else {
                 return NextResponse.json({
                     error: "This store is not yet linked to a DrOutfit account. Please open the DrOutfit app in your Shopify admin to initialize your connection."
                 }, { status: 404 });
             }
-        } else {
-            // Fallback for direct API users / testing
+        }
+
+        // C. Fallback for testing/direct API
+        if (!merchantId) {
             const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
             if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
             merchantId = firstMerchant.id;
         }
 
+        // 2. Load Merchant Profile for Limits/Credits
         const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("credits, ip_limit")
@@ -102,15 +105,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Merchant profile not found" }, { status: 404 });
         }
 
-        try {
-            if ((profile.credits || 0) <= 0) {
-                return NextResponse.json(
-                    { error: "This merchant has an insufficient credit balance to process try-ons. Please top up in Billing." },
-                    { status: 403 }
-                );
-            }
-        } catch (e) {
-            console.warn("Credit check failed, bypassing:", e);
+        if ((profile.credits || 0) <= 0) {
+            return NextResponse.json(
+                { error: "STORE_LIMIT_REACHED" }, // Consistent error code for frontend
+                { status: 403 }
+            );
         }
 
         const limit = (profile as any).ip_limit || 5;
@@ -161,179 +160,88 @@ export async function POST(req: NextRequest) {
             settingsData?.forEach(s => settings[s.key] = s.value);
 
             const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'google';
-            const NB_API_KEY = settings.NANOBANANA_API_KEY || process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
             const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-
-            const nbPrompt = settings.NANOBANANA_PROMPT || "high quality fashion photography, realistic lighting";
             const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
 
             if (PREFERRED_AI_PROVIDER === 'google') {
                 if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
-                console.log("Using Google Gemini Engine...");
-                try {
-                    const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-                    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
-                    const [personData, garmentData] = await Promise.all([
-                        (async () => {
-                            let url = imageUrls[0];
-                            if (url.startsWith('//')) url = 'https:' + url;
-                            const resp = await fetch(url);
-                            const buffer = await resp.arrayBuffer();
-                            return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                        })(),
-                        (async () => {
-                            let url = imageUrls[1];
-                            if (url.startsWith('//')) url = 'https:' + url;
-                            const resp = await fetch(url);
-                            const buffer = await resp.arrayBuffer();
-                            return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                        })()
-                    ]);
+                const genAI = new GoogleGenerativeAI(GEM_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Corrected model name
 
-                    const result = await model.generateContent([geminiPrompt, personData, garmentData]);
+                const [personData, garmentData] = await Promise.all([
+                    (async () => {
+                        let url = imageUrls[0];
+                        if (url.startsWith('//')) url = 'https:' + url;
+                        const resp = await fetch(url);
+                        const buffer = await resp.arrayBuffer();
+                        return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                    })(),
+                    (async () => {
+                        let url = imageUrls[1];
+                        if (url.startsWith('//')) url = 'https:' + url;
+                        const resp = await fetch(url);
+                        const buffer = await resp.arrayBuffer();
+                        return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                    })()
+                ]);
 
-                    // Extract usage metadata
-                    const usage = result.response.usageMetadata;
-                    const promptTokens = usage?.promptTokenCount || 0;
-                    const candidatesTokens = usage?.candidatesTokenCount || 0;
-                    const totalTokens = usage?.totalTokenCount || 0;
+                const result = await model.generateContent([geminiPrompt, personData, garmentData]);
 
-                    // Estimate cost (3.1 Pricing): $0.10 per 1M input, $1.00 per 1M output
-                    const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
+                const usage = result.response.usageMetadata;
+                const promptTokens = usage?.promptTokenCount || 0;
+                const candidatesTokens = usage?.candidatesTokenCount || 0;
+                const totalTokens = usage?.totalTokenCount || 0;
+                const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
 
-                    // Extract image from response
-                    let base64Result = null;
-                    if (result.response.candidates && result.response.candidates[0].content.parts) {
-                        for (const part of result.response.candidates[0].content.parts) {
-                            if (part.inlineData) {
-                                base64Result = part.inlineData.data;
-                                break;
-                            }
+                let base64Result = null;
+                if (result.response.candidates && result.response.candidates[0].content.parts) {
+                    for (const part of result.response.candidates[0].content.parts) {
+                        if (part.inlineData) {
+                            base64Result = part.inlineData.data;
+                            break;
                         }
                     }
-
-                    if (base64Result) {
-                        console.log(`Google AI Success (2.5-Preview). Tokens: ${totalTokens}. Cost: $${estimatedCost.toFixed(5)}`);
-                        resultUrl = await uploadBase64Image(base64Result);
-                    } else {
-                        const analysisText = result.response.text();
-                        console.error("Google AI 2.5 did not return an image. Response text:", analysisText);
-                        throw new Error("The AI 2.5 did not generate an image: " + analysisText);
-                    }
-
-                    const usageMetadata = {
-                        tokens_used: totalTokens,
-                        estimated_cost: estimatedCost,
-                        prompt_tokens: promptTokens,
-                        candidates_tokens: candidatesTokens
-                    };
-
-                    // Final log and credits update
-                    const newCredits = Math.max(0, (profile.credits || 0) - 1);
-                    try {
-                        const updates = [
-                            supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId)
-                        ];
-
-                        if (productId && isUUID(productId)) {
-                            const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                            updates.push(supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId));
-                        }
-
-                        await Promise.all(updates);
-                    } catch (err) { console.error("Updates failed:", err); }
-
-                    if (logEntryId) {
-                        await supabase.from("usage_logs").update({
-                            status: 200,
-                            latency: `${Date.now() - startTime}ms`,
-                            error_message: JSON.stringify({
-                                taskId,
-                                result_url: resultUrl,
-                                input_images: imageUrls,
-                                credits_used: 1,
-                                channel: PREFERRED_AI_PROVIDER,
-                                ...usageMetadata
-                            })
-                        }).eq("id", logEntryId);
-                    }
-
-                    return NextResponse.json({ status: "success", result_url: resultUrl, taskId, tokens: totalTokens });
-
-                } catch (gemError) {
-                    console.error("Google AI 2.5 Error:", gemError);
-                    throw gemError;
                 }
-            } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {
-                if (!NB_API_KEY) throw new Error("NanoBanana API Key is missing.");
-                console.log("Using NanoBanana Engine...");
-                const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${NB_API_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        prompt: prompt || nbPrompt,
-                        type: type || "IMAGETOIAMGE",
-                        numImages: numImages || 1,
-                        imageUrls: imageUrls,
-                    }),
-                });
 
-                const taskResult = await taskResponse.json();
-                if (!taskResponse.ok || taskResult.code !== 200) throw new Error(taskResult.msg || "Failed to submit task");
-                taskId = taskResult.data?.taskId || taskResult.taskId;
-
-                let attempts = 0;
-                while (attempts < 60) {
-                    attempts++;
-                    await new Promise(r => setTimeout(r, 5000));
-                    const stResp = await fetch(`${NANOBANANA_BASE_URL}/record-info?taskId=${taskId}`, {
-                        headers: { "Authorization": `Bearer ${NB_API_KEY}` },
-                    });
-                    const stData = await stResp.json();
-                    const successFlag = stData.data?.successFlag ?? stData.successFlag;
-                    if (successFlag === 1) {
-                        resultUrl = stData.data?.response?.resultImageUrl || stData.response?.result_url;
-                        break;
-                    } else if (successFlag === 2 || successFlag === 3) throw new Error(stData.errorMessage || "Generation failed");
+                if (base64Result) {
+                    resultUrl = await uploadBase64Image(base64Result);
+                } else {
+                    const analysisText = result.response.text();
+                    throw new Error("AI did not generate an image: " + analysisText);
                 }
-            }
 
-            if (!resultUrl) resultUrl = imageUrls[1]; // Final fallback
+                const usageMetadata = { tokens_used: totalTokens, estimated_cost: estimatedCost };
 
-            if (logEntryId) {
-                await supabase.from("usage_logs").update({
-                    status: 200,
-                    latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ taskId, result_url: resultUrl, input_images: imageUrls, credits_used: 1, channel: PREFERRED_AI_PROVIDER })
-                }).eq("id", logEntryId);
-            }
-
-            const newCredits = Math.max(0, (profile.credits || 0) - 1);
-            try {
-                const updates = [
-                    supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId)
-                ];
+                // Update credits
+                const newCredits = Math.max(0, (profile.credits || 0) - 1);
+                await supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId);
 
                 if (productId && isUUID(productId)) {
                     const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                    updates.push(supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId));
+                    await supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId);
                 }
 
-                await Promise.all(updates);
-            } catch (err) { console.error("Updates failed:", err); }
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ taskId, result_url: resultUrl, ...usageMetadata })
+                    }).eq("id", logEntryId);
+                }
 
-            return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
+                return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
+
+            } else {
+                throw new Error("AI provider not fully configured");
+            }
 
         } catch (error) {
             if (logEntryId) {
                 await supabase.from("usage_logs").update({
                     status: 500,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ error: (error as Error).message, taskId, input_images: imageUrls })
+                    error_message: JSON.stringify({ error: (error as Error).message, taskId })
                 }).eq("id", logEntryId);
             }
             throw error;
@@ -356,47 +264,44 @@ export async function GET(req: NextRequest) {
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
-        // 1. Get Merchant ID
-        let merchantId: string;
+        let merchantId: string | null = null;
 
-        const isProdUuid = productId && isUUID(productId);
-        const { data: product } = isProdUuid ? await supabase
-            .from("products")
-            .select("user_id")
-            .eq("id", productId)
-            .single() : { data: null };
-
-        if (product && product.user_id) {
-            merchantId = product.user_id;
-        } else if (shop) {
-            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-
-            const { data: profileByShop } = await supabase
-                .from("profiles")
-                .select("id")
-                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
-                .limit(1)
-                .single();
-
-            if (profileByShop) {
-                merchantId = profileByShop.id;
-            } else {
-                return NextResponse.json({ error: "Store not initialized" }, { status: 404 });
-            }
-        } else {
-            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-            if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
-            merchantId = firstMerchant.id;
+        // 1. Identify Merchant
+        if (productId && isUUID(productId)) {
+            const { data: product } = await supabase.from("products").select("user_id").eq("id", productId).single();
+            if (product) merchantId = product.user_id;
         }
+
+        if (!merchantId && shop) {
+            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+            const { data: profiles } = await (supabase as any)
+                .from("profiles")
+                .select("id, credits")
+                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
+                .order('credits', { ascending: false })
+                .limit(1);
+
+            if (profiles && profiles.length > 0) {
+                merchantId = profiles[0].id;
+            }
+        }
+
+        if (!merchantId) {
+            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
+            merchantId = firstMerchant?.id || null;
+        }
+
+        if (!merchantId) return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
 
         // 2. Get Limits
         const { data: profile } = await supabase
             .from("profiles")
-            .select("ip_limit")
+            .select("ip_limit, credits")
             .eq("id", merchantId)
             .single();
 
         const limit = (profile as any)?.ip_limit || 5;
+        const totalCredits = (profile as any)?.credits || 0;
 
         // 3. Get Usage
         let used = 0;
@@ -410,7 +315,7 @@ export async function GET(req: NextRequest) {
                 .gte("created_at", oneDayAgo);
             used = count || 0;
         } catch (e) {
-            console.warn("Usage check failed, likely missing ip_address column:", e);
+            console.warn("Usage check failed:", e);
         }
 
         const remaining = Math.max(0, limit - used);
@@ -419,7 +324,8 @@ export async function GET(req: NextRequest) {
             limit,
             used,
             remaining,
-            hasAccess: remaining > 0
+            hasAccess: remaining > 0 && totalCredits > 0,
+            totalCredits
         });
 
     } catch (error) {

@@ -45,6 +45,14 @@ function ConnectContent() {
         setError(null);
 
         try {
+            // 1. Ownership Takeover: Nullify store_website for any other profile that might own this shop
+            // This prevents the "multiple profiles for same shop" error in the API
+            await supabase
+                .from('profiles')
+                .update({ store_website: null })
+                .eq('store_website', shop);
+
+            // 2. Link to current profile
             const { error: updateError } = await supabase
                 .from('profiles')
                 .update({ store_website: shop })

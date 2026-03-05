@@ -5,6 +5,7 @@ import {
     Plus,
     Loader2
 } from "lucide-react"
+import Link from "next/link"
 import {
     BarChart,
     Bar,
@@ -31,66 +32,43 @@ export default function OverviewPage() {
     } | null>(null)
     const [chartData, setChartData] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [showConnectPrompt, setShowConnectPrompt] = useState(false)
+    const [shopDomain, setShopDomain] = useState<string | null>(null)
 
     useEffect(() => {
         const handlePaymentAndFetchStats = async () => {
             setIsLoading(true)
 
-            // Check for frontend credit processing (fallback for missing server key)
+            let isShopifyContext = false
+            let currentShop = null
+
+            // Check for Shopify context
             if (typeof window !== 'undefined') {
                 const searchParams = new URLSearchParams(window.location.search)
-                const addedCredits = parseInt(searchParams.get('added') || '0')
-                const isSuccess = searchParams.get('payment_successful') === 'true'
-                const txId = searchParams.get('tx_id')
-
-                // Security check to avoid duplicate top-ups on page refresh/back
-                const isProcessed = txId ? localStorage.getItem(`whop_tx_${txId}`) === 'true' : false;
-
-                if (isSuccess && addedCredits > 0 && !isProcessed) {
-                    try {
-                        const { data: { user } } = await supabase.auth.getUser()
-                        if (user) {
-                            // 1. Fetch current credits
-                            const { data: profile } = await supabase
-                                .from('profiles')
-                                .select('credits')
-                                .eq('id', user.id)
-                                .single()
-
-                            const currentCredits = profile?.credits || 0
-                            const newCredits = currentCredits + addedCredits
-
-                            // 2. Perform the update acting exactly as the authorized user!
-                            await supabase
-                                .from('profiles')
-                                .update({ credits: newCredits })
-                                .eq('id', user.id)
-
-                            // 3. Mark processed in local storage and clean up the URL
-                            if (txId) {
-                                localStorage.setItem(`whop_tx_${txId}`, 'true')
-                            }
-                            window.history.replaceState({}, '', '/dashboard')
-                        }
-                    } catch (e) {
-                        console.error("Frontend credit update failed:", e)
-                    }
-                } else if (isSuccess && addedCredits > 0 && isProcessed) {
-                    // Still clear the URL if they somehow kept the params
-                    window.history.replaceState({}, '', '/dashboard')
+                currentShop = searchParams.get('shop')
+                if (searchParams.get('embedded') === '1' || currentShop) {
+                    isShopifyContext = true
+                    setShopDomain(currentShop)
                 }
             }
 
-            // Normal Stats Fetching
+            // Normal Stats Fetching & Profile Check
             try {
-                const [dashboardStats, dailyStats] = await Promise.all([
+                const { data: { user } } = await supabase.auth.getUser()
+
+                const [dashboardStats, dailyStats, profileRes] = await Promise.all([
                     getDashboardStats(),
-                    getChartData(14)
+                    getChartData(14),
+                    user ? supabase.from('profiles').select('store_website').eq('id', user.id).single() : Promise.resolve({ data: null })
                 ])
 
+                if (isShopifyContext && profileRes.data && !profileRes.data.store_website) {
+                    setShowConnectPrompt(true)
+                }
+
                 // Calculate blocked totals from chart data
-                const totalBlocked = dailyStats.reduce((sum, day) => sum + day.blocked, 0);
-                const totalSuccess = dailyStats.reduce((sum, day) => sum + day.success, 0);
+                const totalBlocked = dailyStats.reduce((sum: number, day: any) => sum + day.blocked, 0);
+                const totalSuccess = dailyStats.reduce((sum: number, day: any) => sum + day.success, 0);
                 const totalRequests = totalSuccess + totalBlocked;
                 const successRate = totalRequests > 0 ? (totalSuccess / totalRequests) * 100 : 100;
 
@@ -143,6 +121,29 @@ export default function OverviewPage() {
             </div>
 
             <TopUpModal isOpen={isTopUpOpen} onClose={() => setIsTopUpOpen(false)} />
+
+            {/* Shopify Connection Prompt */}
+            {showConnectPrompt && (
+                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-6 mb-8 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <Plus className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Connect your Shopify Store</h3>
+                                <p className="text-gray-400 text-sm">Link your {shopDomain} store to start using DrOutfit features.</p>
+                            </div>
+                        </div>
+                        <Link
+                            href={`/dashboard/shopify/connect?shop=${shopDomain}&embedded=1`}
+                            className="bg-white text-black px-8 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all shadow-xl shadow-white/5 active:scale-[0.98]"
+                        >
+                            Connect Now
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* Top Cards Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
