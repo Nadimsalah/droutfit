@@ -35,22 +35,20 @@ export default function DashboardLayout({
 
     return (
         <div className="flex h-screen bg-[#0B0E14] font-sans overflow-hidden text-white">
-            {!isEmbedded && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
-            <div className={`flex flex-1 flex-col overflow-hidden w-full relative ${isEmbedded ? '' : ''}`}>
-                {/* Mobile Header - Hide if embedded */}
-                {!isEmbedded && (
-                    <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
-                        <div className="flex items-center gap-2">
-                            <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
-                        </div>
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                        >
-                            <Menu className="h-6 w-6" />
-                        </button>
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            <div className={`flex flex-1 flex-col overflow-hidden w-full relative`}>
+                {/* Mobile/Embedded Header Toggle */}
+                <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
                     </div>
-                )}
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+                </div>
 
 
                 {/* Background decorative blur */}

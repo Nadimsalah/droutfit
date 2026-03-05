@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import {
     LayoutDashboard,
@@ -43,7 +43,23 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [profile, setProfile] = useState<{ fullName: string; email: string } | null>(null)
+
+    // Preserve Shopify parameters
+    const shop = searchParams.get('shop')
+    const host = searchParams.get('host')
+    const embedded = searchParams.get('embedded')
+
+    const getHref = (href: string) => {
+        const params = new URLSearchParams()
+        if (shop) params.set('shop', shop)
+        if (host) params.set('host', host)
+        if (embedded) params.set('embedded', embedded)
+
+        const queryString = params.toString()
+        return queryString ? `${href}?${queryString}` : href
+    }
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -112,7 +128,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             return (
                                 <Link
                                     key={item.name}
-                                    href={item.href}
+                                    href={getHref(item.href)}
                                     onClick={onClose}
                                     className={cn(
                                         "flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-lg group",
@@ -135,7 +151,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {footerNavigation.map((item) => (
                             <Link
                                 key={item.name}
-                                href={item.href}
+                                href={getHref(item.href)}
                                 className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 rounded-lg group"
                             >
                                 <item.icon className="h-4 w-4 text-gray-500 group-hover:text-white" />
