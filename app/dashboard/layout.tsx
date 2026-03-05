@@ -1,7 +1,7 @@
 "use client"
 
 import { Sidebar } from "@/components/Sidebar"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Menu } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
@@ -35,7 +35,9 @@ export default function DashboardLayout({
 
     return (
         <div className="flex h-screen bg-[#0B0E14] font-sans overflow-hidden text-white">
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            <Suspense fallback={<div className="w-72 bg-[#0F1116] border-r border-gray-800/50 hidden md:block" />}>
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            </Suspense>
             <div className={`flex flex-1 flex-col overflow-hidden w-full relative`}>
                 {/* Mobile/Embedded Header Toggle */}
                 <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
