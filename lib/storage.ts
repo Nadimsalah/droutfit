@@ -78,6 +78,13 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return undefined;
 
+    // Validate UUID format to avoid Postgres errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+        console.warn('Invalid UUID provided to getProductById:', id);
+        return undefined;
+    }
+
     const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -86,7 +93,7 @@ export async function getProductById(id: string): Promise<Product | undefined> {
         .single();
 
     if (error || !data) {
-        console.error('Error fetching product by ID from Supabase:', error);
+        console.error('Error fetching product by ID from Supabase:', JSON.stringify(error));
         return undefined;
     }
 
@@ -102,6 +109,13 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 
 export async function getProductByIdPublic(id: string): Promise<Product | undefined> {
     // No auth check - public access for widget
+    // Validate UUID format to avoid Postgres errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+        console.warn('Invalid UUID provided to getProductByIdPublic:', id);
+        return undefined;
+    }
+
     const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -109,7 +123,7 @@ export async function getProductByIdPublic(id: string): Promise<Product | undefi
         .single();
 
     if (error || !data) {
-        console.error('Error fetching product by ID (public):', error);
+        console.error('Error fetching product by ID (public):', JSON.stringify(error));
         return undefined;
     }
 

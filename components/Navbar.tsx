@@ -2,17 +2,57 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Menu, X, User, LayoutDashboard, Plus, CreditCard, LogOut, ChevronDown } from 'lucide-react';
+import { ArrowRight, Menu, X, User, LayoutDashboard, Plus, CreditCard, LogOut, ChevronDown, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isEmbedded, setIsEmbedded] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const [shop, setShop] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Detect if we are in an iframe (Shopify dashboard) or have embedded=1
+        const urlParams = new URL(window.location.href).searchParams;
+        const embedded = typeof window !== 'undefined' && (window.self !== window.top || urlParams.get('embedded') === '1');
+        setIsEmbedded(embedded);
+
+        // Detect shop from various sources
+        let s = searchParams.get('shop') || urlParams.get('shop');
+
+        if (!s && typeof window !== 'undefined') {
+            s = sessionStorage.getItem('shopify_shop');
+        }
+
+        const isShopifyReferrer = typeof document !== 'undefined' && document.referrer.includes('myshopify.com');
+
+        if (s) {
+            setShop(s);
+            sessionStorage.setItem('shopify_shop', s);
+        } else if (embedded || isShopifyReferrer) {
+            // Fallback for when we know it's Shopify but params are missing
+            setShop("your-store");
+        }
+
+        console.log("Droutfit Shopify Detection:", { embedded, shop: s || "none", url: window.location.href });
+
+        if (s && (window as any).shopify) {
+            try {
+                (window as any).shopify.config.set({
+                    apiKey: '74303bbd83d05928ebbc1ebf980450a3',
+                    shopOrigin: s,
+                });
+            } catch (e) {
+                console.error("App Bridge config failed:", e);
+            }
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -62,7 +102,18 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14] border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/80 backdrop-blur-xl border-b border-white/5'}`}>
+            {(shop || isEmbedded) && (
+                <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-700 text-white z-[110] py-2 px-6 flex items-center justify-between shadow-lg h-10">
+                    <p className="text-[10px] md:text-sm font-bold flex items-center gap-2">
+                        <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
+                        Using Shopify? Link your store to use your DrOutfit credits.
+                    </p>
+                    <Link href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`} className="bg-white text-blue-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-tight">
+                        Connect now
+                    </Link>
+                </div>
+            )}
+            <nav className={`fixed ${(shop || isEmbedded) ? 'top-10' : 'top-0'} left-0 right-0 z-[100] transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14] border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/80 backdrop-blur-xl border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between pointer-events-auto">
                     <Link href="/" className="flex items-center gap-2 group relative z-50">
                         <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />
@@ -84,6 +135,15 @@ export default function Navbar() {
 
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-4">
+                        {(shop || isEmbedded) && (
+                            <Link
+                                href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
+                                className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-5 py-2.5 rounded-full text-sm font-bold hover:bg-blue-600/30 transition-all flex items-center gap-2 group animate-pulse"
+                            >
+                                <ShoppingBag className="h-4 w-4" />
+                                Connect your Store
+                            </Link>
+                        )}
                         {!user ? (
                             <>
                                 <Link href="/login" className="text-sm font-medium text-white hover:text-purple-400 transition-colors">
@@ -182,6 +242,16 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex flex-col gap-4 w-full max-w-sm pt-8">
+                        {(shop || isEmbedded) && (
+                            <Link
+                                href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
+                                className="w-full py-4 rounded-xl bg-blue-600 text-white text-center font-bold hover:bg-blue-500 transition-all flex items-center justify-center gap-2 animate-pulse"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <ShoppingBag className="h-5 w-5" />
+                                Connect your Store
+                            </Link>
+                        )}
                         {!user ? (
                             <>
                                 <Link

@@ -17,8 +17,8 @@ const BASE_URL = 'https://api.nanobananaapi.ai/api/v1/nanobanana';
  * Generates a Virtual Try-On image using the server-side API route.
  * This proxy handles API keys and rate limiting securely.
  */
-export async function generateTryOn(garmentUrl: string, faceImageUrl: string, productId: string): Promise<TryOnResponse> {
-    console.log("Starting NanoBanana VTO with:", { garmentUrl, faceImageUrl, productId });
+export async function generateTryOn(garmentUrl: string, faceImageUrl: string, productId: string, shop?: string): Promise<TryOnResponse> {
+    console.log("Starting NanoBanana VTO with:", { garmentUrl, faceImageUrl, productId, shop });
 
     try {
         const response = await fetch('/api/virtual-try-on', {
@@ -30,7 +30,8 @@ export async function generateTryOn(garmentUrl: string, faceImageUrl: string, pr
                 type: 'IMAGETOIAMGE', // API expects this typo "IAMGE"
                 numImages: 1,
                 imageUrls: [faceImageUrl, garmentUrl],
-                productId: productId
+                productId: productId,
+                shop: shop
             }),
         });
 

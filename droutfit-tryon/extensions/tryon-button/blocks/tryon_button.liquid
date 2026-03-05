@@ -1,0 +1,292 @@
+<style>
+  #droutfit-tryon-container {
+    padding: 12px 0;
+  }
+  .droutfit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 24px;
+    background-color: {{ block.settings.button_color }};
+    color: {{ block.settings.text_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .droutfit-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+  .droutfit-btn svg {
+    margin-right: 8px;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Modal Overlay CSS */
+  #droutfit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 2147483647;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #droutfit-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #droutfit-modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 500px;
+    height: 90vh;
+    max-height: 850px;
+    background: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  #droutfit-modal-overlay.active #droutfit-modal-content {
+    transform: scale(1) translateY(0);
+  }
+
+  #droutfit-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    color: #111827;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    transition: all 0.2s ease;
+  }
+
+  #droutfit-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: rotate(90deg);
+  }
+
+  #droutfit-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  #droutfit-iframe.loaded {
+    opacity: 1;
+  }
+
+  /* Loading Spinner */
+  #droutfit-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    z-index: 5;
+  }
+
+  .droutfit-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 0, 0, 0.05);
+    border-top: 3px solid #000000;
+    border-radius: 50%;
+    animation: droutfit-spin 1s linear infinite;
+  }
+
+  @keyframes droutfit-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 600px) {
+    #droutfit-modal-content {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      border: none;
+    }
+  }
+</style>
+
+<div id="droutfit-tryon-container">
+  <button id="droutfit-tryon-btn-{{ section.id }}" class="droutfit-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 3v4M19 3v4M5 11h14M5 11l-2 10h18l-2-10" />
+    </svg>
+    {{ block.settings.button_text }}
+  </button>
+</div>
+
+<!-- Premium Modal Overlay -->
+<div id="droutfit-modal-overlay">
+  <div id="droutfit-modal-content">
+    <button id="droutfit-close-btn" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    
+    <div id="droutfit-loader">
+      <div class="droutfit-spinner"></div>
+      <span style="color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 500;">Loading Experience...</span>
+    </div>
+
+    <iframe id="droutfit-iframe" src="" allow="camera; microphone; clipboard-write; fullscreen"></iframe>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tryOnBtn = document.getElementById('droutfit-tryon-btn-{{ section.id }}');
+    const modalOverlay = document.getElementById('droutfit-modal-overlay');
+    const closeBtn = document.getElementById('droutfit-close-btn');
+    const iframe = document.getElementById('droutfit-iframe');
+    const loader = document.getElementById('droutfit-loader');
+    
+    // Product Data Context provided by Shopify Liquid
+    const shopDomain = "{{ shop.domain }}";
+    const productId = "{{ product.id }}";
+    let productImageUrl = "{{ product.featured_image | image_url }}";
+    if (productImageUrl.startsWith('//')) {
+        productImageUrl = 'https:' + productImageUrl;
+    }
+    const productUrl = "{{ shop.url }}{{ product.url }}";
+    
+    // Construct the popup URL for DrOutfit
+    const droutfitBaseUrl = "https://www.droutfit.com"; 
+    const popupUrl = `${droutfitBaseUrl}/widget/vto?productId=${productId}&shop=${shopDomain}&img=${encodeURIComponent(productImageUrl)}&url=${encodeURIComponent(productUrl)}`;
+
+    if (tryOnBtn && modalOverlay && closeBtn && iframe) {
+      
+      // Iframe load listener
+      iframe.addEventListener('load', function() {
+        if (iframe.src !== "about:blank" && iframe.src !== "") {
+          iframe.classList.add('loaded');
+          if (loader) loader.style.display = 'none';
+        }
+      });
+
+      // Open Modal
+      tryOnBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Show loader, hide old iframe content
+        if (loader) loader.style.display = 'flex';
+        iframe.classList.remove('loaded');
+
+        // Load iframe source ONLY when they click the button
+        if (iframe.src !== popupUrl) {
+            iframe.src = popupUrl;
+        }
+        
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; 
+      });
+
+      // Close Modal
+      const closeModal = function() {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      };
+
+      // Listen for messages from the DrOutfit Iframe
+      window.addEventListener('message', function(event) {
+        // Ensure message is from our trusted domain (optional)
+        // if (event.origin !== droutfitBaseUrl) return;
+
+        if (event.data && event.data.type === 'droutfit_add_to_cart') {
+            closeModal();
+            // Optional: User can add scroll-to-cart logic here if they want
+            console.log('DrOutfit: User returning to store to complete purchase.');
+        }
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) closeModal();
+      });
+
+      // Escape key to close
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Virtual Try-On Button",
+  "target": "section",
+  "templates": ["product"],
+  "settings": [
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "✨ Try it On"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border Radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 4
+    }
+  ]
+}
+{% endschema %}

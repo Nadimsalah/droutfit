@@ -46,25 +46,42 @@ async function uploadBase64Image(base64Image: string): Promise<string> {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { prompt, type, numImages, imageUrls, productId } = body;
+        const { prompt, type, numImages, imageUrls, productId, shop } = body;
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
         let merchantId: string;
+
+        // 1. Try finding by productId
         const { data: product, error: productError } = await supabase
             .from("products")
             .select("user_id")
             .eq("id", productId)
             .single();
 
-        if (productError || !product) {
-            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-            if (!firstMerchant) {
-                return NextResponse.json({ error: "System not initialized. Please sign up or check DB." }, { status: 500 });
-            }
-            merchantId = firstMerchant.id;
-        } else {
+        if (!productError && product) {
             merchantId = product.user_id;
+        } else if (shop) {
+            // 2. Try finding by shop domain
+            const { data: profileByShop } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("store_website", shop)
+                .single();
+
+            if (profileByShop) {
+                merchantId = profileByShop.id;
+            } else {
+                // 3. Fallback
+                const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
+                if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
+                merchantId = firstMerchant.id;
+            }
+        } else {
+            // Fallback
+            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
+            if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
+            merchantId = firstMerchant.id;
         }
 
         const { data: profile, error: profileError } = await supabase
@@ -151,12 +168,16 @@ export async function POST(req: NextRequest) {
 
                     const [personData, garmentData] = await Promise.all([
                         (async () => {
-                            const resp = await fetch(imageUrls[0]);
+                            let url = imageUrls[0];
+                            if (url.startsWith('//')) url = 'https:' + url;
+                            const resp = await fetch(url);
                             const buffer = await resp.arrayBuffer();
                             return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
                         })(),
                         (async () => {
-                            const resp = await fetch(imageUrls[1]);
+                            let url = imageUrls[1];
+                            if (url.startsWith('//')) url = 'https:' + url;
+                            const resp = await fetch(url);
                             const buffer = await resp.arrayBuffer();
                             return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
                         })()
@@ -309,28 +330,43 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const productId = searchParams.get("productId");
+        const shop = searchParams.get("shop");
 
-        if (!productId) {
-            return NextResponse.json({ error: "Missing productId" }, { status: 400 });
+        if (!productId && !shop) {
+            return NextResponse.json({ error: "Missing productId or shop" }, { status: 400 });
         }
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
         // 1. Get Merchant ID
         let merchantId: string;
+
         const { data: product } = await supabase
             .from("products")
             .select("user_id")
             .eq("id", productId)
             .single();
 
-        if (!product) {
-            // Fallback for demo
+        if (product && product.user_id) {
+            merchantId = product.user_id;
+        } else if (shop) {
+            const { data: profileByShop } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("store_website", shop)
+                .single();
+
+            if (profileByShop) {
+                merchantId = profileByShop.id;
+            } else {
+                const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
+                if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
+                merchantId = firstMerchant.id;
+            }
+        } else {
             const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
             if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
             merchantId = firstMerchant.id;
-        } else {
-            merchantId = product.user_id;
         }
 
         // 2. Get Limits

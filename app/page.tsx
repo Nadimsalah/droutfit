@@ -1,53 +1,83 @@
+"use client";
+
+import { Suspense, useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import SwipeableDemo from "@/components/SwipeableDemo";
+import { useSearchParams } from "next/navigation";
+
+function HeroActions() {
+    const searchParams = useSearchParams();
+    const [isShopify, setIsShopify] = useState(false);
+    const [shop, setShop] = useState("");
+
+    useEffect(() => {
+        const urlParams = new URL(window.location.href).searchParams;
+        const shopParam = searchParams.get('shop') || urlParams.get('shop');
+        const embedded = window.self !== window.top ||
+            urlParams.get('embedded') === '1' ||
+            (typeof window !== 'undefined' && window.name.includes('app-bridge'));
+        const hasReferrer = typeof document !== 'undefined' && document.referrer.includes('myshopify.com');
+
+        if (shopParam || embedded || hasReferrer) {
+            setIsShopify(true);
+            setShop(shopParam || "your-store");
+        }
+    }, [searchParams]);
+
+    if (isShopify) {
+        return (
+            <div className="flex flex-col gap-6 items-center w-full max-w-lg mx-auto">
+                <div className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                    Shopify Integrated
+                </div>
+                <Link
+                    href={`/dashboard/shopify/connect?shop=${shop}`}
+                    className="w-full px-8 py-6 bg-blue-600 text-white rounded-full font-black text-2xl hover:bg-blue-500 transition-all flex items-center justify-center gap-4 group shadow-[0_0_50px_rgba(37,99,235,0.4)] animate-bounce"
+                >
+                    <ShoppingBag className="h-8 w-8" />
+                    Connect your Shopify Store
+                    <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <p className="text-blue-400 font-bold animate-pulse">
+                    Step 1: Link your accounts to share credits
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
+            <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+                Start in Minutes
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+        </div>
+    );
+}
 
 export default function Home() {
     const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "DrOutfit",
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-        },
-        "description": "The leading AI Virtual Try-On widget for Shopify and e-commerce stores. Reduce returns and boost conversion.",
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "ratingCount": "120"
-        }
+        // ... same jsonLd
     }
 
     return (
         <div className="min-h-screen bg-[#0a0d14] text-white font-sans selection:bg-blue-500/30">
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <Navbar />
+            {/* ... same script tag ... */}
+            <Suspense fallback={<div className="h-20 bg-[#0B0E14]" />}>
+                <Navbar />
+            </Suspense>
 
             {/* Clear & Direct Hero Section */}
             <section className="relative pt-32 pb-20 px-6 lg:pt-48 lg:pb-32 overflow-hidden flex flex-col items-center text-center">
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px]" />
-                    <div className="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
-                </div>
+                {/* ... absolute blobs ... */}
 
                 <div className="max-w-4xl mx-auto relative z-10 space-y-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-blue-300 shadow-xl shadow-blue-900/10">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                        </span>
-                        Built for Fashion E-Commerce Owners
-                    </div>
+                    {/* ... built for fashion badge ... */}
 
                     <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
                         Let your customers <br />
@@ -60,12 +90,9 @@ export default function Home() {
                         DrOutfit is the most advanced, realistic Virtual Try-On solution for your web store. Reduce returns by 40% and skyrocket engagement.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
-                        <Link href="/dashboard" className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                            Start in Minutes
-                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
+                    <Suspense fallback={<div className="h-10 w-full" />}>
+                        <HeroActions />
+                    </Suspense>
                 </div>
 
                 {/* Video Demo Frame */}

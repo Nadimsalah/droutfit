@@ -61,6 +61,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script src="https://unpkg.com/@shopify/app-bridge@latest/umd/index.js" defer></script>
         {children}
       </body>
     </html>
