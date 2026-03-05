@@ -163,7 +163,14 @@ export default function ConnectPage() {
                 <Navbar />
             </Suspense>
             <div className="pt-20 px-6">
-                <ConnectContent />
+                <Suspense fallback={
+                    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                        <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                        <p className="mt-4 text-gray-400">Loading connection page...</p>
+                    </div>
+                }>
+                    <ConnectContent />
+                </Suspense>
             </div>
         </div>
     );
