@@ -99,10 +99,29 @@ function ConnectContent() {
                 </div>
                 <h1 className="text-3xl font-bold mb-4">Store Connected!</h1>
                 <p className="text-gray-400 mb-8">
-                    Your Shopify store <b>{shop}</b> is now linked to your DrOutfit account. You can now use your credits in your store.
+                    Your Shopify store <b>{shop}</b> is now linked to your DrOutfit account. You're ready to start using AI Try-On!
                 </p>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left mb-8">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">Next Steps:</h3>
+                    <ul className="space-y-3 text-sm text-gray-300">
+                        <li className="flex items-start gap-3">
+                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                            Open your **Shopify Theme Editor**.
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                            Go to your **Default Product** template.
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
+                            Add the **"Virtual Try-On Button"** block.
+                        </li>
+                    </ul>
+                </div>
+
                 <Link href="/" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all">
-                    Finish Setup
+                    Back to Dashboard
                     <ArrowRight className="h-5 w-5" />
                 </Link>
             </div>

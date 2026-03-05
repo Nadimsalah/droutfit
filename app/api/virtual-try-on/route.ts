@@ -72,13 +72,12 @@ export async function POST(req: NextRequest) {
             if (profileByShop) {
                 merchantId = profileByShop.id;
             } else {
-                // 3. Fallback
-                const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-                if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
-                merchantId = firstMerchant.id;
+                return NextResponse.json({
+                    error: "This store is not yet linked to a DrOutfit account. Please open the DrOutfit app in your Shopify admin to initialize your connection."
+                }, { status: 404 });
             }
         } else {
-            // Fallback
+            // Fallback for direct API users / testing
             const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
             if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
             merchantId = firstMerchant.id;
@@ -359,9 +358,7 @@ export async function GET(req: NextRequest) {
             if (profileByShop) {
                 merchantId = profileByShop.id;
             } else {
-                const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-                if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
-                merchantId = firstMerchant.id;
+                return NextResponse.json({ error: "Store not initialized" }, { status: 404 });
             }
         } else {
             const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();

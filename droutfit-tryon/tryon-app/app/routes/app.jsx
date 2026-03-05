@@ -13,11 +13,33 @@ export const loader = async ({ request }) => {
   const shop = session.shop;
 
   // Fetch the profile for this merchant
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('store_website', shop)
     .single();
+
+  // If no profile exists for this shop, create a placeholder merchant profile with free credits
+  if (!profile) {
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          store_website: shop,
+          credits: 100, // 100 free try-on credits for new merchants
+          full_name: `Shopify Merchant (${shop})`,
+          ip_limit: 5 // Standard daily limit per IP for the widget
+        }
+      ])
+      .select()
+      .single();
+
+    if (!createError) {
+      profile = newProfile;
+    } else {
+      console.error("Failed to create shopify profile:", createError);
+    }
+  }
 
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
