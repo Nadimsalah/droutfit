@@ -63,10 +63,13 @@ export async function POST(req: NextRequest) {
             merchantId = product.user_id;
         } else if (shop) {
             // 2. Try finding by shop domain
+            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+
             const { data: profileByShop } = await supabase
                 .from("profiles")
                 .select("id")
-                .eq("store_website", shop)
+                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
+                .limit(1)
                 .single();
 
             if (profileByShop) {
@@ -349,10 +352,13 @@ export async function GET(req: NextRequest) {
         if (product && product.user_id) {
             merchantId = product.user_id;
         } else if (shop) {
+            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+
             const { data: profileByShop } = await supabase
                 .from("profiles")
                 .select("id")
-                .eq("store_website", shop)
+                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
+                .limit(1)
                 .single();
 
             if (profileByShop) {
