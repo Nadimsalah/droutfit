@@ -240,19 +240,23 @@ export async function getDashboardStats() {
         .eq('id', user.id)
         .single();
 
-    // 2. Fetch Total Usage from products
+    // 2. Fetch Total Usage from usage_logs instead of products
+    // This ensures Shopify and other non-product sessions are counted
+    const { count: totalUsage } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 200);
+
     const { data: products } = await supabase
         .from('products')
-        .select('usage')
+        .select('id')
         .eq('user_id', user.id);
-
-    const totalUsage = products?.reduce((sum, p) => sum + (p.usage || 0), 0) || 0;
-    const successRate = totalUsage > 0 ? 100 : 0; // Simple logic: if there is usage, we assume success for now
 
     return {
         credits: profile?.credits || 0,
-        totalUsage,
-        successRate,
+        totalUsage: totalUsage || 0,
+        successRate: (totalUsage || 0) > 0 ? 100 : 0,
         productCount: products?.length || 0
     };
 }

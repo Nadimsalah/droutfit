@@ -21,10 +21,23 @@ function ConnectContent() {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setUser(session?.user ?? null);
+
+            if (session?.user && shop) {
+                // Check if already linked
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('store_website')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profile?.store_website === shop) {
+                    setSuccess(true);
+                }
+            }
             setLoading(false);
         };
         checkUser();
-    }, []);
+    }, [shop]);
 
     const handleConnect = async () => {
         if (!user || !shop) return;
@@ -38,6 +51,12 @@ function ConnectContent() {
                 .eq('id', user.id);
 
             if (updateError) throw updateError;
+
+            // Open Shopify Admin in new tab before setting success state
+            if (typeof window !== 'undefined') {
+                window.open(`https://${shop}/admin`, '_blank');
+            }
+
             setSuccess(true);
         } catch (err: any) {
             console.error("Linking error:", err);
@@ -93,37 +112,81 @@ function ConnectContent() {
 
     if (success) {
         return (
-            <div className="max-w-md mx-auto mt-20 p-8 rounded-3xl bg-[#131720] border border-white/5 text-center">
-                <div className="h-20 w-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8">
-                    <CheckCircle2 className="h-10 w-10 text-green-500" />
-                </div>
-                <h1 className="text-3xl font-bold mb-4">Store Connected!</h1>
-                <p className="text-gray-400 mb-8">
-                    Your Shopify store <b>{shop}</b> is now linked to your DrOutfit account. You're ready to start using AI Try-On!
-                </p>
+            <div className="max-w-2xl mx-auto mt-10 p-1 rounded-[3rem] bg-gradient-to-b from-blue-500/20 to-purple-600/20">
+                <div className="bg-[#0B0E14] rounded-[2.8rem] p-10 md:p-16 text-center shadow-2xl relative overflow-hidden">
+                    {/* Background decoration */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left mb-8">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">Next Steps:</h3>
-                    <ul className="space-y-3 text-sm text-gray-300">
-                        <li className="flex items-start gap-3">
-                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
-                            Open your **Shopify Theme Editor**.
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
-                            Go to your **Default Product** template.
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="h-5 w-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
-                            Add the **"Virtual Try-On Button"** block.
-                        </li>
-                    </ul>
-                </div>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="h-24 w-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl flex items-center justify-center p-0.5 mb-8 shadow-2xl shadow-green-500/20 rotate-3 group hover:rotate-6 transition-transform">
+                            <div className="bg-[#0B0E14] h-full w-full rounded-[1.4rem] flex items-center justify-center">
+                                <CheckCircle2 className="h-12 w-12 text-green-400" />
+                            </div>
+                        </div>
 
-                <Link href="/" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all">
-                    Back to Dashboard
-                    <ArrowRight className="h-5 w-5" />
-                </Link>
+                        <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight italic uppercase">Store Connected!</h1>
+                        <p className="text-lg text-gray-400 mb-12 max-w-lg leading-relaxed">
+                            Your Shopify store <span className="text-white font-bold">{shop}</span> is now linked to your DrOutfit account. You're ready to start using AI Try-On!
+                        </p>
+
+                        <div className="w-full text-left mb-12 relative">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 mb-8 flex items-center gap-3">
+                                <span className="h-0.5 w-8 bg-blue-500/50" />
+                                Next Steps to Publish
+                            </h3>
+
+                            <div className="grid gap-4">
+                                {[
+                                    { step: "1", title: "Theme Editor", desc: "Open your **Shopify Theme Editor**.", href: `https://${shop}/admin/themes/current/editor` },
+                                    { step: "2", title: "Product Template", desc: "Go to your **Default Product** template." },
+                                    { step: "3", title: "Install Component", desc: 'Add the **"Virtual Try-On Button"** block.' }
+                                ].map((step, i) => {
+                                    const Card = step.href ? 'a' : 'div';
+                                    return (
+                                        <Card
+                                            key={i}
+                                            href={step.href}
+                                            target={step.href ? "_blank" : undefined}
+                                            className="group flex items-center gap-6 p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all cursor-pointer"
+                                        >
+                                            <div className="h-12 w-12 rounded-2xl bg-white/[0.05] flex flex-col items-center justify-center group-hover:bg-blue-600/20 transition-colors">
+                                                <span className="text-xs font-black text-gray-500 group-hover:text-blue-400">{step.step}</span>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h4 className="text-xs font-black uppercase tracking-widest text-white">{step.title}</h4>
+                                                    {step.href && (
+                                                        <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-bold">Open Editor</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-gray-400" dangerouslySetInnerHTML={{ __html: step.desc.replace(/\*\*(.*?)\*\*/g, '<b class="text-gray-200">$1</b>') }} />
+                                            </div>
+                                        </Card>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                            <Link
+                                href="/dashboard"
+                                className="px-12 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-gray-200 transition-all shadow-xl hover:shadow-white/10 active:scale-95 flex items-center justify-center gap-4"
+                            >
+                                Back to Dashboard
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                            <a
+                                href={`https://${shop}`}
+                                target="_blank"
+                                className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center gap-4"
+                            >
+                                <ShoppingBag className="h-4 w-4" />
+                                View Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

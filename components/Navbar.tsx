@@ -16,6 +16,7 @@ export default function Navbar() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [shop, setShop] = useState<string | null>(null);
+    const [isStoreLinked, setIsStoreLinked] = useState(false);
 
     useEffect(() => {
         // Detect if we are in an iframe (Shopify dashboard) or have embedded=1
@@ -61,13 +62,31 @@ export default function Navbar() {
         window.addEventListener('scroll', handleScroll);
 
         // Check initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setUser(session?.user ?? null);
+            if (session?.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('store_website')
+                    .eq('id', session.user.id)
+                    .single();
+                setIsStoreLinked(!!profile?.store_website);
+            }
         });
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null);
+            if (session?.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('store_website')
+                    .eq('id', session.user.id)
+                    .single();
+                setIsStoreLinked(!!profile?.store_website);
+            } else {
+                setIsStoreLinked(false);
+            }
         });
 
         // Close dropdown when clicking outside
@@ -106,11 +125,13 @@ export default function Navbar() {
                 <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-700 text-white z-[110] py-2 px-6 flex items-center justify-between shadow-lg h-10">
                     <p className="text-[10px] md:text-sm font-bold flex items-center gap-2">
                         <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
-                        Using Shopify? Link your store to use your DrOutfit credits.
+                        {isStoreLinked ? "Your Shopify store is connected with DrOutfit" : "Using Shopify? Link your store to use your DrOutfit credits."}
                     </p>
-                    <Link href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`} className="bg-white text-blue-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-tight">
-                        Connect now
-                    </Link>
+                    {!isStoreLinked && (
+                        <Link href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`} className="bg-white text-blue-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-tight">
+                            Connect now
+                        </Link>
+                    )}
                 </div>
             )}
             <nav className={`fixed ${(shop || isEmbedded) ? 'top-10' : 'top-0'} left-0 right-0 z-[100] transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14] border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/80 backdrop-blur-xl border-b border-white/5'}`}>
@@ -135,7 +156,7 @@ export default function Navbar() {
 
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-4">
-                        {(shop || isEmbedded) && (
+                        {(shop || isEmbedded) && !isStoreLinked && (
                             <Link
                                 href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
                                 className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-5 py-2.5 rounded-full text-sm font-bold hover:bg-blue-600/30 transition-all flex items-center gap-2 group animate-pulse"
@@ -242,7 +263,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex flex-col gap-4 w-full max-w-sm pt-8">
-                        {(shop || isEmbedded) && (
+                        {(shop || isEmbedded) && !isStoreLinked && (
                             <Link
                                 href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
                                 className="w-full py-4 rounded-xl bg-blue-600 text-white text-center font-bold hover:bg-blue-500 transition-all flex items-center justify-center gap-2 animate-pulse"

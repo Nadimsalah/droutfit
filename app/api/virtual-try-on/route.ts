@@ -43,6 +43,11 @@ async function uploadBase64Image(base64Image: string): Promise<string> {
     return urlData.publicUrl;
 }
 
+function isUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+}
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -53,11 +58,12 @@ export async function POST(req: NextRequest) {
         let merchantId: string;
 
         // 1. Try finding by productId
-        const { data: product, error: productError } = await supabase
+        const isProdUuid = productId && isUUID(productId);
+        const { data: product, error: productError } = isProdUuid ? await supabase
             .from("products")
             .select("user_id")
             .eq("id", productId)
-            .single();
+            .single() : { data: null, error: { message: "Not a UUID" } };
 
         if (!productError && product) {
             merchantId = product.user_id;
@@ -138,7 +144,7 @@ export async function POST(req: NextRequest) {
                 path: "/api/virtual-try-on",
                 status: 202,
                 latency: null,
-                product_id: productId,
+                product_id: (productId && isUUID(productId)) ? productId : null,
                 ...((profile as any).ip_limit ? { ip_address: ip } : {})
             }]).select().single();
             if (logEntry) logEntryId = logEntry.id;
@@ -226,11 +232,16 @@ export async function POST(req: NextRequest) {
                     // Final log and credits update
                     const newCredits = Math.max(0, (profile.credits || 0) - 1);
                     try {
-                        const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                        await Promise.all([
-                            supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
-                            supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId)
-                        ]);
+                        const updates = [
+                            supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId)
+                        ];
+
+                        if (productId && isUUID(productId)) {
+                            const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
+                            updates.push(supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId));
+                        }
+
+                        await Promise.all(updates);
                     } catch (err) { console.error("Updates failed:", err); }
 
                     if (logEntryId) {
@@ -303,11 +314,16 @@ export async function POST(req: NextRequest) {
 
             const newCredits = Math.max(0, (profile.credits || 0) - 1);
             try {
-                const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                await Promise.all([
-                    supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId),
-                    supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId)
-                ]);
+                const updates = [
+                    supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId)
+                ];
+
+                if (productId && isUUID(productId)) {
+                    const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
+                    updates.push(supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId));
+                }
+
+                await Promise.all(updates);
             } catch (err) { console.error("Updates failed:", err); }
 
             return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
@@ -343,11 +359,12 @@ export async function GET(req: NextRequest) {
         // 1. Get Merchant ID
         let merchantId: string;
 
-        const { data: product } = await supabase
+        const isProdUuid = productId && isUUID(productId);
+        const { data: product } = isProdUuid ? await supabase
             .from("products")
             .select("user_id")
             .eq("id", productId)
-            .single();
+            .single() : { data: null };
 
         if (product && product.user_id) {
             merchantId = product.user_id;

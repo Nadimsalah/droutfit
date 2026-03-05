@@ -182,7 +182,7 @@
     const loader = document.getElementById('droutfit-loader');
     
     // Product Data Context provided by Shopify Liquid
-    const shopDomain = "{{ shop.domain }}";
+    const shopDomain = "{{ shop.permanent_domain }}";
     const productId = "{{ product.id }}";
     let productImageUrl = "{{ product.featured_image | image_url }}";
     if (productImageUrl.startsWith('//')) {
