@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -10,7 +11,9 @@ export const metadata = {
 export default function TermsOfService() {
     return (
         <div className="min-h-screen bg-[#0a0d14] text-gray-300 font-sans selection:bg-blue-500/30">
-            <Navbar />
+            <Suspense fallback={<div className="h-20 bg-[#0B0E14]" />}>
+                <Navbar />
+            </Suspense>
 
             <main className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
                 <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-white transition-colors mb-8 group">
