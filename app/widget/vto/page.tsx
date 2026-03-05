@@ -20,7 +20,7 @@ function ShopifyWidgetContent() {
         productImage = 'https:' + productImage;
     }
 
-    const [step, setStep] = useState<"upload" | "processing" | "result">("upload")
+    const [step, setStep] = useState<"upload" | "processing" | "result" | "limit-reached">("upload")
     const [userImage, setUserImage] = useState<string | null>(null)
     const [userFile, setUserFile] = useState<File | null>(null)
     const [resultImage, setResultImage] = useState<string | null>(null)
@@ -98,11 +98,11 @@ function ShopifyWidgetContent() {
             clearInterval(progressInterval)
             const msg = (error as Error).message
             if (msg === "STORE_LIMIT_REACHED") {
-                alert("This store has reached its daily try-on limit. Please try again tomorrow or contact the merchant.")
+                setStep("limit-reached")
             } else {
                 alert("Generation failed: " + msg)
+                setStep("upload")
             }
-            setStep("upload")
         }
     }
 
@@ -246,6 +246,27 @@ function ShopifyWidgetContent() {
                                     <ShoppingBag className="h-4 w-4" />
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {step === "limit-reached" && (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500 px-4">
+                            <div className="w-24 h-24 rounded-full bg-amber-50 flex items-center justify-center mb-8 relative">
+                                <div className="absolute inset-0 rounded-full border border-amber-200 animate-ping opacity-20"></div>
+                                <ShieldCheck className="h-10 w-10 text-amber-500" />
+                            </div>
+
+                            <h3 className="text-2xl font-black mb-4 text-gray-900 uppercase italic">Service Unavailable</h3>
+                            <p className="text-sm text-gray-500 leading-relaxed max-w-[280px] mb-10">
+                                This service is currently unavailable. Please <span className="text-gray-900 font-bold">contact the store brand</span> for more information.
+                            </p>
+
+                            <button
+                                onClick={reset}
+                                className="w-full bg-black text-white py-4 rounded-2xl font-bold text-sm shadow-xl hover:bg-gray-800 transition-all active:scale-[0.98]"
+                            >
+                                Close Widget
+                            </button>
                         </div>
                     )}
                 </div>
