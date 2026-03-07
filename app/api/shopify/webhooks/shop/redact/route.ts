@@ -10,8 +10,8 @@ const supabase = createClient(
 function verifyShopifyWebhook(rawBody: Buffer, hmacHeader: string): boolean {
     const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
     if (!secret) {
-        console.warn("SHOPIFY_WEBHOOK_SECRET is not set. Skipping HMAC verification.");
-        return true;
+        console.warn("SHOPIFY_WEBHOOK_SECRET is not set. Cannot verify HMAC.");
+        return false;
     }
     const digest = createHmac("sha256", secret).update(rawBody).digest("base64");
     try {
