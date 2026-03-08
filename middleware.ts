@@ -30,9 +30,9 @@ export async function middleware(request: NextRequest) {
         const isShopifyEmbedded = request.nextUrl.searchParams.has('shop') || request.nextUrl.searchParams.get('embedded') === '1';
 
         let newUrlPath = `/${locale}${pathname === '/' ? '' : pathname}`;
-        // If Shopify is loading the root page, redirect to dashboard
+        // If Shopify is loading the root page, redirect to the shopify app page
         if (isShopifyEmbedded && (pathname === '/' || pathname === '')) {
-            newUrlPath = `/${locale}/dashboard`;
+            newUrlPath = `/${locale}/shopify-app`;
         }
 
         const newUrl = new URL(`${newUrlPath}${request.nextUrl.search}`, request.url)
@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
         const isShopifyEmbedded = request.nextUrl.searchParams.has('shop') || request.nextUrl.searchParams.get('embedded') === '1';
         const isRootLocalePath = ['/en', '/fr', '/ar', '/en/', '/fr/', '/ar/'].includes(pathname);
         if (isShopifyEmbedded && isRootLocalePath) {
-            const newUrl = new URL(`${pathname.endsWith('/') ? pathname : pathname + '/'}dashboard${request.nextUrl.search}`, request.url);
+            const newUrl = new URL(`${pathname.endsWith('/') ? pathname : pathname + '/'}shopify-app${request.nextUrl.search}`, request.url);
             const redirectResponse = NextResponse.redirect(newUrl);
             redirectResponse.headers.set(
                 "Content-Security-Policy",
