@@ -104,7 +104,10 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
     const handleConnectStore = async () => {
         if (!user) return;
         const shop = getShop();
-        if (!shop) { setConnectError("Cannot detect your store domain. Please re-open the app from Shopify Admin."); return; }
+        if (!shop) {
+            setConnectError("Cannot detect your store domain. Please re-open the app from Shopify Admin.");
+            return;
+        }
         setConnectingStore(true);
         setConnectError(null);
         try {
@@ -115,9 +118,12 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Connection failed");
-            // Store is linked — reload data
-            try { await loadData(user); } catch { setView("dashboard"); }
+            // ✅ Success — directly update local state, no re-fetch needed
+            setProfile((prev: any) => ({ ...prev, store_website: shop }));
+            setShopDomain(shop);
+            setView("dashboard");
         } catch (e: any) {
+            console.error("Connect error:", e);
             setConnectError(e.message || "Failed to connect. Please try again.");
         } finally {
             setConnectingStore(false);
