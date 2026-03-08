@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Hand } from "lucide-react"
 
 const images = [
-    { id: 1, src: "/demo-images/virtual-try-on-clothes-online-02.jpg", alt: "Virtual Try-On 1" },
-    { id: 2, src: "/demo-images/virtual-try-on-clothes-online-09.jpg", alt: "Virtual Try-On 2" },
-    { id: 3, src: "/demo-images/virtual-try-on-clothes-online-kids-01.jpg", alt: "Virtual Try-On Kids 1" },
-    { id: 4, src: "/demo-images/virtual-try-on-clothes-online-kids.jpg", alt: "Virtual Try-On Kids 2" }
+    { id: 1, src: "/demo-images/virtual-try-on-clothes-online-02.jpg", alt: "Realistic AI virtual try-on clothes online for women" },
+    { id: 2, src: "/demo-images/virtual-try-on-clothes-online-09.jpg", alt: "Virtual fitting room experience for e-commerce apparel" },
+    { id: 3, src: "/demo-images/virtual-try-on-clothes-online-kids-01.jpg", alt: "AI virtual try-on for kids fashion and clothing stores" },
+    { id: 4, src: "/demo-images/virtual-try-on-clothes-online-kids.jpg", alt: "Interactive virtual dressing room simulator for infants" }
 ]
 
 const variants = {
@@ -37,8 +37,15 @@ const swipePower = (offset: number, velocity: number) => {
     return Math.abs(offset) * velocity
 }
 
-export default function SwipeableDemo() {
+export default function SwipeableDemo({ dict }: { dict: any }) {
     const [[page, direction], setPage] = useState([0, 0])
+
+    const images = [
+        { id: 1, src: "/demo-images/virtual-try-on-clothes-online-02.jpg", alt: dict.swipeableDemo.alt1 },
+        { id: 2, src: "/demo-images/virtual-try-on-clothes-online-09.jpg", alt: dict.swipeableDemo.alt2 },
+        { id: 3, src: "/demo-images/virtual-try-on-clothes-online-kids-01.jpg", alt: dict.swipeableDemo.alt3 },
+        { id: 4, src: "/demo-images/virtual-try-on-clothes-online-kids.jpg", alt: dict.swipeableDemo.alt4 }
+    ]
 
     const imageIndex = Math.abs(page % images.length)
 
@@ -47,17 +54,17 @@ export default function SwipeableDemo() {
     }
 
     return (
-        <section className="py-6 md:py-20 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between relative z-10 overflow-hidden gap-6 lg:gap-8">
-            {/* Text Content (Left on Desktop) */}
-            <div className="text-center lg:text-left lg:w-1/3 z-20">
+        <section id="how-it-works" className="py-6 md:py-20 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between relative z-10 overflow-hidden gap-6 lg:gap-8">
+            {/* Text Content (Start on Desktop) */}
+            <div className="text-center lg:text-start lg:w-1/3 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-400 mb-6 uppercase tracking-widest">
-                    Interactive Demo
+                    {dict.swipeableDemo.badge}
                 </div>
                 <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
-                    Slide to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Explore</span>
+                    {dict.swipeableDemo.title1} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{dict.swipeableDemo.title2}</span>
                 </h2>
-                <p className="text-gray-400 font-medium max-w-sm mx-auto lg:mx-0 text-lg leading-relaxed">
-                    Experience the realism. Swipe through our high-quality AI Try-On results and see the perfect fit, generated in seconds.
+                <p className="text-gray-400 font-medium max-w-sm mx-auto lg:mx-0 lg:me-auto text-lg leading-relaxed">
+                    {dict.swipeableDemo.description}
                 </p>
             </div>
 
@@ -97,8 +104,8 @@ export default function SwipeableDemo() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Left/Right controls for desktop */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-6 md:left-10 z-20 hidden md:flex">
+                {/* Prev/Next controls for desktop */}
+                <div className="absolute top-1/2 -translate-y-1/2 start-6 md:start-10 z-20 hidden md:flex">
                     <button
                         className="p-3 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all shadow-lg hover:scale-110 active:scale-95"
                         onClick={() => paginate(-1)}
@@ -107,7 +114,7 @@ export default function SwipeableDemo() {
                     </button>
                 </div>
 
-                <div className="absolute top-1/2 -translate-y-1/2 right-6 md:right-10 z-20 hidden md:flex">
+                <div className="absolute top-1/2 -translate-y-1/2 end-6 md:end-10 z-20 hidden md:flex">
                     <button
                         className="p-3 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all shadow-lg hover:scale-110 active:scale-95"
                         onClick={() => paginate(1)}
@@ -138,7 +145,7 @@ export default function SwipeableDemo() {
                     className="absolute bottom-20 md:hidden z-50 flex flex-col items-center pointer-events-none"
                 >
                     <Hand className="h-6 w-6 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] rotate-[-15deg]" />
-                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1 animate-pulse">Swipe</span>
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1 animate-pulse">{dict.swipeableDemo.swipe}</span>
                 </motion.div>
             </div>
         </section>

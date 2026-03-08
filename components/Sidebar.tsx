@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
     LayoutDashboard,
     Activity,
@@ -23,28 +24,30 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const mainNavigation = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Products", href: "/dashboard/products", icon: Zap },
-    { name: "Logs", href: "/dashboard/logs", icon: ScrollText },
-    { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
-]
-
-const footerNavigation = [
-    { name: "Get Support On Whatsapp", href: "https://wa.me/212707777721", icon: MessageSquare },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
-]
-
 interface SidebarProps {
     isOpen?: boolean
     onClose?: () => void
+    dict: any
+    locale: string
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, dict, locale }: SidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const searchParams = useSearchParams()
     const [profile, setProfile] = useState<{ fullName: string; email: string } | null>(null)
+
+    const mainNavigation = [
+        { name: dict.dashboard.overview, href: `/${locale}/dashboard`, icon: LayoutDashboard },
+        { name: dict.dashboard.products, href: `/${locale}/dashboard/products`, icon: Zap },
+        { name: dict.dashboard.logs, href: `/${locale}/dashboard/logs`, icon: ScrollText },
+        { name: dict.dashboard.billing, href: `/${locale}/dashboard/billing`, icon: CreditCard },
+    ]
+
+    const footerNavigation = [
+        { name: dict.dashboard.supportWhatsapp, href: "https://wa.me/212707777721", icon: MessageSquare },
+        { name: dict.dashboard.settings, href: `/${locale}/dashboard/settings`, icon: Settings },
+    ]
 
     // Preserve Shopify parameters
     const shop = searchParams.get('shop')
@@ -82,7 +85,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const handleSignOut = async () => {
         await supabase.auth.signOut()
-        router.push('/login')
+        router.push(`/${locale}/login`)
     }
 
     const getInitials = (name: string) => {
@@ -100,10 +103,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )}
 
             <div className={cn(
-                "fixed inset-y-0 left-0 z-50 flex w-full md:w-72 flex-col bg-[#0F1116] border-r border-gray-800/50 transition-all duration-300 ease-in-out md:relative",
-                isOpen ? "translate-x-0" : "-translate-x-full",
-                "md:translate-x-0"
-            )}>
+                "fixed inset-y-0 z-50 flex w-full md:w-72 flex-col bg-[#0F1116] border-gray-800/50 transition-all duration-300 ease-in-out md:relative",
+                locale === 'ar' ? (isOpen ? "translate-x-0 right-0 border-l" : "translate-x-full right-0 border-l") : (isOpen ? "translate-x-0 left-0 border-r" : "-translate-x-full left-0 border-r"),
+                "md:translate-x-0",
+                locale === 'ar' ? "md:border-l" : "md:border-r"
+            )} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                 {/* User Section */}
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-8">
@@ -115,7 +119,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             {profile ? getInitials(profile.fullName) : '--'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-white text-sm font-bold truncate">{profile?.fullName || 'Loading...'}</span>
+                            <span className="text-white text-sm font-bold truncate">{profile?.fullName || dict.common.loading}</span>
                             <span className="text-gray-500 text-[10px] truncate">{profile?.email || '...'}</span>
                         </div>
                     </div>
@@ -159,23 +163,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </Link>
                         ))}
 
-                        <div className="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 rounded-lg group cursor-pointer">
-                            <div className="flex items-center gap-3 text-gray-400 group-hover:text-white">
-                                <Globe className="h-4 w-4 text-gray-500 group-hover:text-white" />
-                                <span>English</span>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-gray-600" />
-                        </div>
                     </nav>
                 </div>
 
-                <div className="p-4 mt-auto">
+                <div className="px-6 py-4 border-t border-gray-800/50">
+                    <LanguageSwitcher dict={dict} />
+                </div>
+
+                <div className="p-4">
                     <button
                         onClick={handleSignOut}
                         className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 rounded-xl transition-all group"
                     >
                         <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-500" />
-                        Sign Out
+                        {dict.common.signOut}
                     </button>
                 </div>
             </div>

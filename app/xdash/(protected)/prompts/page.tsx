@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase"
 
 export default function PromptsPage() {
     const [geminiPrompt, setGeminiPrompt] = useState("")
-    const [nanoBananaPrompt, setNanoBananaPrompt] = useState("")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -19,20 +18,12 @@ export default function PromptsPage() {
     const loadSettings = async () => {
         setLoading(true)
         try {
-            const { data } = await supabase.from('system_settings').select('key, value').in('key', ['GEMINI_PROMPT', 'NANOBANANA_PROMPT'])
+            const { data } = await supabase.from('system_settings').select('key, value').eq('key', 'GEMINI_PROMPT')
 
-            if (data) {
-                const gp = data.find(d => d.key === 'GEMINI_PROMPT')
-                const np = data.find(d => d.key === 'NANOBANANA_PROMPT')
-
-                if (gp) setGeminiPrompt(gp.value)
-                else setGeminiPrompt("Analyze these images for virtual try-on suitability. Return 'READY'.")
-
-                if (np) setNanoBananaPrompt(np.value)
-                else setNanoBananaPrompt("high quality fashion photography, realistic lighting")
+            if (data && data.length > 0) {
+                setGeminiPrompt(data[0].value)
             } else {
                 setGeminiPrompt("Analyze these images for virtual try-on suitability. Return 'READY'.")
-                setNanoBananaPrompt("high quality fashion photography, realistic lighting")
             }
         } catch (error) {
             console.error(error)
@@ -44,11 +35,10 @@ export default function PromptsPage() {
         setSaving(true)
         setMessage(null)
         try {
-            const res1 = await updatePromptAction('GEMINI_PROMPT', geminiPrompt)
-            const res2 = await updatePromptAction('NANOBANANA_PROMPT', nanoBananaPrompt)
+            const res = await updatePromptAction('GEMINI_PROMPT', geminiPrompt)
 
-            if (res1.error || res2.error) {
-                setMessage({ type: 'error', text: `Failed: ${res1.error || res2.error}` })
+            if (res.error) {
+                setMessage({ type: 'error', text: `Failed: ${res.error}` })
             } else {
                 setMessage({ type: 'success', text: 'Prompts saved successfully!' })
             }
@@ -90,30 +80,16 @@ export default function PromptsPage() {
                         AI Generation Prompts
                     </h2>
 
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-400">Gemini Demo Prompt</label>
-                            <textarea
-                                rows={4}
-                                value={geminiPrompt}
-                                onChange={(e) => setGeminiPrompt(e.target.value)}
-                                className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm resize-y"
-                                placeholder="Analyze these images for virtual try-on suitability. Return 'READY'."
-                            />
-                            <p className="text-xs text-gray-500">This instruction is sent to Gemini 1.5 Flash during the Virtual Try-On Demo pipeline.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-400">NanoBanana Virtual Try-On Prompt</label>
-                            <textarea
-                                rows={4}
-                                value={nanoBananaPrompt}
-                                onChange={(e) => setNanoBananaPrompt(e.target.value)}
-                                className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm resize-y"
-                                placeholder="high quality fashion photography, realistic lighting"
-                            />
-                            <p className="text-xs text-gray-500">This prompt acts as the style instructions when NanoBanana generates the final Try-On image.</p>
-                        </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-400">Gemini Try-On Prompt</label>
+                        <textarea
+                            rows={6}
+                            value={geminiPrompt}
+                            onChange={(e) => setGeminiPrompt(e.target.value)}
+                            className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm resize-y"
+                            placeholder="Analyze these images for virtual try-on suitability. Return 'READY'."
+                        />
+                        <p className="text-xs text-gray-500">This instruction is sent to Google Gemini Flash during the image generation pipeline.</p>
                     </div>
                 </div>
 

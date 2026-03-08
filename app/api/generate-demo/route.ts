@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const NANOBANANA_BASE_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana";
+// NanoBanana provider removed to optimize costs.
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -83,12 +83,10 @@ export async function POST(req: NextRequest) {
         const settings: Record<string, string> = {};
         settingsData?.forEach(s => settings[s.key] = s.value);
 
-        const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'nanobanana';
-        const NB_API_KEY = settings.NANOBANANA_API_KEY || process.env.NEXT_PUBLIC_NANOBANANA_API_KEY;
+        const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'google';
         const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
         const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
-        const nbPrompt = settings.NANOBANANA_PROMPT || "high quality fashion photography, realistic lighting";
 
         // 3. Call AI Provider
         let resultUrl = null;
@@ -158,41 +156,8 @@ export async function POST(req: NextRequest) {
                 console.error("Google AI Demo 2.5 Error:", err);
                 throw err;
             }
-        } else if (PREFERRED_AI_PROVIDER === 'nanobanana') {
-            if (!NB_API_KEY) throw new Error("NanoBanana API Key is missing.");
-            console.log("Using NanoBanana for Demo...");
-            const taskResponse = await fetch(`${NANOBANANA_BASE_URL}/generate`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${NB_API_KEY}`,
-                },
-                body: JSON.stringify({
-                    prompt: nbPrompt,
-                    type: "IMAGETOIAMGE",
-                    numImages: 1,
-                    imageUrls: [finalUserImageUrl, absoluteGarmentUrl],
-                }),
-            });
-
-            const taskResult = await taskResponse.json();
-            if (taskResponse.ok && taskResult.code === 200) {
-                const taskId = taskResult.data?.taskId || taskResult.taskId;
-                let attempts = 0;
-                while (attempts < 30) {
-                    attempts++;
-                    await new Promise(r => setTimeout(r, 5000));
-                    const stResp = await fetch(`${NANOBANANA_BASE_URL}/record-info?taskId=${taskId}`, {
-                        headers: { "Authorization": `Bearer ${NB_API_KEY}` },
-                    });
-                    const stData = await stResp.json();
-                    const successFlag = stData.data?.successFlag ?? stData.successFlag;
-                    if (successFlag === 1) {
-                        resultUrl = stData.data?.response?.resultImageUrl || stData.response?.result_url;
-                        break;
-                    } else if (successFlag === 2) break;
-                }
-            }
+        } else {
+            console.log("No valid AI provider selected. Defaulting to Google...");
         }
 
         if (!resultUrl) {

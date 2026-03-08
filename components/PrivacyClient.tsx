@@ -1,0 +1,47 @@
+"use client";
+
+import { Suspense } from "react";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+export default function PrivacyClient({ dict, locale }: { dict: any, locale: string }) {
+    const lastUpdated = new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    return (
+        <div className="min-h-screen bg-[#0a0d14] text-gray-300 font-sans selection:bg-blue-500/30" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+            <Suspense fallback={<div className="h-20 bg-[#0B0E14]" />}>
+                <Navbar dict={dict} locale={locale} />
+            </Suspense>
+
+            <main className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
+                <Link href={`/${locale}`} className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-white transition-colors mb-8 group">
+                    <ArrowLeft className={`h-4 w-4 transition-transform ${locale === 'ar' ? 'rotate-180 group-hover:translate-x-1' : 'group-hover:-translate-x-1'}`} />
+                    {dict.privacyPage.backHome}
+                </Link>
+
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">{dict.privacyPage.title}</h1>
+                <p className="text-gray-400 mb-12">{dict.privacyPage.lastUpdated}: {lastUpdated}</p>
+
+                <div className="prose prose-invert prose-blue max-w-none space-y-8">
+                    <section>
+                        <h2 className="text-2xl font-bold text-white mb-4">{dict.privacyPage.sections.s1}</h2>
+                        <p className="leading-relaxed">
+                            {dict.privacyPage.intro}
+                        </p>
+                    </section>
+                    {/* Add more sections as needed, for now focusing on the infrastructure */}
+                </div>
+            </main>
+
+            {/* Simple Footer */}
+            <footer className="border-t border-white/10 bg-[#050608] py-12 px-6">
+                <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] font-black uppercase tracking-widest text-gray-600">
+                    <p>© {new Date().getFullYear()} Droutfit. {dict.common.allRightsReserved}</p>
+                    <LanguageSwitcher dict={dict} />
+                </div>
+            </footer>
+        </div>
+    );
+}

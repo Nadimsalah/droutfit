@@ -12,9 +12,7 @@ export const DEFAULT_PRICING = {
     CUSTOM_CREDIT_PRICE: 0.028,
     MINIMUM_CUSTOM_AMOUNT: 50000,
     // AI Provider Settings
-    PREFERRED_AI_PROVIDER: 'google', // 'google' or 'nanobanana'
-    GEMINI_API_KEY: '',
-    NANOBANANA_API_KEY: ''
+    GEMINI_API_KEY: ''
 }
 
 export type PricingConfig = typeof DEFAULT_PRICING

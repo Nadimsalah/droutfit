@@ -77,7 +77,7 @@ export async function getSystemLogsAction() {
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || [])
 
         const enrichedLogs = logs.map(log => {
-            let meta = { taskId: "—", result_url: "", credits_used: 0, channel: "Nano Banana", error: "" }
+            let meta = { taskId: "—", result_url: "", credits_used: 0, channel: "Google Gemini", error: "" }
             if (log.error_message && log.error_message.startsWith('{')) {
                 try {
                     const parsed = JSON.parse(log.error_message)

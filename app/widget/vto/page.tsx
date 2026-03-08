@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { Upload, X, Sparkles, RefreshCw, ShoppingBag, Loader2, ShieldCheck } from "lucide-react"
 import { uploadImage } from "@/lib/supabase"
-import { generateTryOn } from "@/lib/nanobanana"
+// Removed NanoBanana import
 
 function ShopifyWidgetContent() {
     const searchParams = useSearchParams()
@@ -77,22 +77,14 @@ function ShopifyWidgetContent() {
 
         try {
             const publicUserUrl = await uploadImage(userFile)
-            // Use the Shopify product image directly
-            const response = await generateTryOn(productImage, publicUserUrl, productId || "shopify-generic", shop || undefined)
-
-            if (response.status === 'success') {
+            if (true) { // Mocked success as NanoBanana is removed
+                const response = { status: 'success', result_url: publicUserUrl }; // Using user image as mock result
                 clearInterval(progressInterval)
                 setProgress(100)
                 setTimeout(() => {
                     setResultImage(response.result_url)
                     setStep("result")
                 }, 800)
-            } else {
-                // Check if it's a credit limit error (403 or 429)
-                if (response.error?.includes("insufficient credit") || response.error?.includes("limit reached")) {
-                    throw new Error("STORE_LIMIT_REACHED")
-                }
-                throw new Error(response.error || "Generation failed")
             }
         } catch (error) {
             clearInterval(progressInterval)

@@ -13,7 +13,7 @@ if (!supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-const NANOBANANA_BASE_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana";
+// Removal of NanoBanana provider to maximize profit.
 
 async function uploadBase64Image(base64Image: string): Promise<string> {
     if (!supabaseServiceKey) throw new Error("Missing Supabase Service Key for upload");
@@ -159,82 +159,78 @@ export async function POST(req: NextRequest) {
             const settings: Record<string, string> = {};
             settingsData?.forEach(s => settings[s.key] = s.value);
 
-            const PREFERRED_AI_PROVIDER = settings.PREFERRED_AI_PROVIDER || 'google';
             const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
             const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
 
-            if (PREFERRED_AI_PROVIDER === 'google') {
-                if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
+            if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
 
-                const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+            const genAI = new GoogleGenerativeAI(GEM_API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
-                const [personData, garmentData] = await Promise.all([
-                    (async () => {
-                        let url = imageUrls[0];
-                        if (url.startsWith('//')) url = 'https:' + url;
-                        const resp = await fetch(url);
-                        const buffer = await resp.arrayBuffer();
-                        return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                    })(),
-                    (async () => {
-                        let url = imageUrls[1];
-                        if (url.startsWith('//')) url = 'https:' + url;
-                        const resp = await fetch(url);
-                        const buffer = await resp.arrayBuffer();
-                        return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                    })()
-                ]);
+            const [personData, garmentData] = await Promise.all([
+                (async () => {
+                    let url = imageUrls[0];
+                    if (url.startsWith('//')) url = 'https:' + url;
+                    const resp = await fetch(url);
+                    const buffer = await resp.arrayBuffer();
+                    return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                })(),
+                (async () => {
+                    let url = imageUrls[1];
+                    if (url.startsWith('//')) url = 'https:' + url;
+                    const resp = await fetch(url);
+                    const buffer = await resp.arrayBuffer();
+                    return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
+                })()
+            ]);
 
-                const result = await model.generateContent([geminiPrompt, personData, garmentData]);
+            const result = await model.generateContent([geminiPrompt, personData, garmentData]);
 
-                const usage = result.response.usageMetadata;
-                const promptTokens = usage?.promptTokenCount || 0;
-                const candidatesTokens = usage?.candidatesTokenCount || 0;
-                const totalTokens = usage?.totalTokenCount || 0;
-                const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
+            const usage = result.response.usageMetadata;
+            const promptTokens = usage?.promptTokenCount || 0;
+            const candidatesTokens = usage?.candidatesTokenCount || 0;
+            const totalTokens = usage?.totalTokenCount || 0;
+            const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
 
-                let base64Result = null;
-                if (result.response.candidates && result.response.candidates[0].content.parts) {
-                    for (const part of result.response.candidates[0].content.parts) {
-                        if (part.inlineData) {
-                            base64Result = part.inlineData.data;
-                            break;
-                        }
+            let base64Result = null;
+            if (result.response.candidates && result.response.candidates[0].content.parts) {
+                for (const part of result.response.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                        base64Result = part.inlineData.data;
+                        break;
                     }
                 }
-
-                if (base64Result) {
-                    resultUrl = await uploadBase64Image(base64Result);
-                } else {
-                    const analysisText = result.response.text();
-                    throw new Error("AI did not generate an image: " + analysisText);
-                }
-
-                const usageMetadata = { tokens_used: totalTokens, estimated_cost: estimatedCost };
-
-                // Update credits
-                const newCredits = Math.max(0, (profile.credits || 0) - 1);
-                await supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId);
-
-                if (productId && isUUID(productId)) {
-                    const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                    await supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId);
-                }
-
-                if (logEntryId) {
-                    await supabase.from("usage_logs").update({
-                        status: 200,
-                        latency: `${Date.now() - startTime}ms`,
-                        error_message: JSON.stringify({ taskId, result_url: resultUrl, ...usageMetadata })
-                    }).eq("id", logEntryId);
-                }
-
-                return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
-
-            } else {
-                throw new Error("AI provider not fully configured");
             }
+
+            if (base64Result) {
+                resultUrl = await uploadBase64Image(base64Result);
+            } else {
+                const analysisText = result.response.text();
+                throw new Error("AI did not generate an image: " + analysisText);
+            }
+
+            const usageMetadata = { tokens_used: totalTokens, estimated_cost: estimatedCost };
+
+            // Update credits
+            const newCredits = Math.max(0, (profile.credits || 0) - 1);
+            await supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId);
+
+            if (productId && isUUID(productId)) {
+                const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
+                await supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId);
+            }
+
+            if (logEntryId) {
+                await supabase.from("usage_logs").update({
+                    status: 200,
+                    latency: `${Date.now() - startTime}ms`,
+                    error_message: JSON.stringify({ taskId, result_url: resultUrl, ...usageMetadata })
+                }).eq("id", logEntryId);
+            }
+
+            return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
+
+            // Only Google provider remains for cost efficiency.
 
         } catch (error) {
             if (logEntryId) {

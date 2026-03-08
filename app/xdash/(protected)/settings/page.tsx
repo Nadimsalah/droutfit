@@ -184,59 +184,16 @@ export default function SettingsPage() {
 
                     <div className="my-8 border-t border-gray-800" />
 
+                    <div className="my-8 border-t border-gray-800" />
+
                     <div className="space-y-6">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <Cpu className="h-5 w-5 text-purple-500" />
-                            AI Provider Configuration
+                            <Cpu className="h-5 w-5 text-blue-500" />
+                            AI Engine (Google Gemini)
                         </h2>
 
-                        <div className="grid md:grid-cols-2 gap-8">
+                        <div className="grid md:grid-cols-1 gap-8">
                             <div className="space-y-4">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-                                    Preferred AI Engine
-                                </label>
-                                <div className="flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleChange('PREFERRED_AI_PROVIDER', 'nanobanana')}
-                                        className={`flex-1 py-3 px-4 rounded-xl border font-bold transition-all text-sm flex items-center justify-center ${String(config.PREFERRED_AI_PROVIDER) === 'nanobanana'
-                                            ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-lg shadow-purple-600/10'
-                                            : 'bg-[#1A1D24] border-gray-800 text-gray-500 hover:border-gray-700'
-                                            }`}
-                                    >
-                                        NanoBanana
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleChange('PREFERRED_AI_PROVIDER', 'google')}
-                                        className={`flex-1 py-3 px-4 rounded-xl border font-bold transition-all text-sm flex items-center justify-center ${String(config.PREFERRED_AI_PROVIDER) === 'google'
-                                            ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-lg shadow-blue-600/10'
-                                            : 'bg-[#1A1D24] border-gray-800 text-gray-500 hover:border-gray-700'
-                                            }`}
-                                    >
-                                        Google Gemini
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 italic">
-                                    Choose which AI engine will process the virtual try-on requests.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                        <Key className="h-4 w-4" />
-                                        NanoBanana API Key
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={config.NANOBANANA_API_KEY || ''}
-                                        onChange={(e) => handleChange('NANOBANANA_API_KEY', e.target.value)}
-                                        placeholder="Enter NanoBanana Key"
-                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-purple-500 transition-all font-mono"
-                                    />
-                                </div>
-
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                                         <Key className="h-4 w-4" />
@@ -249,6 +206,9 @@ export default function SettingsPage() {
                                         placeholder="Enter Gemini API Key"
                                         className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono"
                                     />
+                                    <p className="text-xs text-gray-500 italic">
+                                        Google Gemini runs at lowest possible cost (~$0.0003 per generation).
+                                    </p>
                                 </div>
                             </div>
                         </div>

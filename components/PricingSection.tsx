@@ -70,7 +70,7 @@ const MagicCard = ({ children, popular = false }: { children: React.ReactNode, p
     )
 }
 
-export default function PricingSection() {
+export default function PricingSection({ dict, locale }: { dict: any, locale: string }) {
     const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING)
     const [mounted, setMounted] = useState(false)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -80,8 +80,8 @@ export default function PricingSection() {
             id: 'package_1',
             amount: pricing.PACKAGE_1_AMOUNT,
             price: pricing.PACKAGE_1_PRICE,
-            label: "Starter",
-            desc: "For boutiques",
+            label: dict.pricingSection.packages.starter,
+            desc: dict.pricingSection.packages.starterDesc,
             icon: <Zap className="h-5 w-5 text-blue-400" />,
             color: "blue"
         },
@@ -89,8 +89,8 @@ export default function PricingSection() {
             id: 'package_2',
             amount: pricing.PACKAGE_2_AMOUNT,
             price: pricing.PACKAGE_2_PRICE,
-            label: "Growth",
-            desc: "Merchant choice",
+            label: dict.pricingSection.packages.growth,
+            desc: dict.pricingSection.packages.growthDesc,
             icon: <Flame className="h-5 w-5 text-orange-400" />,
             color: "orange"
         },
@@ -98,8 +98,8 @@ export default function PricingSection() {
             id: 'package_3',
             amount: pricing.PACKAGE_3_AMOUNT,
             price: pricing.PACKAGE_3_PRICE,
-            label: "Elite",
-            desc: "Enterprise",
+            label: dict.pricingSection.packages.elite,
+            desc: dict.pricingSection.packages.eliteDesc,
             popular: true,
             icon: <Sparkles className="h-6 w-6 text-purple-400" />,
             color: "purple"
@@ -130,12 +130,12 @@ export default function PricingSection() {
                     className="mb-12 space-y-4"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[9px] font-black text-blue-500 uppercase tracking-[0.4em] backdrop-blur-xl shadow-[0_0_20px_rgba(59,130,246,0.15)] mx-auto relative">
-                        Unified Ecosystem
+                        {dict.pricingSection.badge}
                     </div>
 
                     <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-[0.9]">
-                        Level Up Your <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 italic drop-shadow-[0_0_30px_rgba(59,130,246,0.3)]">Conversion</span>
+                        {dict.pricingSection.title1} <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 italic drop-shadow-[0_0_30px_rgba(59,130,246,0.3)]">{dict.pricingSection.title2}</span>
                     </h2>
                 </motion.div>
 
@@ -167,7 +167,7 @@ export default function PricingSection() {
                                         </motion.div>
                                         {pkg.popular && (
                                             <span className="px-3 py-1 rounded-full bg-blue-600 text-[9px] font-black text-white uppercase tracking-widest italic shadow-[0_0_15px_rgba(59,130,246,0.4)]">
-                                                Best Value
+                                                {dict.pricingSection.bestValue}
                                             </span>
                                         )}
                                     </div>
@@ -180,7 +180,7 @@ export default function PricingSection() {
                                     <div className="flex flex-col mb-6 text-left">
                                         <div className="flex items-baseline gap-1.5">
                                             <span className="text-5xl font-black text-white tracking-tighter transition-all group-hover:text-blue-400">${pkg.price}</span>
-                                            <span className="text-gray-600 font-bold text-[9px] uppercase tracking-[0.2em] leading-none">Fixed</span>
+                                            <span className="text-gray-600 font-bold text-[9px] uppercase tracking-[0.2em] leading-none">{dict.pricingSection.fixed}</span>
                                         </div>
                                     </div>
 
@@ -191,20 +191,20 @@ export default function PricingSection() {
                                                 {mounted ? <CountUp to={pkg.amount} /> : formatNumber(pkg.amount)}
                                             </span>
                                             <span className="text-xs font-black text-blue-500 uppercase tracking-[0.4em] mt-4 block italic">
-                                                Try-ons
+                                                {dict.pricingSection.tryons}
                                             </span>
                                         </div>
                                     </div>
 
                                     <motion.button
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={() => window.location.href = '/dashboard'}
+                                        onClick={() => window.location.href = `/${locale}/dashboard`}
                                         className={`w-full py-4.5 rounded-[1.3rem] font-black text-[10px] transition-all flex items-center justify-center gap-2 relative overflow-hidden group/btn shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] ${pkg.popular
                                             ? 'bg-white text-black hover:bg-gray-100'
                                             : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'
                                             }`}
                                     >
-                                        <span className="relative z-10 uppercase tracking-[0.3em]">Ignite Sales</span>
+                                        <span className="relative z-10 uppercase tracking-[0.3em]">{dict.pricingSection.igniteSales}</span>
                                         <ArrowRight className="h-3.5 w-3.5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" />
 
                                         {/* Luxury Shine Effect */}
@@ -218,7 +218,7 @@ export default function PricingSection() {
 
                 <div className="mt-8 flex flex-col items-center gap-4">
                     <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                        Need higher volume? <Link href="/contact" className="text-blue-500 hover:underline">Contact Sales</Link>
+                        {dict.pricingSection.needVolume} <Link href={`/${locale}/contact`} className="text-blue-500 hover:underline">{dict.pricingSection.contactSales}</Link>
                     </p>
                 </div>
 
@@ -239,7 +239,7 @@ export default function PricingSection() {
                             ))}
                         </div>
                         <div className="text-left">
-                            <p className="text-white font-black text-xs uppercase italic tracking-widest leading-none">Dominating $2.4M GMV</p>
+                            <p className="text-white font-black text-xs uppercase italic tracking-widest leading-none">{dict.pricingSection.dominating}</p>
                             <div className="flex gap-0.5 mt-1.5">
                                 {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3 w-3 fill-blue-500 text-blue-500" />)}
                             </div>
@@ -249,12 +249,12 @@ export default function PricingSection() {
                     <div className="flex items-center gap-10">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 text-green-500" />
-                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Whop Managed</span>
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{dict.pricingSection.whopManaged}</span>
                         </div>
                         <div className="h-6 w-[1px] bg-white/10 hidden md:block" />
                         <div className="flex items-center gap-2">
                             <MousePointer2 className="h-4 w-4 text-blue-400" />
-                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Instant Setup</span>
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{dict.pricingSection.instantSetup}</span>
                         </div>
                     </div>
                 </motion.div>

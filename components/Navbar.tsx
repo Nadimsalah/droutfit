@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { ArrowRight, Menu, X, User, LayoutDashboard, Plus, CreditCard, LogOut, ChevronDown, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
-export default function Navbar() {
+export default function Navbar({ dict, locale }: { dict: any, locale: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -19,14 +20,12 @@ export default function Navbar() {
     const [isStoreLinked, setIsStoreLinked] = useState(false);
 
     useEffect(() => {
-        // Detect if we are in an iframe (Shopify dashboard) or have embedded=1
+        // ... same useEffect logic ...
         const urlParams = new URL(window.location.href).searchParams;
         const embedded = typeof window !== 'undefined' && (window.self !== window.top || urlParams.get('embedded') === '1');
         setIsEmbedded(embedded);
 
-        // Detect shop from various sources
         let s = searchParams.get('shop') || urlParams.get('shop');
-
         if (!s && typeof window !== 'undefined') {
             s = sessionStorage.getItem('shopify_shop');
         }
@@ -37,11 +36,8 @@ export default function Navbar() {
             setShop(s);
             sessionStorage.setItem('shopify_shop', s);
         } else if (embedded || isShopifyReferrer) {
-            // Fallback for when we know it's Shopify but params are missing
             setShop("your-store");
         }
-
-        console.log("Droutfit Shopify Detection:", { embedded, shop: s || "none", url: window.location.href });
 
         if (s && (window as any).shopify) {
             try {
@@ -61,7 +57,6 @@ export default function Navbar() {
         };
         window.addEventListener('scroll', handleScroll);
 
-        // Check initial session
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             setUser(session?.user ?? null);
             if (session?.user) {
@@ -74,7 +69,6 @@ export default function Navbar() {
             }
         });
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null);
             if (session?.user) {
@@ -89,7 +83,6 @@ export default function Navbar() {
             }
         });
 
-        // Close dropdown when clicking outside
         const handleClickOutside = (event: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
                 setIsProfileOpen(false);
@@ -110,7 +103,6 @@ export default function Navbar() {
         setIsProfileOpen(false);
     };
 
-    // Lock body scroll when menu is open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -125,30 +117,34 @@ export default function Navbar() {
                 <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-700 text-white z-[110] py-2 px-6 flex items-center justify-between shadow-lg h-10">
                     <p className="text-[10px] md:text-sm font-bold flex items-center gap-2">
                         <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
-                        {isStoreLinked ? "Your Shopify store is connected with DrOutfit" : "Using Shopify? Link your store to use your DrOutfit credits."}
+                        {isStoreLinked ? dict.navbar.storeConnected : dict.navbar.linkStorePrompt}
                     </p>
                     {!isStoreLinked && (
-                        <Link href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`} className="bg-white text-blue-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-tight">
-                            Connect now
+                        <Link href={`/${locale}/dashboard/shopify/connect?shop=${shop || 'your-store'}`} className="bg-white text-blue-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-tight">
+                            {dict.common.connectStore}
                         </Link>
                     )}
                 </div>
             )}
             <nav className={`fixed ${(shop || isEmbedded) ? 'top-10' : 'top-0'} left-0 right-0 z-[100] transition-all duration-300 ${scrolled || isOpen ? 'bg-[#0B0E14] border-b border-white/10 shadow-2xl' : 'bg-[#0B0E14]/80 backdrop-blur-xl border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between pointer-events-auto">
-                    <Link href="/" className="flex items-center gap-2 group relative z-50">
+                    <Link href={`/${locale}`} className="flex items-center gap-2 group relative z-50">
                         <img src="/logo.png" alt="Droutfit" className="h-10 w-auto object-contain" />
                     </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-8">
-                        {['Features', 'How it Works', 'Pricing'].map((item) => (
+                        {[
+                            { name: dict.navbar.features, id: 'features' },
+                            { name: dict.navbar.howItWorks, id: 'how-it-works' },
+                            { name: dict.navbar.pricing, id: 'pricing' }
+                        ].map((item) => (
                             <Link
-                                key={item}
-                                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                key={item.id}
+                                href={`/${locale}#${item.id}`}
                                 className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group"
                             >
-                                {item}
+                                {item.name}
                                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-full"></span>
                             </Link>
                         ))}
@@ -158,20 +154,20 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-4">
                         {(shop || isEmbedded) && !isStoreLinked && (
                             <Link
-                                href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
+                                href={`/${locale}/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
                                 className="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-5 py-2.5 rounded-full text-sm font-bold hover:bg-blue-600/30 transition-all flex items-center gap-2 group animate-pulse"
                             >
                                 <ShoppingBag className="h-4 w-4" />
-                                Connect your Store
+                                {dict.navbar.connectShopify}
                             </Link>
                         )}
                         {!user ? (
                             <>
-                                <Link href="/login" className="text-sm font-medium text-white hover:text-purple-400 transition-colors">
-                                    Sign In
+                                <Link href={`/${locale}/login`} className="text-sm font-medium text-white hover:text-purple-400 transition-colors">
+                                    {dict.common.signIn}
                                 </Link>
-                                <Link href="/dashboard" className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2 group hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                                    Get Started
+                                <Link href={`/${locale}/dashboard`} className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2 group hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                    {dict.common.getStarted}
                                     <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
                             </>
@@ -190,31 +186,34 @@ export default function Navbar() {
 
                                 {/* Profile Dropdown */}
                                 {isProfileOpen && (
-                                    <div className="absolute right-0 mt-3 w-56 bg-[#13171F] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[100]">
+                                    <div className={cn(
+                                        "absolute mt-3 w-56 bg-[#13171F] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[100]",
+                                        locale === 'ar' ? "left-0" : "right-0"
+                                    )}>
                                         <div className="p-2 space-y-1">
                                             <Link
-                                                href="/dashboard"
+                                                href={`/${locale}/dashboard`}
                                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <LayoutDashboard className="h-4 w-4 text-blue-400" />
-                                                Dashboard
+                                                {dict.common.dashboard}
                                             </Link>
                                             <Link
-                                                href="/dashboard/products/add"
+                                                href={`/${locale}/dashboard/products/add`}
                                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <Plus className="h-4 w-4 text-green-400" />
-                                                Add Products
+                                                {dict.dashboard.addProduct}
                                             </Link>
                                             <Link
-                                                href="/dashboard/billing"
+                                                href={`/${locale}/dashboard/billing`}
                                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
                                                 <CreditCard className="h-4 w-4 text-purple-400" />
-                                                Billing
+                                                {dict.dashboard.billing}
                                             </Link>
                                             <div className="h-px bg-white/5 my-1 mx-2" />
                                             <button
@@ -222,7 +221,7 @@ export default function Navbar() {
                                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-400/10 transition-colors"
                                             >
                                                 <LogOut className="h-4 w-4" />
-                                                Sign Out
+                                                {dict.common.signOut}
                                             </button>
                                         </div>
                                     </div>
@@ -249,15 +248,19 @@ export default function Navbar() {
 
                 <div className="flex flex-col items-center justify-center h-full space-y-8 p-6 relative z-10">
                     <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-                        {['Features', 'How it Works', 'Pricing'].map((item, i) => (
+                        {[
+                            { name: dict.navbar.features, id: 'features' },
+                            { name: dict.navbar.howItWorks, id: 'how-it-works' },
+                            { name: dict.navbar.pricing, id: 'pricing' }
+                        ].map((item, i) => (
                             <Link
-                                key={item}
-                                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                key={item.id}
+                                href={`/${locale}#${item.id}`}
                                 onClick={() => setIsOpen(false)}
                                 className="text-2xl font-bold text-gray-300 hover:text-white transition-colors w-full text-center py-2 border-b border-white/5 hover:border-white/20"
                                 style={{ transitionDelay: `${i * 50}ms` }}
                             >
-                                {item}
+                                {item.name}
                             </Link>
                         ))}
                     </div>
@@ -265,49 +268,49 @@ export default function Navbar() {
                     <div className="flex flex-col gap-4 w-full max-w-sm pt-8">
                         {(shop || isEmbedded) && !isStoreLinked && (
                             <Link
-                                href={`/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
+                                href={`/${locale}/dashboard/shopify/connect?shop=${shop || 'your-store'}`}
                                 className="w-full py-4 rounded-xl bg-blue-600 text-white text-center font-bold hover:bg-blue-500 transition-all flex items-center justify-center gap-2 animate-pulse"
                                 onClick={() => setIsOpen(false)}
                             >
                                 <ShoppingBag className="h-5 w-5" />
-                                Connect your Store
+                                {dict.navbar.connectShopify}
                             </Link>
                         )}
                         {!user ? (
                             <>
                                 <Link
-                                    href="/login"
+                                    href={`/${locale}/login`}
                                     onClick={() => setIsOpen(false)}
                                     className="w-full py-4 rounded-xl border border-white/10 text-center font-bold text-white hover:bg-white/5 transition-colors"
                                 >
-                                    Sign In
+                                    {dict.common.signIn}
                                 </Link>
                                 <Link
-                                    href="/dashboard"
+                                    href={`/${locale}/dashboard`}
                                     onClick={() => setIsOpen(false)}
                                     className="w-full py-4 rounded-xl bg-white text-black text-center font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                 >
-                                    Get Started
+                                    {dict.common.getStarted}
                                     <ArrowRight className="h-5 w-5" />
                                 </Link>
                             </>
                         ) : (
                             <>
                                 <Link
-                                    href="/dashboard"
+                                    href={`/${locale}/dashboard`}
                                     onClick={() => setIsOpen(false)}
                                     className="w-full py-4 rounded-xl border border-white/10 text-center font-bold text-white flex items-center justify-center gap-3"
                                 >
                                     <LayoutDashboard className="h-5 w-5" />
-                                    Dashboard
+                                    {dict.common.dashboard}
                                 </Link>
                                 <Link
-                                    href="/dashboard/products/add"
+                                    href={`/${locale}/dashboard/products/add`}
                                     onClick={() => setIsOpen(false)}
                                     className="w-full py-4 rounded-xl border border-white/10 text-center font-bold text-white flex items-center justify-center gap-3"
                                 >
                                     <Plus className="h-5 w-5" />
-                                    Add Products
+                                    {dict.dashboard.addProduct}
                                 </Link>
                                 <button
                                     onClick={() => {
@@ -317,7 +320,7 @@ export default function Navbar() {
                                     className="w-full py-4 rounded-xl bg-red-500/10 text-red-400 text-center font-bold flex items-center justify-center gap-3"
                                 >
                                     <LogOut className="h-5 w-5" />
-                                    Sign Out
+                                    {dict.common.signOut}
                                 </button>
                             </>
                         )}

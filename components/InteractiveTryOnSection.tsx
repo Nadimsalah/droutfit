@@ -2,9 +2,24 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, ShoppingCart, Sparkles, RefreshCw, Wand2, ArrowLeft, Check, ShieldCheck, Zap, Image as ImageIcon } from "lucide-react";
+import {
+    Upload,
+    ShoppingCart,
+    Sparkles,
+    RefreshCw,
+    Wand2,
+    ArrowLeft,
+    Check,
+    ShieldCheck,
+    Zap,
+    Image as ImageIcon,
+    Star,
+    Info,
+    Camera,
+    Activity
+} from "lucide-react";
 
-export default function InteractiveTryOnSection() {
+export default function InteractiveTryOnSection({ dict, locale }: { dict: any, locale: string }) {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [status, setStatus] = useState<"idle" | "uploading" | "processing" | "success" | "error">("idle");
@@ -16,21 +31,16 @@ export default function InteractiveTryOnSection() {
     const scrollTargetRef = useRef<HTMLDivElement>(null);
 
     const product = {
-        name: "Alaska Puffer Jacket",
+        name: dict.demoSection.productName,
+        brand: dict.demoSection.productBrand,
         price: "$50.00",
         originalPrice: "$65.00",
-        description: "Engineered for excellence. High-loft synthetic insulation meets a weather-resistant shell for the ultimate urban explorer jacket.",
+        description: dict.demoSection.productDesc,
         image: "/alaska-jacket.webp",
-        garmentUrl: "/alaska-jacket.webp"
+        garmentUrl: "/alaska-jacket.webp",
+        rating: 4.9,
+        reviews: 128
     };
-
-    // Auto-scroll logic if needed or just ensuring smooth transitions
-    useEffect(() => {
-        if (view === "tryon" && status === "idle") {
-            // If we somehow get into tryon view without a status, set it
-            setStatus("idle");
-        }
-    }, [view]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -43,7 +53,6 @@ export default function InteractiveTryOnSection() {
             setStatus("processing");
             handleTryOn(file);
 
-            // On mobile, scroll up to see the processing frame
             setTimeout(() => {
                 scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
@@ -54,14 +63,13 @@ export default function InteractiveTryOnSection() {
         setProgress(0);
         setErrorMsg(null);
 
-        // Simulate progress with more natural steps
         const interval = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 98) return prev;
-                const jump = Math.floor(Math.random() * 8) + 1;
+                const jump = Math.floor(Math.random() * 5) + 1;
                 return Math.min(prev + jump, 98);
             });
-        }, 400);
+        }, 300);
 
         try {
             const base64Image = await new Promise<string>((resolve, reject) => {
@@ -81,9 +89,8 @@ export default function InteractiveTryOnSection() {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Generation failed.");
+            if (!response.ok) throw new Error(data.error || dict.demoSection.generationFailed);
 
-            // Artificial delay for smooth transition even if API is super fast
             await new Promise(r => setTimeout(r, 1000));
 
             setResultImage(data.result_url);
@@ -97,9 +104,7 @@ export default function InteractiveTryOnSection() {
         }
     };
 
-    const triggerUpload = () => {
-        fileInputRef.current?.click();
-    };
+    const triggerUpload = () => fileInputRef.current?.click();
 
     const reset = () => {
         setView("details");
@@ -111,101 +116,89 @@ export default function InteractiveTryOnSection() {
     };
 
     return (
-        <section id="demo" className="py-12 md:py-20 px-4 md:px-6 relative overflow-hidden bg-[#050608]">
-            <div className="absolute inset-0 pointer-events-none z-0">
-                <div className="absolute top-[10%] left-[-5%] w-[600px] h-[600px] bg-blue-600/[0.03] rounded-full blur-[140px]" />
-                <div className="absolute bottom-[0%] right-[-5%] w-[600px] h-[600px] bg-purple-600/[0.03] rounded-full blur-[140px]" />
+        <section id="demo" className="py-24 px-6 relative overflow-hidden bg-[#050608]">
+            {/* Ambient Background Glow */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-600/10 rounded-full blur-[160px] animate-pulse" />
+                <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-600/10 rounded-full blur-[160px] animate-pulse" style={{ animationDelay: '2s' }} />
             </div>
 
-            <div className="max-w-5xl mx-auto relative z-10">
-                {/* Section Header */}
-                <div className="text-center mb-10 md:mb-16 space-y-4">
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Header with improved hierarchy */}
+                <div className="text-center mb-20 space-y-6">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-black text-purple-400 uppercase tracking-widest"
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em]"
                     >
-                        <ShoppingCart className="h-3 w-3" /> Digital Storefront
+                        <ShoppingCart className="h-3 w-3 text-blue-500" /> {dict.demoSection.badge}
                     </motion.div>
-                    <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                        Imagine your store with <br className="md:hidden" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                            Feature Try-On
+
+                    <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-[1] max-w-3xl mx-auto">
+                        {dict.demoSection.title1} <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
+                            {dict.demoSection.title2}
                         </span>
                     </h2>
-                    <p className="text-gray-500 text-sm max-w-xl mx-auto font-medium px-4">
-                        Test our hyper-realistic AI try-on technology instantly. Upload a photo and see the future of fashion.
+
+                    <p className="text-gray-500 text-lg max-w-2xl mx-auto font-medium">
+                        {dict.demoSection.description}
                     </p>
                 </div>
 
-                <div ref={scrollTargetRef} className="bg-[#0D1117]/60 backdrop-blur-3xl rounded-[32px] md:rounded-[48px] border border-white/5 overflow-hidden shadow-2xl">
-                    <div className="flex flex-col lg:flex-row min-h-[500px] md:min-h-[600px]">
+                {/* Product Layout Grid */}
+                <div ref={scrollTargetRef} className="bg-[#0D1117]/80 backdrop-blur-3xl rounded-[40px] border border-white/5 overflow-hidden shadow-2xl transition-all duration-500 hover:border-white/10 group">
+                    <div className="flex flex-col lg:flex-row min-h-[700px]">
 
-                        {/* Display Area (Left) */}
-                        <div className="lg:w-1/2 relative bg-black/20 flex items-center justify-center p-4 md:p-8 lg:p-12 overflow-hidden lg:border-r border-white/5 min-h-[400px] lg:min-h-0">
-                            <motion.div
-                                initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 20 }}
-                                className="absolute top-10 md:top-14 left-1/2 -translate-x-1/2 bg-[#050608]/80 backdrop-blur-2xl border border-white/10 text-white text-xs md:text-sm font-medium pl-4 pr-5 py-2.5 rounded-full flex items-center gap-3 z-30 whitespace-nowrap shadow-[0_10px_40px_-10px_rgba(59,130,246,0.3)] pointer-events-none"
-                            >
-                                <div className="relative flex h-2.5 w-2.5 items-center justify-center">
-                                    <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-blue-500 opacity-40"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,1)]"></span>
+                        {/* Media Section (Left) */}
+                        <div className="lg:w-[55%] relative flex items-center justify-center p-6 lg:p-12 lg:border-r border-white/5 bg-black/40">
+                            {/* Live Badge */}
+                            <div className="absolute top-8 left-8 z-40">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                                    {dict.demoSection.environment}
                                 </div>
-                                <span className="tracking-wide text-gray-200">Test product to see</span>
-                            </motion.div>
+                            </div>
 
                             <AnimatePresence mode="wait">
                                 {view === "details" ? (
                                     <motion.div
-                                        key="details-view"
-                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        key="product-image"
+                                        initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 1.1 }}
-                                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                        className="w-full flex items-center justify-center"
+                                        exit={{ opacity: 0, scale: 1.05 }}
+                                        className="relative w-full aspect-[4/5] max-w-[450px]"
                                     >
-                                        <div className="relative group">
-                                            <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full scale-110 group-hover:scale-125 transition-transform duration-700" />
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className="relative z-10 w-full h-auto max-w-[320px] md:max-w-full max-h-[350px] md:max-h-[450px] object-cover rounded-[24px] md:rounded-[40px] shadow-2xl"
-                                            />
-                                        </div>
+                                        <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full group-hover:bg-blue-500/20 transition-all duration-700" />
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            className="relative z-10 w-full h-full object-cover rounded-[32px] shadow-3xl border border-white/5"
+                                        />
                                     </motion.div>
                                 ) : (
                                     <motion.div
-                                        key="tryon-view"
+                                        key="vto-result"
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
-                                        className="w-full h-full flex flex-col items-center justify-center relative py-4 lg:py-0"
+                                        className="w-full h-full flex items-center justify-center relative"
                                     >
-                                        <div className="w-full max-w-[320px] md:max-w-[400px] aspect-[4/5] bg-[#0B0E14] rounded-[24px] md:rounded-[32px] overflow-hidden relative shadow-2xl border border-white/5">
+                                        <div className="w-full aspect-[4/5] max-w-[450px] bg-[#0B0E14] rounded-[32px] overflow-hidden relative shadow-2xl border border-white/5">
                                             <AnimatePresence mode="wait">
                                                 {status === "processing" ? (
                                                     <motion.div
-                                                        key="processing"
+                                                        key="processing-overlay"
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
                                                         exit={{ opacity: 0 }}
-                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 transition-all rounded-[24px] md:rounded-[32px] overflow-hidden"
+                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-xl z-20"
                                                     >
-                                                        <div className="relative w-24 h-24 md:w-32 md:h-32 mb-8 scale-110 md:scale-100">
+                                                        <div className="relative w-32 h-32 mb-10">
+                                                            <div className="absolute inset-0 rounded-full border-4 border-white/5" />
                                                             <svg className="w-full h-full transform -rotate-90">
-                                                                <circle
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    r="45%"
-                                                                    className="stroke-white/5 fill-none"
-                                                                    strokeWidth="4"
-                                                                />
                                                                 <motion.circle
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    r="45%"
+                                                                    cx="50%" cy="50%" r="45%"
                                                                     className="stroke-blue-500 fill-none"
                                                                     strokeWidth="4"
                                                                     strokeDasharray="283"
@@ -215,153 +208,145 @@ export default function InteractiveTryOnSection() {
                                                                 />
                                                             </svg>
                                                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                                <span className="text-white text-xl md:text-2xl font-black">{progress}%</span>
-                                                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest mt-1">Neural AI</span>
+                                                                <span className="text-3xl font-black text-white">{progress}%</span>
+                                                                <Activity className="w-4 h-4 text-blue-400 mt-1 animate-pulse" />
                                                             </div>
                                                         </div>
-                                                        <div className="text-center space-y-2 px-6">
-                                                            <p className="text-white text-xs md:text-sm font-black uppercase tracking-[0.2em] animate-pulse">Analyzing Frame...</p>
-                                                            <p className="text-gray-500 text-[10px] font-medium leading-relaxed">Adjusting lighting & garment physics to match your pose.</p>
+                                                        <div className="text-center space-y-3 px-10">
+                                                            <h4 className="text-white text-sm font-black uppercase tracking-[0.3em]">{dict.demoSection.neuralFitting}</h4>
+                                                            <p className="text-gray-500 text-xs font-medium leading-relaxed">
+                                                                {dict.demoSection.mapping}
+                                                            </p>
                                                         </div>
                                                     </motion.div>
                                                 ) : status === "success" ? (
                                                     <motion.div
-                                                        key="success"
-                                                        initial={{ opacity: 0, scale: 1.05 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        className="absolute inset-0 z-10"
+                                                        key="success-image"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="absolute inset-0"
                                                     >
-                                                        <img src={resultImage!} alt="VTO Result" className="w-full h-full object-cover" />
-                                                        <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl">
-                                                            <Check className="w-3 h-3" /> Result Ready
-                                                        </div>
+                                                        <img src={resultImage!} alt="Try-on Result" className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
                                                     </motion.div>
                                                 ) : status === "error" ? (
-                                                    <motion.div
-                                                        key="error"
-                                                        className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-red-500/5 backdrop-blur-sm"
-                                                    >
-                                                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                                                            <RefreshCw className="w-8 h-8 text-red-500" />
-                                                        </div>
-                                                        <h4 className="text-white font-black mb-2 uppercase text-xs tracking-widest">Processing Error</h4>
-                                                        <p className="text-gray-400 text-[10px] mb-6 leading-relaxed">{errorMsg || "Try a clearer photo of yourself"}</p>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-red-500/5">
+                                                        <RefreshCw className="w-12 h-12 text-red-500 mb-6" />
+                                                        <p className="text-white font-black uppercase tracking-widest text-xs mb-2">{dict.demoSection.failed}</p>
+                                                        <p className="text-gray-500 text-[11px] text-center mb-8">{errorMsg}</p>
                                                         <button
                                                             onClick={triggerUpload}
-                                                            className="px-6 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+                                                            className="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest"
                                                         >
-                                                            Retry Upload
+                                                            {dict.demoSection.tryAgain}
                                                         </button>
-                                                    </motion.div>
+                                                    </div>
                                                 ) : null}
                                             </AnimatePresence>
 
-                                            {/* Preview of uploaded image while processing */}
-                                            {uploadedImage && status === "processing" && (
-                                                <img src={uploadedImage} alt="Preview" className="w-full h-full object-cover opacity-50 blur-sm scale-110" />
+                                            {status === "processing" && uploadedImage && (
+                                                <img src={uploadedImage} alt="Reference" className="w-full h-full object-cover opacity-30 blur-sm scale-105" />
                                             )}
                                         </div>
 
                                         <button
                                             onClick={reset}
-                                            className="absolute top-0 md:top-2 left-4 md:left-2 flex items-center gap-1.5 text-gray-500 hover:text-white transition-all font-black uppercase text-[9px] tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/10"
+                                            className="absolute top-0 transform -translate-y-4 right-0 lg:-right-4 flex items-center gap-2 text-gray-400 hover:text-white transition-all font-black uppercase text-[10px] tracking-widest bg-white/5 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-md z-30 shadow-xl"
                                         >
-                                            <ArrowLeft className="w-3 h-3" /> Close Demo
+                                            <ArrowLeft className="w-3.5 h-3.5" /> {dict.demoSection.back}
                                         </button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        {/* Content Area (Right) */}
-                        <div className="lg:w-1/2 p-6 md:p-10 lg:p-14 flex flex-col justify-center gap-6 md:gap-8 bg-white/[0.01]">
-                            <div className="space-y-6 md:space-y-8">
+                        {/* Content Section (Right) */}
+                        <div className="lg:w-[45%] flex flex-col p-8 lg:p-16 bg-white/[0.01]">
+                            <div className="flex-1 space-y-10">
+                                {/* Brand & Rating */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 uppercase tracking-widest">
-                                            Premium Collection
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            {[1, 2, 3, 4, 5].map(i => (
-                                                <Sparkles key={i} className="h-3 w-3 text-orange-400/80 fill-orange-400/20" />
-                                            ))}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[12px] font-black text-blue-500 uppercase tracking-[0.2em]">
+                                            {product.brand}
+                                        </span>
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">
+                                            <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                                            <span className="text-[11px] font-black text-white">{product.rating}</span>
+                                            <span className="text-[11px] text-gray-600">({product.reviews})</span>
                                         </div>
                                     </div>
+                                    <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-[0.9]">
+                                        {product.name}
+                                    </h1>
+                                </div>
 
-                                    <div className="space-y-3">
-                                        <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase leading-[0.9]">
-                                            {product.name}
-                                        </h3>
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-0.5">Sale Price</span>
-                                                <p className="text-3xl md:text-4xl font-black text-white">
-                                                    {product.price}
-                                                </p>
-                                            </div>
-                                            <div className="h-8 w-px bg-white/10 self-end mb-1" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] text-gray-400/50 font-black uppercase tracking-widest mb-0.5">Value</span>
-                                                <p className="text-xl md:text-2xl font-bold text-gray-600 line-through decoration-red-500/30 decoration-2">
-                                                    {product.originalPrice}
-                                                </p>
-                                            </div>
-                                        </div>
+                                {/* Pricing */}
+                                <div className="flex items-baseline gap-6 border-b border-white/5 pb-8">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{dict.demoSection.salePrice}</span>
+                                        <div className="text-5xl font-black text-white">{product.price}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{dict.demoSection.msrp}</span>
+                                        <div className="text-2xl font-bold text-gray-700 line-through decoration-red-500/20">{product.originalPrice}</div>
                                     </div>
                                 </div>
 
-                                <p className="text-gray-400 text-sm md:text-base leading-relaxed font-medium">
-                                    {product.description}
-                                </p>
+                                {/* Description */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <Info className="w-3 h-3" /> {dict.demoSection.productIntel}
+                                    </h4>
+                                    <p className="text-gray-400 text-lg leading-relaxed font-medium">
+                                        {product.description}
+                                    </p>
+                                </div>
 
-                                <div className="pt-2 md:pt-6 space-y-4">
-                                    <button className="w-full py-4 bg-white/5 border border-white/5 text-white/10 rounded-2xl font-black text-sm cursor-not-allowed flex items-center justify-center gap-2 group transition-all">
-                                        <ShoppingCart className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        Add to Cart
-                                    </button>
-
+                                {/* Main Actions */}
+                                <div className="space-y-5 pt-4">
                                     <div className="relative group">
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200" />
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-[24px] blur-lg opacity-40 group-hover:opacity-100 transition duration-500" />
                                         <button
                                             onClick={triggerUpload}
-                                            className="relative w-full py-5 md:py-6 bg-white text-black rounded-full font-black text-base md:text-lg transition-all flex items-center justify-center gap-3 active:scale-95 overflow-hidden"
+                                            className="relative w-full py-6 bg-white text-black rounded-[20px] font-black text-xl flex items-center justify-center gap-4 transition-transform active:scale-95 shadow-2xl overflow-hidden"
                                         >
-                                            <span className="relative z-10 flex items-center gap-3">
-                                                <Zap className="w-5 h-5 fill-black" />
-                                                {view === "details" ? "Try it On Instantly" : "Try Different Photo"}
-                                            </span>
-                                            <motion.div
-                                                className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"
-                                                initial={{ scaleX: 0 }}
-                                                animate={{ scaleX: status === "processing" ? progress / 100 : 0 }}
-                                                transition={{ duration: 0.1 }}
-                                            />
+                                            {status === "processing" ? (
+                                                <RefreshCw className="w-6 h-6 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <Camera className="w-6 h-6" />
+                                                    {view === "details" ? dict.demoSection.virtualTryon : dict.demoSection.tryDifferent}
+                                                </>
+                                            )}
                                         </button>
                                     </div>
+
+                                    <button className="w-full py-5 bg-white/5 border border-white/10 text-gray-700 rounded-[20px] font-black text-lg cursor-not-allowed flex items-center justify-center gap-3 transition-colors hover:bg-white/10">
+                                        <ShoppingCart className="w-5 h-5" />
+                                        {dict.demoSection.addToCart}
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Trust System */}
-                            <div className="grid grid-cols-3 gap-2 pt-8 border-t border-white/5">
+                            {/* Trust Footer */}
+                            <div className="pt-10 mt-12 border-t border-white/5 grid grid-cols-3 gap-4">
                                 {[
-                                    { label: "Privacy", value: "Secure", icon: ShieldCheck },
-                                    { label: "AI Engine", value: "Neural", icon: Wand2 },
-                                    { label: "Latency", value: "3.2s", icon: Zap }
+                                    { label: dict.demoSection.stats.privacy, value: dict.demoSection.stats.secure, icon: ShieldCheck, color: "text-green-400" },
+                                    { label: dict.demoSection.stats.engine, value: dict.demoSection.stats.neural, icon: Wand2, color: "text-blue-400" },
+                                    { label: dict.demoSection.stats.latency, value: dict.demoSection.stats.global, icon: Zap, color: "text-yellow-400" }
                                 ].map((item, i) => (
-                                    <div key={i} className="flex flex-col items-center text-center group">
-                                        <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center mb-2 group-hover:border-blue-500/50 transition-colors">
-                                            <item.icon className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
-                                        </div>
-                                        <p className="text-[8px] font-black text-gray-700 uppercase tracking-widest mb-0.5">{item.label}</p>
-                                        <p className="text-white text-[10px] font-bold">{item.value}</p>
+                                    <div key={i} className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group">
+                                        <item.icon className={`w-5 h-5 mb-2 ${item.color} group-hover:scale-110 transition-transform`} />
+                                        <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-1">{item.label}</span>
+                                        <span className="text-white text-[10px] font-black">{item.value}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
-
                     </div>
                 </div>
 
+                {/* Hidden File Input */}
                 <input
                     type="file"
                     ref={fileInputRef}

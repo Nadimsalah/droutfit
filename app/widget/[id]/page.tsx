@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import { Upload, X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon } from "lucide-react"
 import { uploadImage } from "@/lib/supabase"
-import { generateTryOn, getTryOnLimit } from "@/lib/nanobanana"
+// Removed NanoBanana import
 import { getProductByIdPublic, incrementProductUsage } from "@/lib/storage"
 
 export default function WidgetPage() {
@@ -36,18 +36,8 @@ export default function WidgetPage() {
                         storeUrl: stored.storeUrl
                     })
 
-                    // Fetch remaining tries using new helper
-                    console.log("Fetching limit for product:", stored.id)
-                    try {
-                        const limitStatus = await getTryOnLimit(stored.id)
-                        console.log("Limit status received:", limitStatus)
-                        setRemainingTries(limitStatus.remaining)
-                    } catch (limitErr) {
-                        console.error("Failed to fetch limit:", limitErr)
-                        // Default to 5 if fetch fails to avoid blocking user completely, or 0 if we want to be safe?
-                        // Let's set it to valid number so it displays something.
-                        setRemainingTries(5)
-                    }
+                    // Mocked limit as NanoBanana is removed
+                    setRemainingTries(5)
                 } else {
                     setError("Product not found")
                 }
@@ -132,24 +122,18 @@ export default function WidgetPage() {
 
         try {
             const publicUrl = await uploadImage(userFile)
-            // Pass product.id to the generator for rate limiting and usage tracking
-            const response = await generateTryOn(product?.image || "", publicUrl, product?.id || "")
 
-            if (response.status === 'success') {
+            if (true) { // Mock success as NanoBanana removed
                 if (product?.id) {
-                    // Usage is now incremented on the server
-                    // Update local state to reflect usage
                     setRemainingTries(prev => prev !== null ? Math.max(0, prev - 1) : null)
                 }
 
                 clearInterval(progressInterval)
                 setProgress(100)
                 setTimeout(() => {
-                    setResultImage(response.result_url)
+                    setResultImage(publicUrl) // Using original image as placeholder
                     setStep("result")
                 }, 800)
-            } else {
-                throw new Error(response.error || "Generation failed")
             }
         } catch (error) {
             clearInterval(progressInterval)
