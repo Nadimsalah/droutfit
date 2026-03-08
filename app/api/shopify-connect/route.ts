@@ -1,27 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Use service role key to bypass RLS
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId, shopDomain } = await req.json();
+        const body = await req.json();
+        const { userId, shopDomain, accessToken } = body;
 
         if (!userId || !shopDomain) {
             return NextResponse.json({ error: "Missing userId or shopDomain" }, { status: 400 });
         }
 
-        // 1. Remove this shop from any other profile (ownership takeover)
-        await supabase
-            .from("profiles")
-            .update({ store_website: null })
-            .eq("store_website", shopDomain);
+        // Try service role key first (bypasses RLS completely)
+        // Fall back to user's access token if service role key isn't a valid JWT
+        let supabase;
+        if (serviceRoleKey && serviceRoleKey.startsWith("eyJ")) {
+            supabase = createClient(supabaseUrl, serviceRoleKey);
+        } else if (accessToken) {
+            // Use user's own access token — RLS allows users to update their own profile
+            supabase = createClient(supabaseUrl, supabaseAnonKey, {
+                global: { headers: { Authorization: `Bearer ${accessToken}` } }
+            });
+        } else {
+            supabase = createClient(supabaseUrl, supabaseAnonKey);
+        }
 
-        // 2. Link to the requesting user
+        // Remove this shop from any other account (only works with service role or if RLS allows)
+        try {
+            await supabase.from("profiles").update({ store_website: null }).eq("store_website", shopDomain).neq("id", userId);
+        } catch (e) {
+            // Ignore if RLS blocks this — at least we can still link to the current user
+        }
+
+        // Link store to this user's account
         const { error } = await supabase
             .from("profiles")
             .update({ store_website: shopDomain })
@@ -34,7 +48,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, store_website: shopDomain });
     } catch (error) {
-        console.error("Shopify connect API Error:", error);
+        console.error("Shopify connect error:", error);
         return NextResponse.json({ error: (error as Error).message || "Internal error" }, { status: 500 });
     }
 }

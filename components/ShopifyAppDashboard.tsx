@@ -107,11 +107,16 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
         setConnectingStore(true);
         setConnectError(null);
         try {
-            // Use server API to bypass RLS on update (only for the write, not reads)
+            // Use server API for the write; pass access token so it can auth as the user
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch("/api/shopify-connect", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.id, shopDomain: shop }),
+                body: JSON.stringify({
+                    userId: user.id,
+                    shopDomain: shop,
+                    accessToken: session?.access_token,
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Connection failed");
