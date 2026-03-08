@@ -44,31 +44,22 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             if (!activeUser) { setView("login"); return; }
             setUser(activeUser);
 
-            const { data: profileData } = await supabase
-                .from("profiles")
-                .select("id, credits, store_website, plan, email")
-                .eq("id", activeUser.id)
-                .single();
-            setProfile(profileData);
+            // Fetch all data via server API (bypasses RLS in iframe)
+            const res = await fetch("/api/shopify-status", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: activeUser.id }),
+            });
+            const data = await res.json();
 
-            const [{ count: tryOns }, { count: products }] = await Promise.all([
-                supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id).eq("status", 200),
-                supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id),
-            ]);
-            setStats({ tryOns: tryOns || 0, products: products || 0 });
+            if (!res.ok) throw new Error(data.error || "Failed to load data");
 
-            setLoadingLogs(true);
-            const { data: logsData } = await supabase
-                .from("usage_logs")
-                .select("id, status, created_at, latency")
-                .eq("user_id", activeUser.id)
-                .order("created_at", { ascending: false })
-                .limit(8);
-            setLogs(logsData || []);
-            setLoadingLogs(false);
+            setProfile(data.profile);
+            setStats(data.stats);
+            setLogs(data.logs);
 
             const shop = getShop();
-            const storeSet = profileData?.store_website;
+            const storeSet = data.profile?.store_website;
             if (!storeSet && shop) {
                 setView("not_connected");
             } else {
