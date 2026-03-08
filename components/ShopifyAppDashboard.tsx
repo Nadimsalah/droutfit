@@ -111,9 +111,11 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             await supabase.from("profiles").update({ store_website: null }).eq("store_website", shop);
             const { error } = await supabase.from("profiles").update({ store_website: shop }).eq("id", user.id);
             if (error) throw error;
-            await loadData(user);
+            // Store is linked — reload data
+            try { await loadData(user); } catch { setView("dashboard"); }
         } catch (e: any) {
             setConnectError(e.message || "Failed to connect. Please try again.");
+        } finally {
             setConnectingStore(false);
         }
     };
@@ -182,6 +184,10 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                                 onChange={e => setEmail(e.target.value)}
                                 required
                                 placeholder="you@example.com"
+                                autoComplete="email"
+                                autoCorrect="off"
+                                autoCapitalize="none"
+                                spellCheck={false}
                                 className="w-full border border-[#c9cccf] rounded-lg px-3 py-2.5 text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#5c6ac4] focus:ring-1 focus:ring-[#5c6ac4] transition-colors bg-white"
                             />
                         </div>
@@ -194,6 +200,10 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••"
+                                    autoComplete="current-password"
+                                    autoCorrect="off"
+                                    autoCapitalize="none"
+                                    spellCheck={false}
                                     className="w-full border border-[#c9cccf] rounded-lg px-3 py-2.5 pr-10 text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#5c6ac4] focus:ring-1 focus:ring-[#5c6ac4] transition-colors bg-white"
                                 />
                                 <button
