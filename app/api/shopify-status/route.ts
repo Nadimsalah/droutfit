@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
             { count: products },
             { data: logs }
         ] = await Promise.all([
-            supabase.from("profiles").select("id, credits, store_website, plan, email").eq("id", userId).single(),
+            supabase.from("profiles").select("id, credits, store_website").eq("id", userId).single(),
             supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("status", 200),
             supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", userId),
             supabase.from("usage_logs").select("id, status, created_at, latency").eq("user_id", userId).order("created_at", { ascending: false }).limit(8),

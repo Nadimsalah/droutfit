@@ -53,7 +53,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 { count: products },
                 { data: logsData }
             ] = await Promise.all([
-                supabase.from("profiles").select("id, credits, store_website, plan, email").eq("id", activeUser.id).single(),
+                supabase.from("profiles").select("id, credits, store_website").eq("id", activeUser.id).single(),
                 supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id).eq("status", 200),
                 supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id),
                 supabase.from("usage_logs").select("id, status, created_at, latency").eq("user_id", activeUser.id).order("created_at", { ascending: false }).limit(8),
@@ -124,7 +124,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             // Re-fetch profile with the authenticated client to get real credits
             const { data: freshProfile } = await supabase
                 .from("profiles")
-                .select("id, credits, store_website, plan, email")
+                .select("id, credits, store_website")
                 .eq("id", user.id)
                 .single();
 
