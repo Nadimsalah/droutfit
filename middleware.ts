@@ -14,13 +14,21 @@ export async function middleware(request: NextRequest) {
         (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
     )
 
-    // Redirect if there is no locale
-    if (pathnameIsMissingLocale) {
+    // Paths that should not be localized
+    const isPublicStaticOrApi =
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/widget') ||
+        pathname.startsWith('/xdash') ||
+        pathname === '/icon.png' ||
+        pathname === '/robots.txt' ||
+        pathname === '/sitemap.xml';
+
+    // Redirect if there is no locale and it's not a special path
+    if (!isPublicStaticOrApi && pathnameIsMissingLocale) {
         // Simple logic for now: default to English
         const locale = 'en'
-        return NextResponse.redirect(
-            new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url)
-        )
+        const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}${request.nextUrl.search}`, request.url)
+        return NextResponse.redirect(newUrl)
     }
 
     const supabase = createServerClient(
