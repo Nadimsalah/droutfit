@@ -27,7 +27,15 @@ export async function middleware(request: NextRequest) {
     if (!isPublicStaticOrApi && pathnameIsMissingLocale) {
         // Simple logic for now: default to English
         const locale = 'en'
-        const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}${request.nextUrl.search}`, request.url)
+        const isShopifyEmbedded = request.nextUrl.searchParams.has('shop') || request.nextUrl.searchParams.get('embedded') === '1';
+
+        let newUrlPath = `/${locale}${pathname === '/' ? '' : pathname}`;
+        // If Shopify is loading the root page, redirect to dashboard
+        if (isShopifyEmbedded && (pathname === '/' || pathname === '')) {
+            newUrlPath = `/${locale}/dashboard`;
+        }
+
+        const newUrl = new URL(`${newUrlPath}${request.nextUrl.search}`, request.url)
         const redirectResponse = NextResponse.redirect(newUrl)
 
         // IMPORTANT: Attach iframe CSP header to the redirect itself!
@@ -37,6 +45,21 @@ export async function middleware(request: NextRequest) {
             "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com https://*.shopify.com"
         )
         return redirectResponse
+    }
+
+    // Check if we already have a locale but it's the root page AND it's Shopify
+    if (!pathnameIsMissingLocale && !isPublicStaticOrApi) {
+        const isShopifyEmbedded = request.nextUrl.searchParams.has('shop') || request.nextUrl.searchParams.get('embedded') === '1';
+        const isRootLocalePath = ['/en', '/fr', '/ar', '/en/', '/fr/', '/ar/'].includes(pathname);
+        if (isShopifyEmbedded && isRootLocalePath) {
+            const newUrl = new URL(`${pathname.endsWith('/') ? pathname : pathname + '/'}dashboard${request.nextUrl.search}`, request.url);
+            const redirectResponse = NextResponse.redirect(newUrl);
+            redirectResponse.headers.set(
+                "Content-Security-Policy",
+                "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com https://*.shopify.com"
+            );
+            return redirectResponse;
+        }
     }
 
     const supabase = createServerClient(
