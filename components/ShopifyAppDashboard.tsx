@@ -108,9 +108,13 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
         setConnectingStore(true);
         setConnectError(null);
         try {
-            await supabase.from("profiles").update({ store_website: null }).eq("store_website", shop);
-            const { error } = await supabase.from("profiles").update({ store_website: shop }).eq("id", user.id);
-            if (error) throw error;
+            const res = await fetch("/api/shopify-connect", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id, shopDomain: shop }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Connection failed");
             // Store is linked — reload data
             try { await loadData(user); } catch { setView("dashboard"); }
         } catch (e: any) {
