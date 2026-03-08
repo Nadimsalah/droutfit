@@ -28,7 +28,15 @@ export async function middleware(request: NextRequest) {
         // Simple logic for now: default to English
         const locale = 'en'
         const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}${request.nextUrl.search}`, request.url)
-        return NextResponse.redirect(newUrl)
+        const redirectResponse = NextResponse.redirect(newUrl)
+
+        // IMPORTANT: Attach iframe CSP header to the redirect itself!
+        // Otherwise, browsers will block the 307 redirect inside the Shopify iframe and abort the signal.
+        redirectResponse.headers.set(
+            "Content-Security-Policy",
+            "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com https://*.shopify.com"
+        )
+        return redirectResponse
     }
 
     const supabase = createServerClient(
