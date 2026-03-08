@@ -1,9 +1,9 @@
-api_version = "2024-04"
+api_version = "2024-10"
 
 [[extensions]]
+
+uid = "53b5dfb4-3bb4-0954-72aa-7e751170befc5b13a1dd"
+
+type = "theme"
 name = "Virtual Try-On"
 handle = "tryon-button"
-type = "theme"
-
-[extensions.targeting]
-  [[extensions.targeting.settings]]
