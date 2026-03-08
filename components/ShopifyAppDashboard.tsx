@@ -39,8 +39,9 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     const loadData = async (authUser?: any) => {
         try {
-            const { data: { user: u } } = await supabase.auth.getUser();
-            const activeUser = authUser || u;
+            // getSession reads from localStorage - doesn't make a network call (faster, safer in iframes)
+            const { data: { session } } = await supabase.auth.getSession();
+            const activeUser = authUser || session?.user;
             if (!activeUser) { setView("login"); return; }
             setUser(activeUser);
 
@@ -109,8 +110,20 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Connection failed");
-            // ✅ Success — directly update local state, no re-fetch needed
-            setProfile((prev: any) => ({ ...prev, store_website: shop }));
+            // ✅ Connect succeeded — now re-fetch full profile to get real credits
+            const statusRes = await fetch("/api/shopify-status", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id }),
+            });
+            const statusData = await statusRes.json();
+            if (statusRes.ok && statusData.profile) {
+                setProfile(statusData.profile);
+                setStats(statusData.stats);
+                setLogs(statusData.logs);
+            } else {
+                setProfile((prev: any) => ({ ...prev, store_website: shop }));
+            }
             setShopDomain(shop);
             setView("dashboard");
         } catch (e: any) {
