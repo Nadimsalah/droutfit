@@ -36,7 +36,13 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     function getShop(): string | null {
         if (typeof window === "undefined") return null;
-        return new URLSearchParams(window.location.search).get("shop");
+        // First try URL param, then fall back to localStorage
+        const fromUrl = new URLSearchParams(window.location.search).get("shop");
+        if (fromUrl) {
+            localStorage.setItem('droutfit_shopify_domain', fromUrl); // persist for Return to Shopify
+            return fromUrl;
+        }
+        return localStorage.getItem('droutfit_shopify_domain');
     }
 
     const loadData = async () => {
@@ -72,8 +78,13 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             setLoadingLogs(false);
 
             const storeSet = profileData?.store_website;
-            const isLinked = storeSet && shop && (storeSet === shop || storeSet.includes(shop) || shop.includes(storeSet));
-            setView(isLinked || (!shop && storeSet) ? "dashboard" : shop ? "not_connected" : "dashboard");
+            // Lenient: if user has ANY store linked, go to dashboard.
+            // Only ask to connect if they have NO store AND there is a shop param.
+            if (!storeSet && shop) {
+                setView("not_connected");
+            } else {
+                setView("dashboard");
+            }
         } catch (e) {
             console.error("Load error:", e);
             setView("not_logged_in");
