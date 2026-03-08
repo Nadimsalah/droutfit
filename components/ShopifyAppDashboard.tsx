@@ -39,28 +39,32 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     const loadData = async (authUser?: any) => {
         try {
-            // getSession reads from localStorage - doesn't make a network call (faster, safer in iframes)
+            // getSession reads from localStorage — safe in iframes
             const { data: { session } } = await supabase.auth.getSession();
             const activeUser = authUser || session?.user;
             if (!activeUser) { setView("login"); return; }
             setUser(activeUser);
 
-            // Fetch all data via server API (bypasses RLS in iframe)
-            const res = await fetch("/api/shopify-status", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: activeUser.id }),
-            });
-            const data = await res.json();
+            // After signInWithPassword, Supabase client has the session token.
+            // RLS allows users to read their own profile → works correctly.
+            const [
+                { data: profileData },
+                { count: tryOns },
+                { count: products },
+                { data: logsData }
+            ] = await Promise.all([
+                supabase.from("profiles").select("id, credits, store_website, plan, email").eq("id", activeUser.id).single(),
+                supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id).eq("status", 200),
+                supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id),
+                supabase.from("usage_logs").select("id, status, created_at, latency").eq("user_id", activeUser.id).order("created_at", { ascending: false }).limit(8),
+            ]);
 
-            if (!res.ok) throw new Error(data.error || "Failed to load data");
-
-            setProfile(data.profile);
-            setStats(data.stats);
-            setLogs(data.logs);
+            setProfile(profileData);
+            setStats({ tryOns: tryOns || 0, products: products || 0 });
+            setLogs(logsData || []);
 
             const shop = getShop();
-            const storeSet = data.profile?.store_website;
+            const storeSet = profileData?.store_website;
             if (!storeSet && shop) {
                 setView("not_connected");
             } else {
@@ -103,6 +107,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
         setConnectingStore(true);
         setConnectError(null);
         try {
+            // Use server API to bypass RLS on update (only for the write, not reads)
             const res = await fetch("/api/shopify-connect", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -110,20 +115,15 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Connection failed");
-            // ✅ Connect succeeded — now re-fetch full profile to get real credits
-            const statusRes = await fetch("/api/shopify-status", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.id }),
-            });
-            const statusData = await statusRes.json();
-            if (statusRes.ok && statusData.profile) {
-                setProfile(statusData.profile);
-                setStats(statusData.stats);
-                setLogs(statusData.logs);
-            } else {
-                setProfile((prev: any) => ({ ...prev, store_website: shop }));
-            }
+
+            // Re-fetch profile with the authenticated client to get real credits
+            const { data: freshProfile } = await supabase
+                .from("profiles")
+                .select("id, credits, store_website, plan, email")
+                .eq("id", user.id)
+                .single();
+
+            setProfile(freshProfile || { ...profile, store_website: shop });
             setShopDomain(shop);
             setView("dashboard");
         } catch (e: any) {
