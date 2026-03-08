@@ -11,12 +11,12 @@ import {
     Loader2,
     Plus,
     AlertTriangle,
-    CheckCircle,
     ChevronRight,
     Activity,
     RefreshCw,
     Clock,
     Package,
+    CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n-config";
@@ -34,16 +34,13 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
     const [connectError, setConnectError] = useState<string | null>(null);
     const [loadingLogs, setLoadingLogs] = useState(false);
 
-    // Detect Shopify shop param on mount
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const params = new URLSearchParams(window.location.search);
-            const shop = params.get("shop");
-            if (shop) setShopDomain(shop);
-        }
-    }, []);
+    function getShop(): string | null {
+        if (typeof window === "undefined") return null;
+        return new URLSearchParams(window.location.search).get("shop");
+    }
 
     const loadData = async () => {
+        setView("loading");
         try {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (!authUser) { setView("not_logged_in"); return; }
@@ -56,14 +53,14 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 .single();
             setProfile(profileData);
 
-            // Stats
+            const shop = getShop();
+
             const [{ count: tryOns }, { count: products }] = await Promise.all([
                 supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", authUser.id).eq("status", 200),
                 supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", authUser.id),
             ]);
             setStats({ tryOns: tryOns || 0, products: products || 0 });
 
-            // Recent logs
             setLoadingLogs(true);
             const { data: logsData } = await supabase
                 .from("usage_logs")
@@ -74,24 +71,36 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             setLogs(logsData || []);
             setLoadingLogs(false);
 
-            // Decide view
-            const shop = shopDomain || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("shop") : null);
             const storeSet = profileData?.store_website;
             const isLinked = storeSet && shop && (storeSet === shop || storeSet.includes(shop) || shop.includes(storeSet));
-            setView(isLinked ? "dashboard" : "not_connected");
+            setView(isLinked || (!shop && storeSet) ? "dashboard" : shop ? "not_connected" : "dashboard");
         } catch (e) {
             console.error("Load error:", e);
             setView("not_logged_in");
         }
     };
 
+    // Auto-detect auth changes (when user logs in from new tab)
     useEffect(() => {
+        const shop = getShop();
+        if (shop) setShopDomain(shop);
         loadData();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN" && session) {
+                loadData();
+            } else if (event === "SIGNED_OUT") {
+                setView("not_logged_in");
+                setUser(null);
+                setProfile(null);
+            }
+        });
+        return () => subscription.unsubscribe();
     }, []);
 
     const handleConnectStore = async () => {
         if (!user) return;
-        const shop = shopDomain || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("shop") : null);
+        const shop = getShop();
         if (!shop) { setConnectError("Could not detect your store domain. Please re-open the app from Shopify."); return; }
         setConnectingStore(true);
         setConnectError(null);
@@ -99,258 +108,241 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             await supabase.from("profiles").update({ store_website: null }).eq("store_website", shop);
             const { error } = await supabase.from("profiles").update({ store_website: shop }).eq("id", user.id);
             if (error) throw error;
-            await loadData(); // reload → switches to dashboard view
+            await loadData();
         } catch (e: any) {
             setConnectError(e.message || "Failed to connect. Please try again.");
-        } finally {
             setConnectingStore(false);
         }
     };
 
     const credits = profile?.credits ?? 0;
-    const creditVariant = credits === 0 ? "red" : credits < 10 ? "yellow" : "green";
-    const creditColors = {
-        red: "text-red-400 bg-red-400/10 border-red-400/20",
-        yellow: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-        green: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
-    }[creditVariant];
 
-    const searchParam = typeof window !== "undefined" ? window.location.search : "";
-
-    // ── LOADING ─────────────────────────────────────────────────────────────────
-    if (view === "loading") {
-        return (
-            <div className="min-h-screen bg-[#0c0c0c] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+    // ─── LOADING ───────────────────────────────────────────────────────────────
+    if (view === "loading") return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#5c6ac4] flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
                 </div>
+                <div className="w-5 h-5 border-2 border-[#5c6ac4] border-t-transparent rounded-full animate-spin" />
             </div>
-        );
-    }
+        </div>
+    );
 
-    // ── WRAPPER ─────────────────────────────────────────────────────────────────
+    const shopSearch = typeof window !== "undefined" ? window.location.search : "";
+
+    // ─── SHARED WRAPPER ────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-[#0c0c0c] text-white flex flex-col">
-            {/* Header */}
-            <header className="border-b border-white/8 bg-[#111]/80 backdrop-blur px-5 py-3.5 flex items-center justify-between sticky top-0 z-10">
+        <div className="min-h-screen bg-[#f6f6f7] font-sans">
+            {/* Shopify-style top bar */}
+            <header className="bg-white border-b border-[#e1e3e5] px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-md shadow-violet-500/30">
-                        <Zap className="w-4 h-4 text-white" />
+                    <div className="w-7 h-7 rounded-lg bg-[#5c6ac4] flex items-center justify-center">
+                        <Zap className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <span className="font-bold text-white text-sm tracking-wide">DrOutfit</span>
-                    {view === "dashboard" && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-medium">Connected</span>
-                    )}
+                    <span className="font-semibold text-[#202223] text-sm">DrOutfit · AI Try-On</span>
                 </div>
                 {view === "dashboard" && (
                     <Link
-                        href={`https://droutfit.com/${locale}/dashboard${searchParam}`}
+                        href={`https://droutfit.com/${locale}/dashboard${shopSearch}`}
                         target="_blank"
-                        className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-white transition-colors"
+                        className="flex items-center gap-1 text-xs text-[#5c6ac4] hover:text-[#4959bd] transition-colors font-medium"
                     >
-                        Open Full Platform
+                        Open platform
                         <ExternalLink className="w-3 h-3" />
                     </Link>
                 )}
             </header>
 
-            {/* ── NOT LOGGED IN ────────────────────────────────────── */}
+            {/* ── NOT LOGGED IN ──────────────────────────────────── */}
             {view === "not_logged_in" && (
-                <div className="flex-1 flex flex-col items-center justify-center px-6 text-center py-16">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center mb-6 shadow-xl shadow-violet-500/25">
-                        <Zap className="w-8 h-8 text-white" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Welcome to DrOutfit</h1>
-                    <p className="text-gray-400 text-sm mb-8 max-w-xs leading-relaxed">
-                        Log into your DrOutfit account to connect your Shopify store and manage your AI Try-On widget.
-                    </p>
-                    <Link
-                        href={`https://droutfit.com/${locale}/login`}
-                        target="_blank"
-                        className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-violet-500/25 mb-3"
-                    >
-                        <LogIn className="w-4 h-4" />
-                        Sign into DrOutfit
-                        <ExternalLink className="w-3.5 h-3.5 opacity-60" />
-                    </Link>
-                    <p className="text-gray-600 text-xs">
-                        No account?{" "}
-                        <Link href={`https://droutfit.com/${locale}/signup`} target="_blank" className="text-violet-400 hover:underline">
-                            Create one free
+                <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 text-center">
+                    <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-8 max-w-sm w-full">
+                        <div className="w-14 h-14 rounded-2xl bg-[#5c6ac4] flex items-center justify-center mx-auto mb-5">
+                            <Zap className="w-7 h-7 text-white" />
+                        </div>
+                        <h1 className="text-xl font-bold text-[#202223] mb-2">Connect DrOutfit</h1>
+                        <p className="text-[#6d7175] text-sm mb-6 leading-relaxed">
+                            Sign into your DrOutfit account to activate the AI Virtual Try-On widget on your store.
+                        </p>
+                        <Link
+                            href={`https://droutfit.com/${locale}/login`}
+                            target="_blank"
+                            className="flex items-center justify-center gap-2 w-full bg-[#5c6ac4] hover:bg-[#4959bd] text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors mb-3"
+                        >
+                            <LogIn className="w-4 h-4" />
+                            Sign into DrOutfit
+                            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
                         </Link>
-                    </p>
-                    <button onClick={loadData} className="mt-8 text-xs text-gray-600 hover:text-gray-400 flex items-center gap-1.5 transition-colors">
-                        <RefreshCw className="w-3 h-3" />
-                        I already signed in — refresh
-                    </button>
+                        <button
+                            onClick={loadData}
+                            className="flex items-center justify-center gap-1.5 w-full text-sm text-[#6d7175] hover:text-[#202223] py-2 transition-colors"
+                        >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            I already signed in — refresh
+                        </button>
+                        <p className="text-[#8c9196] text-xs mt-3">
+                            No account?{" "}
+                            <Link href={`https://droutfit.com/${locale}/signup`} target="_blank" className="text-[#5c6ac4] hover:underline">
+                                Create one free
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             )}
 
-            {/* ── NOT CONNECTED ─────────────────────────────────────── */}
+            {/* ── NOT CONNECTED ──────────────────────────────────── */}
             {view === "not_connected" && (
-                <div className="flex-1 flex flex-col items-center justify-center px-6 text-center py-12">
-                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
-                        <XCircle className="w-7 h-7 text-amber-400" />
-                    </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Connect Your Store</h2>
-                    <p className="text-gray-400 text-sm max-w-xs mb-2 leading-relaxed">
-                        Link <strong className="text-white">{shopDomain || "your Shopify store"}</strong> to your DrOutfit account to activate the AI Try-On widget.
-                    </p>
-                    <p className="text-gray-600 text-xs mb-8">
-                        Logged in as <span className="text-gray-400">{profile?.email || user?.email}</span>
-                    </p>
-
-                    {connectError && (
-                        <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl mb-4 max-w-sm">
-                            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                            {connectError}
+                <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 text-center">
+                    <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-8 max-w-sm w-full">
+                        <div className="w-14 h-14 rounded-xl bg-[#fff3cd] border border-[#ffd79d] flex items-center justify-center mx-auto mb-5">
+                            <XCircle className="w-7 h-7 text-[#916a00]" />
                         </div>
-                    )}
+                        <h2 className="text-lg font-bold text-[#202223] mb-1">Link your Shopify store</h2>
+                        <p className="text-[#6d7175] text-sm mb-1">
+                            Connect <strong className="text-[#202223]">{shopDomain || "your store"}</strong> to your DrOutfit account.
+                        </p>
+                        <p className="text-[#8c9196] text-xs mb-6">Signed in as {profile?.email || user?.email}</p>
 
-                    <button
-                        onClick={handleConnectStore}
-                        disabled={connectingStore}
-                        className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white px-7 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-violet-500/25 mb-3"
-                    >
-                        {connectingStore ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        {connectingStore ? "Connecting…" : "Connect This Store"}
-                    </button>
-                    <p className="text-gray-600 text-xs">This will link your store to your DrOutfit account</p>
-                    <p className="text-gray-700 text-xs mt-6">
-                        Wrong account?{" "}
-                        <Link href={`https://droutfit.com/${locale}/login`} target="_blank" className="text-violet-400 hover:underline">
-                            Sign in with another account
-                            <ExternalLink className="inline w-2.5 h-2.5 ml-0.5 opacity-70" />
+                        {connectError && (
+                            <div className="flex items-start gap-2 bg-[#fff3cd] border border-[#ffd79d] text-[#916a00] text-sm px-3 py-2.5 rounded-lg mb-4 text-left">
+                                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                {connectError}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleConnectStore}
+                            disabled={connectingStore}
+                            className="flex items-center justify-center gap-2 w-full bg-[#008060] hover:bg-[#006e52] disabled:opacity-60 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors mb-3"
+                        >
+                            {connectingStore ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            {connectingStore ? "Connecting…" : "Connect this store"}
+                        </button>
+
+                        <Link
+                            href={`https://droutfit.com/${locale}/login`}
+                            target="_blank"
+                            className="text-xs text-[#8c9196] hover:text-[#5c6ac4] transition-colors"
+                        >
+                            Sign in with a different account
                         </Link>
-                    </p>
+                    </div>
                 </div>
             )}
 
-            {/* ── DASHBOARD ─────────────────────────────────────────── */}
+            {/* ── DASHBOARD ──────────────────────────────────────── */}
             {view === "dashboard" && (
-                <div className="flex-1 p-5 space-y-4 max-w-2xl w-full mx-auto">
+                <div className="max-w-2xl mx-auto p-5 space-y-4">
 
-                    {/* Store banner */}
-                    <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl px-4 py-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    {/* Connected store banner */}
+                    <div className="bg-[#e3f1df] border border-[#a8d5a2] rounded-xl px-4 py-3 flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-[#008060] flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                            <p className="text-emerald-300 font-medium text-sm">Store Connected</p>
-                            <p className="text-emerald-600 text-xs truncate">{profile?.store_website}</p>
+                            <p className="text-[#003321] font-medium text-sm">Store connected</p>
+                            <p className="text-[#00693e] text-xs truncate">{profile?.store_website}</p>
                         </div>
-                        <button onClick={loadData} className="text-gray-600 hover:text-gray-300 transition-colors">
+                        <button onClick={loadData} className="text-[#00693e] hover:text-[#003321] transition-colors" title="Refresh">
                             <RefreshCw className="w-4 h-4" />
                         </button>
                     </div>
 
-                    {/* Credits + Stats */}
+                    {/* Stats */}
                     <div className="grid grid-cols-3 gap-3">
-                        <div className={`rounded-2xl border ${creditColors} p-4 flex flex-col`}>
-                            <span className="text-[11px] uppercase tracking-wide opacity-60 mb-1.5">Credits Left</span>
-                            <span className="text-3xl font-black">{credits}</span>
-                            <span className="text-[11px] opacity-50 mt-1">try-ons</span>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/4 p-4 flex flex-col">
-                            <span className="text-[11px] uppercase tracking-wide text-gray-500 mb-1.5">Total Try-Ons</span>
-                            <span className="text-3xl font-black text-white">{stats?.tryOns ?? "—"}</span>
-                            <span className="text-[11px] text-gray-600 mt-1">all time</span>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/4 p-4 flex flex-col">
-                            <span className="text-[11px] uppercase tracking-wide text-gray-500 mb-1.5">Products</span>
-                            <span className="text-3xl font-black text-white">{stats?.products ?? "—"}</span>
-                            <span className="text-[11px] text-gray-600 mt-1">with widget</span>
-                        </div>
+                        {[
+                            {
+                                label: "Credits left",
+                                value: credits,
+                                color: credits === 0 ? "text-[#d72c0d]" : credits < 10 ? "text-[#916a00]" : "text-[#008060]",
+                                bg: credits === 0 ? "bg-[#fff3f2] border-[#feb8b2]" : credits < 10 ? "bg-[#fff3cd] border-[#ffd79d]" : "bg-[#e3f1df] border-[#a8d5a2]",
+                            },
+                            { label: "Total try-ons", value: stats?.tryOns ?? "—", color: "text-[#202223]", bg: "bg-white border-[#e1e3e5]" },
+                            { label: "Products", value: stats?.products ?? "—", color: "text-[#202223]", bg: "bg-white border-[#e1e3e5]" },
+                        ].map(({ label, value, color, bg }) => (
+                            <div key={label} className={`rounded-xl border ${bg} p-4`}>
+                                <p className="text-[11px] text-[#6d7175] uppercase tracking-wide mb-1.5">{label}</p>
+                                <p className={`text-3xl font-bold ${color}`}>{value}</p>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Low credits warning */}
                     {credits < 10 && (
-                        <div className="flex items-center gap-3 bg-yellow-500/8 border border-yellow-500/20 rounded-2xl px-4 py-3">
-                            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                        <div className="bg-[#fff3cd] border border-[#ffd79d] rounded-xl px-4 py-3 flex items-center gap-3">
+                            <AlertTriangle className="w-5 h-5 text-[#916a00] flex-shrink-0" />
                             <div className="flex-1">
-                                <p className="text-yellow-300 text-sm font-medium">
-                                    {credits === 0 ? "No credits — widget disabled!" : `Only ${credits} credits left`}
+                                <p className="text-[#4a2c00] text-sm font-medium">
+                                    {credits === 0 ? "Out of credits — widget is paused" : `Only ${credits} credits remaining`}
                                 </p>
-                                <p className="text-yellow-700 text-xs">Top up to keep Try-On running</p>
+                                <p className="text-[#916a00] text-xs">Top up to keep the AI Try-On active</p>
                             </div>
                         </div>
                     )}
 
-                    {/* Action buttons */}
+                    {/* Actions */}
                     <div className="grid grid-cols-2 gap-3">
                         <Link
                             href={`https://droutfit.com/${locale}/dashboard/billing`}
                             target="_blank"
-                            className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all shadow-lg shadow-violet-500/20"
+                            className="flex items-center justify-center gap-2 bg-[#5c6ac4] hover:bg-[#4959bd] text-white px-4 py-3 rounded-xl font-medium text-sm transition-colors"
                         >
                             <Zap className="w-4 h-4" />
-                            Top Up Credits
+                            Top up credits
                         </Link>
                         <Link
                             href={`https://droutfit.com/${locale}/dashboard/products`}
                             target="_blank"
-                            className="flex items-center justify-center gap-2 border border-white/12 hover:bg-white/5 text-white px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all"
+                            className="flex items-center justify-center gap-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] px-4 py-3 rounded-xl font-medium text-sm transition-colors"
                         >
                             <Package className="w-4 h-4" />
-                            Products
+                            View products
                             <ExternalLink className="w-3 h-3 opacity-40" />
                         </Link>
                     </div>
 
-                    {/* Recent Request Logs */}
-                    <div className="rounded-2xl border border-white/10 bg-white/3 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+                    {/* Request log */}
+                    <div className="bg-white rounded-xl border border-[#e1e3e5] overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#e1e3e5]">
                             <div className="flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-violet-400" />
-                                <span className="text-sm font-semibold text-white">Recent Requests</span>
+                                <Activity className="w-4 h-4 text-[#5c6ac4]" />
+                                <span className="text-sm font-semibold text-[#202223]">Recent Requests</span>
                             </div>
                             <Link
                                 href={`https://droutfit.com/${locale}/dashboard/logs`}
                                 target="_blank"
-                                className="text-xs text-gray-500 hover:text-violet-400 transition-colors flex items-center gap-1"
+                                className="flex items-center gap-0.5 text-xs text-[#5c6ac4] hover:text-[#4959bd] transition-colors font-medium"
                             >
-                                All logs
+                                View all
                                 <ChevronRight className="w-3 h-3" />
                             </Link>
                         </div>
 
                         {loadingLogs ? (
                             <div className="py-8 flex justify-center">
-                                <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
+                                <Loader2 className="w-5 h-5 text-[#8c9196] animate-spin" />
                             </div>
                         ) : logs.length === 0 ? (
                             <div className="py-8 text-center">
-                                <Clock className="w-6 h-6 text-gray-700 mx-auto mb-2" />
-                                <p className="text-gray-600 text-sm">No requests yet</p>
-                                <p className="text-gray-700 text-xs">Try-Ons will appear here once your widget is active</p>
+                                <Clock className="w-6 h-6 text-[#c9cccf] mx-auto mb-2" />
+                                <p className="text-[#6d7175] text-sm">No requests yet</p>
+                                <p className="text-[#8c9196] text-xs mt-0.5">Try-ons will appear here once your widget gets traffic</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-white/5">
+                            <div className="divide-y divide-[#f6f6f7]">
                                 {logs.map((log, i) => {
-                                    const isSuccess = log.status === 200;
-                                    const date = new Date(log.created_at);
-                                    const timeAgo = formatTimeAgo(date);
+                                    const ok = log.status === 200;
                                     return (
                                         <div key={log.id || i} className="flex items-center gap-3 px-4 py-2.5">
-                                            {isSuccess ? (
-                                                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                                            ) : (
-                                                <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                                            )}
+                                            {ok
+                                                ? <CheckCircle className="w-4 h-4 text-[#008060] flex-shrink-0" />
+                                                : <XCircle className="w-4 h-4 text-[#d72c0d] flex-shrink-0" />
+                                            }
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-xs font-medium ${isSuccess ? "text-emerald-400" : "text-red-400"}`}>
-                                                        {log.status}
-                                                    </span>
-                                                    {log.latency && (
-                                                        <span className="text-gray-600 text-[10px]">{log.latency}</span>
-                                                    )}
-                                                </div>
-                                                <span className="text-[10px] text-gray-600">{timeAgo}</span>
+                                                <p className="text-[13px] text-[#202223] font-medium">{ok ? "Try-On generated" : "Request failed"}</p>
+                                                <p className="text-xs text-[#8c9196]">{formatTimeAgo(new Date(log.created_at))}{log.latency ? ` · ${log.latency}` : ""}</p>
                                             </div>
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${isSuccess ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"}`}>
-                                                {isSuccess ? "Success" : "Failed"}
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ok ? "bg-[#e3f1df] text-[#008060]" : "bg-[#fff3f2] text-[#d72c0d]"}`}>
+                                                {ok ? "Success" : "Failed"}
                                             </span>
                                         </div>
                                     );
@@ -360,17 +352,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between text-[11px] text-gray-700 pb-2">
-                        <span>{user?.email}</span>
-                        <Link
-                            href={`https://droutfit.com/${locale}/dashboard`}
-                            target="_blank"
-                            className="hover:text-gray-400 transition-colors flex items-center gap-1"
-                        >
-                            Full Dashboard
-                            <ExternalLink className="w-3 h-3" />
-                        </Link>
-                    </div>
+                    <p className="text-center text-xs text-[#8c9196] pb-2">{user?.email}</p>
                 </div>
             )}
         </div>
