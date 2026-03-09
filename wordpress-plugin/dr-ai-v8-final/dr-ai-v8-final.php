@@ -2,8 +2,8 @@
 /**
  * Plugin Name: DrOutfit Ultra-Safe v8
  * Plugin URI: https://droutfit.com
- * Description: AI Virtual Try-On (V8.4 Dashboard Fix)
- * Version: 8.4.0
+ * Description: AI Virtual Try-On (V8.4.1 Stable)
+ * Version: 8.4.1
  * Author: DrOutfit
  * Text Domain: dr-ai-v8-final
  */
@@ -118,6 +118,9 @@ class DrOutfit_AI_v8 {
                         <p><label style="display:block; margin-bottom:5px;">Password</label><input name="password" type="password" class="regular-text" required style="width:100%"></p>
                         <p style="margin-top:20px;"><button type="submit" name="droutfit_login" value="1" class="button button-primary button-large" style="width:100%; height:45px;">Login & Connect</button></p>
                     </form>
+                    <p style="margin-top: 20px; text-align: center; color: #646970; font-size: 13px;">
+                        Don't have an account? <a href="https://droutfit.com/en/signup" target="_blank" style="color: #2271b1; text-decoration: none; font-weight: 600;">Create one for free</a>
+                    </p>
                 </div>
             <?php else: ?>
                 <div style="display: grid; grid-template-columns: 300px 1fr; gap: 20px;">
