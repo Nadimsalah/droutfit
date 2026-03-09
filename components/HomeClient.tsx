@@ -225,76 +225,88 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
 
             {/* Integrations Section */}
             <section id="shopify" className="py-24 px-6 relative overflow-hidden">
-                <div className="max-w-5xl mx-auto">
-                    <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden group shadow-2xl">
-                        {/* Background Glow */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors duration-700" />
+                <div className="max-w-7xl mx-auto space-y-12">
+                    <div className="text-center space-y-4 mb-12">
+                        <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                            Integrate with Your <span className="text-blue-400">Fav Platform</span>
+                        </h2>
+                        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                            Choose your store platform and get started in minutes. DrOutfit works seamlessly with the world's leading e-commerce engines.
+                        </p>
+                    </div>
 
-                        <div className="flex-1 space-y-6 text-center md:text-start relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">
-                                <ShoppingBag className="h-3 w-3" />
-                                Shopify Merchant? & WordPress
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Shopify Card */}
+                        <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/10 transition-colors" />
+
+                            <div className="space-y-6">
+                                <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
+                                        alt="Shopify"
+                                        className="h-8 w-auto object-contain"
+                                        style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
+                                    />
+                                    <span className="text-xl font-black text-white">Shopify</span>
+                                </div>
+                                <h3 className="text-2xl md:text-3xl font-black text-white">Shopify Merchant?</h3>
+                                <p className="text-gray-400 text-lg leading-relaxed">
+                                    Connect DrOutfit to your store in just a few clicks. It's easy, fast, and built to scale with your brand.
+                                </p>
                             </div>
-                            <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">
-                                Shopify & WordPress Ready
-                            </h2>
-                            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-                                Are you using Shopify? Connect DrOutfit to your store in just a few clicks. It's easy, fast, and built to scale with your brand. Now including a dedicated, ultra-stable plugin for WooCommerce.
-                            </p>
-                            <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <Link
-                                    href={`/${locale}/dashboard`}
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all shadow-xl shadow-white/5"
-                                >
-                                    Start Shopify Integration
-                                    <ArrowRight className={cn("h-5 w-5", locale === 'ar' && "rotate-180")} />
-                                </Link>
-                                <a
-                                    href="/plugins/dr-ai-v8-4-1-signup.zip"
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-4 px-8 py-4 bg-blue-600/10 text-blue-400 border border-blue-500/30 rounded-full font-black text-lg hover:bg-blue-600/20 transition-all group"
-                                    download
-                                >
-                                    <Smartphone className="h-5 w-5" />
-                                    Download Plugin
-                                </a>
-                            </div>
+
+                            <Link
+                                href={`/${locale}/dashboard`}
+                                className="mt-10 inline-flex items-center justify-center gap-3 px-8 py-5 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all shadow-xl shadow-white/5 group"
+                            >
+                                Start Shopify Integration
+                                <ArrowRight className={cn("h-5 w-5 transition-transform group-hover:translate-x-1", locale === 'ar' && "rotate-180")} />
+                            </Link>
                         </div>
 
-                        <div className="flex-1 flex flex-col items-center gap-8 relative z-10">
-                            <div className="flex flex-col items-center gap-6">
-                                {/* Shopify Logo Container */}
-                                <div className="relative group/logo w-full flex justify-center">
-                                    <div className="absolute inset-0 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 scale-110 group-hover/logo:scale-115 transition-transform duration-700" />
-                                    <div className="bg-white/5 border border-white/10 px-10 py-6 rounded-2xl shadow-2xl relative z-10 backdrop-blur-md flex items-center justify-center gap-4">
-                                        <img
-                                            src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
-                                            alt="Shopify"
-                                            className="h-10 md:h-12 w-auto object-contain"
-                                            style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
-                                        />
-                                        <span className="text-2xl font-black text-white hidden md:block">Shopify</span>
-                                    </div>
-                                </div>
+                        {/* WordPress Card */}
+                        <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors" />
 
-                                <span className="text-3xl font-black text-white/20">X</span>
-
-                                {/* WordPress Logo Container */}
-                                <div className="relative group/logo w-full flex justify-center">
-                                    <div className="absolute inset-0 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 scale-110 group-hover/logo:scale-115 transition-transform duration-700" />
-                                    <div className="bg-white/5 border border-white/10 px-10 py-6 rounded-2xl shadow-2xl relative z-10 backdrop-blur-md flex items-center justify-center gap-4">
-                                        <img
-                                            src="https://upload.wikimedia.org/wikipedia/commons/9/93/Wordpress_Blue_logo.png"
-                                            alt="WordPress"
-                                            className="h-10 md:h-12 w-auto object-contain"
-                                        />
-                                        <span className="text-2xl font-black text-white hidden md:block">WordPress</span>
-                                    </div>
+                            <div className="space-y-6">
+                                <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/9/93/Wordpress_Blue_logo.png"
+                                        alt="WordPress"
+                                        className="h-8 w-auto object-contain"
+                                    />
+                                    <span className="text-xl font-black text-white">WordPress</span>
                                 </div>
+                                <h3 className="text-2xl md:text-3xl font-black text-white">WooCommerce Ready</h3>
+                                <p className="text-gray-400 text-lg leading-relaxed">
+                                    Using WordPress? Download our dedicated, ultra-stable plugin for WooCommerce and go live instantly.
+                                </p>
                             </div>
-                            <div className="px-6 py-2.5 bg-blue-500/10 rounded-full border border-blue-500/30 text-xs font-black text-blue-400 uppercase tracking-widest animate-pulse">
-                                🚀 Stable v8.4.1 Plugin
-                            </div>
+
+                            <a
+                                href="/plugins/dr-ai-v8-4-1-signup.zip"
+                                className="mt-10 inline-flex items-center justify-center gap-3 px-8 py-5 bg-blue-600 text-white rounded-full font-black text-lg hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 group"
+                                download
+                            >
+                                <Smartphone className="h-5 w-5" />
+                                Download Plugin
+                            </a>
                         </div>
+                    </div>
+
+                    {/* Centered Signup Button */}
+                    <div className="flex flex-col items-center pt-8">
+                        <Link
+                            href={`/${locale}/signup`}
+                            className="px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-black text-xl transition-all shadow-2xl shadow-blue-500/20 hover:scale-105 flex items-center gap-3 group"
+                        >
+                            Sign up Free
+                            <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "rotate-180" : "group-hover:translate-x-1")} />
+                        </Link>
+                        <p className="mt-4 text-gray-500 text-sm font-black uppercase tracking-widest">
+                            No credit card required
+                        </p>
                     </div>
                 </div>
             </section>
