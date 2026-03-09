@@ -39,26 +39,35 @@ function WPConnectContent({ dict, locale }: { dict: any; locale: Locale }) {
     }, [site]);
 
     const handleConnect = async () => {
-        if (!user || !site) return;
+        if (!user || (!site && !searchParams.get('embed'))) return;
         setLinking(true);
         setError(null);
 
         try {
-            // 1. Link to current profile
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                    store_website: site,
-                    store_name: new URL(site).hostname
-                })
-                .eq('id', user.id);
+            // 1. Link to current profile (if site is provided, else just return the ID)
+            if (site) {
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                        store_website: site,
+                        store_name: new URL(site).hostname
+                    })
+                    .eq('id', user.id);
 
-            if (updateError) throw updateError;
+                if (updateError) throw updateError;
+            }
 
-            // 2. Redirect back to WordPress with a success token (user ID in this simple case)
-            if (typeof window !== 'undefined') {
+            // 2. Communicate back to the WordPress Iframe Parent
+            if (typeof window !== 'undefined' && window.parent !== window) {
+                // We are inside an iframe (WordPress)
+                window.parent.postMessage({
+                    type: 'droutfit_connected',
+                    merchantId: user.id
+                }, '*'); // In production, replace '*' with the actual WP domain if possible, but '*' works for all clients
+            } else if (site) {
+                // Fallback for direct browser access (non-iframe)
                 const redirectUrl = new URL('/wp-admin/options-general.php', site);
-                redirectUrl.searchParams.set('page', 'droutfit-tryon');
+                redirectUrl.searchParams.set('page', 'droutfit-pro');
                 redirectUrl.searchParams.set('connected', 'true');
                 redirectUrl.searchParams.set('merchant_id', user.id);
 

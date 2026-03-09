@@ -53,9 +53,16 @@ export default function LoginClient({ dict, locale }: { dict: any, locale: strin
 
                     if (createError) {
                         router.push(`/${locale}/onboarding`)
-                    } else {
-                        router.push(`/${locale}/dashboard`)
+                        return;
                     }
+                }
+
+                // If embedded, notify parent window instead of redirecting
+                if (typeof window !== 'undefined' && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'droutfit_connected',
+                        merchantId: user.id
+                    }, '*');
                 } else {
                     router.push(`/${locale}/dashboard`)
                 }

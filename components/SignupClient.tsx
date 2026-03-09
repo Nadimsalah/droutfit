@@ -90,7 +90,16 @@ export default function SignupClient({ dict, locale }: { dict: any, locale: stri
             })
 
             if (signInError) throw signInError
-            router.push(`/${locale}/onboarding`)
+
+            // If embedded, notify parent window instead of redirecting
+            if (typeof window !== 'undefined' && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'droutfit_connected',
+                    merchantId: (await supabase.auth.getUser()).data.user?.id
+                }, '*');
+            } else {
+                router.push(`/${locale}/onboarding`)
+            }
 
         } catch (err: any) {
             setError(err.message || dict.auth.errorSignup || "Signup failed")

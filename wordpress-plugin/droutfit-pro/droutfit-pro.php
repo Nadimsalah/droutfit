@@ -36,9 +36,22 @@ class DrOutfit_Pro {
     public function settings_init() {
         register_setting('droutfit_settings', 'droutfit_merchant_id');
 
-        // Handle the redirect from Next.js
-        if (isset($_GET['connected']) && $_GET['connected'] === 'true' && isset($_GET['merchant_id'])) {
-            update_option('droutfit_merchant_id', sanitize_text_field($_GET['merchant_id']));
+        // Handle the redirect/form submission to save the merchant ID
+        if (isset($_POST['droutfit_merchant_id']) && !empty($_POST['droutfit_merchant_id'])) {
+            update_option('droutfit_merchant_id', sanitize_text_field($_POST['droutfit_merchant_id']));
+            
+            // Redirect back to avoid form resubmission warning on refresh
+            if (!isset($_POST['disconnect'])) {
+                 wp_redirect(admin_url('options-general.php?page=droutfit-pro'));
+                 exit;
+            }
+        }
+        
+        // Handle disconnect
+        if (isset($_POST['disconnect'])) {
+            delete_option('droutfit_merchant_id');
+            wp_redirect(admin_url('options-general.php?page=droutfit-pro'));
+            exit;
         }
     }
 
@@ -46,45 +59,55 @@ class DrOutfit_Pro {
         $merchant_id = get_option('droutfit_merchant_id');
         $engine_url = 'https://droutfit.com';
         $site_url = get_site_url();
-        $connect_url = rtrim($engine_url, '/') . "/dashboard/wordpress/connect?site=" . urlencode($site_url);
+        $iframe_url = $merchant_id 
+            ? rtrim($engine_url, '/') . "/dashboard?shop=" . urlencode($site_url) . "&embed=1"
+            : rtrim($engine_url, '/') . "/en/login?redirect=/dashboard/wordpress/connect?site=" . urlencode($site_url) . "&embed=1";
         ?>
-        <div class="wrap" style="max-width: <?php echo $merchant_id ? '100%' : '800px'; ?>; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+        <div class="wrap" style="max-width: 100%; margin: 20px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
             
-            <?php if ($merchant_id): ?>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="width: 40px; height: 40px; background: #2563eb; border-radius: 10px; display: flex; items-center: center; justify-content: center; color: white; font-weight: bold; font-size: 20px;">Dr</div>
-                        <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b;">DrOutfit Dashboard</h1>
-                    </div>
-                    <form method="post" action="options.php">
-                        <?php settings_fields('droutfit_settings'); ?>
-                        <input type="hidden" name="droutfit_merchant_id" value="">
-                        <?php submit_button('Disconnect', 'secondary', 'submit', false, ['style' => 'border-radius: 8px; color: #ef4444; border-color: #fca5a5; background: #fef2f2;']); ?>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 40px; height: 40px; background: #2563eb; border-radius: 10px; display: flex; items-center: center; justify-content: center; color: white; font-weight: bold; font-size: 20px;">Dr</div>
+                    <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b;">DrOutfit Dashboard</h1>
+                </div>
+                <?php if ($merchant_id): ?>
+                    <form method="post" action="">
+                        <input type="hidden" name="disconnect" value="true">
+                        <?php submit_button('Disconnect Store', 'secondary', 'submit', false, ['style' => 'border-radius: 8px; color: #ef4444; border-color: #fca5a5; background: #fef2f2;']); ?>
                     </form>
-                </div>
-                <!-- Embed the Next.js Dashboard -->
-                <iframe src="<?php echo esc_url($engine_url); ?>/dashboard?shop=<?php echo urlencode($site_url); ?>&embed=1" width="100%" height="850px" style="border:none; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); background: #0a0d14;"></iframe>
-            <?php else: ?>
-                <div style="background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 40px; border: 1px solid #e2e8f0;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
-                        <div style="width: 48px; height: 48px; background: #2563eb; border-radius: 12px; display: flex; items-center: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">Dr</div>
-                        <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b;">DrOutfit Virtual Try-On</h1>
-                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <!-- Hidden form to save the merchant ID when received from the iframe -->
+            <form id="droutfit-connect-form" method="post" action="" style="display: none;">
+                <input type="hidden" name="droutfit_merchant_id" id="droutfit_merchant_id_input" value="">
+                <?php submit_button(); ?>
+            </form>
 
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; margin-bottom: 30px; text-align: center;">
-                        <h2 style="margin: 0 0 10px 0; color: #334155; font-size: 18px; font-weight: 700;">Ready to revolutionize your store?</h2>
-                        <p style="color: #64748b; font-size: 15px; margin-bottom: 25px;">Connect your DrOutfit account to enable AI Virtual Try-On for your products.</p>
-                        <a href="<?php echo esc_url($connect_url); ?>" 
-                           style="display: inline-flex; align-items: center; gap: 10px; background: #2563eb; color: white; padding: 14px 30px; border-radius: 12px; text-decoration: none; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);"
-                           onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-2px)';"
-                           onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)';"
-                        >
-                            Login or Create Account
-                        </a>
+            <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); background: #0a0d14; height: 850px; position: relative;">
+                <?php if (!$merchant_id): ?>
+                    <div id="droutfit-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: #0a0d14; color: white; z-index: 10;">
+                        Wait, loading DrOutfit...
                     </div>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+                
+                <iframe id="droutfit-iframe" src="<?php echo esc_url($iframe_url); ?>" width="100%" height="100%" style="border:none;" onload="document.getElementById('droutfit-loading')?.style.setProperty('display', 'none')"></iframe>
+            </div>
         </div>
+
+        <script>
+            window.addEventListener('message', function(event) {
+                // Verify the origin for security
+                if (event.origin !== "<?php echo rtrim($engine_url, '/'); ?>") return;
+
+                const data = event.data;
+                if (data && data.type === 'droutfit_connected' && data.merchantId) {
+                    // Update the hidden input and submit the form to save it to WordPress db
+                    document.getElementById('droutfit_merchant_id_input').value = data.merchantId;
+                    document.getElementById('droutfit-connect-form').submit();
+                }
+            });
+        </script>
         <?php
     }
 
