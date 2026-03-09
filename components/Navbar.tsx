@@ -138,7 +138,8 @@ export default function Navbar({ dict, locale }: { dict: any, locale: string }) 
                             { name: dict.navbar.features, id: 'features' },
                             { name: dict.navbar.howItWorks, id: 'how-it-works' },
                             { name: dict.navbar.pricing, id: 'pricing' },
-                            { name: dict.navbar.shopify, id: 'shopify' }
+                            { name: dict.navbar.shopify, id: 'shopify' },
+                            { name: dict.navbar.wordpress, id: 'wordpress' }
                         ].map((item) => (
                             <Link
                                 key={item.id}
@@ -253,7 +254,8 @@ export default function Navbar({ dict, locale }: { dict: any, locale: string }) 
                             { name: dict.navbar.features, id: 'features' },
                             { name: dict.navbar.howItWorks, id: 'how-it-works' },
                             { name: dict.navbar.pricing, id: 'pricing' },
-                            { name: dict.navbar.shopify, id: 'shopify' }
+                            { name: dict.navbar.shopify, id: 'shopify' },
+                            { name: dict.navbar.wordpress, id: 'wordpress' }
                         ].map((item, i) => (
                             <Link
                                 key={item.id}

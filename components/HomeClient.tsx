@@ -276,7 +276,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                         </div>
 
                         {/* WordPress Card */}
-                        <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+                        <div id="wordpress" className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors" />
 
                             <div className="space-y-6">
