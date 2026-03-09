@@ -146,10 +146,12 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
         <div className="min-h-screen bg-[#f6f6f7] font-sans">
             <header className="bg-white border-b border-[#e1e3e5] px-5 py-3 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-[#5c6ac4] flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="font-semibold text-[#202223] text-sm">DrOutfit • AI Try-On</span>
+                    <img
+                        src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
+                        alt="DrOutfit"
+                        className="h-6 w-auto"
+                    />
+                    <span className="font-semibold text-[#202223] text-sm">AI Try-On</span>
                     {view === "dashboard" && (
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#e3f1df] text-[#008060] border border-[#a8d5a2] font-medium">Connected</span>
                     )}
@@ -181,8 +183,12 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
         <Shell>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 py-12">
                 <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-7 w-full max-w-sm">
-                    <div className="w-12 h-12 rounded-2xl bg-[#5c6ac4] flex items-center justify-center mx-auto mb-5">
-                        <Zap className="w-6 h-6 text-white" />
+                    <div className="flex justify-center mb-6">
+                        <img
+                            src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
+                            alt="DrOutfit"
+                            className="h-10 w-auto"
+                        />
                     </div>
                     <h1 className="text-xl font-bold text-[#202223] text-center mb-1">Sign into DrOutfit</h1>
                     <p className="text-[#6d7175] text-sm text-center mb-6">Connect your store to activate AI Virtual Try-On</p>
@@ -221,9 +227,11 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                                     placeholder="••••••••"
                                     autoComplete="current-password"
                                     autoCorrect="off"
-                                    autoCapitalize="none"
+                                    autoCapitalize="off"
                                     spellCheck={false}
-                                    className="w-full border border-[#c9cccf] rounded-lg px-3 py-2.5 pr-10 text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#5c6ac4] focus:ring-1 focus:ring-[#5c6ac4] transition-colors bg-white"
+                                    name="password"
+                                    id="shopify-login-password"
+                                    className="w-full border border-[#c9cccf] rounded-lg px-3 py-2.5 pr-10 text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#5c6ac4] focus:ring-1 focus:ring-[#5c6ac4] transition-colors bg-white appearance-none"
                                 />
                                 <button
                                     type="button"

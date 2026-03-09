@@ -76,7 +76,7 @@ export default function LoginClient({ dict, locale }: { dict: any, locale: strin
             <div className="w-full max-w-md relative z-10">
                 <div className="text-center mb-10">
                     <Link href={`/${locale}`} className="inline-block mb-6 hover:scale-105 transition-transform">
-                        <img src="/logo.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain" />
+                        <img src="/logo-black.png" alt="Droutfit" className="h-16 w-auto mx-auto object-contain" />
                     </Link>
                     <h1 className="text-3xl font-bold text-white tracking-tight mb-2">{dict.auth.loginTitle}</h1>
                     <p className="text-gray-400 text-sm">{dict.auth.loginDesc}</p>
@@ -99,6 +99,10 @@ export default function LoginClient({ dict, locale }: { dict: any, locale: strin
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="email"
+                                    autoCorrect="off"
+                                    autoCapitalize="off"
+                                    spellCheck={false}
                                     className="w-full bg-[#0B0E14] border border-gray-800 text-white text-sm font-medium pl-12 pr-4 py-3.5 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-600"
                                     placeholder="name@company.com"
                                 />
@@ -117,6 +121,10 @@ export default function LoginClient({ dict, locale }: { dict: any, locale: strin
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    autoCorrect="off"
+                                    autoCapitalize="off"
+                                    spellCheck={false}
                                     className="w-full bg-[#0B0E14] border border-gray-800 text-white text-sm font-medium pl-12 pr-4 py-3.5 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-600"
                                     placeholder="••••••••"
                                 />
