@@ -77,15 +77,31 @@ function ShopifyWidgetContent() {
 
         try {
             const publicUserUrl = await uploadImage(userFile)
-            if (true) { // Mocked success as NanoBanana is removed
-                const response = { status: 'success', result_url: publicUserUrl }; // Using user image as mock result
-                clearInterval(progressInterval)
-                setProgress(100)
-                setTimeout(() => {
-                    setResultImage(response.result_url)
-                    setStep("result")
-                }, 800)
+
+            // Call the real AI API
+            const response = await fetch("/api/virtual-try-on", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    imageUrls: [publicUserUrl, productImage],
+                    productId: productId,
+                    shop: shop,
+                    type: "person" // Default type
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Generation failed");
             }
+
+            clearInterval(progressInterval)
+            setProgress(100)
+            setTimeout(() => {
+                setResultImage(data.result_url)
+                setStep("result")
+            }, 800)
         } catch (error) {
             clearInterval(progressInterval)
             const msg = (error as Error).message

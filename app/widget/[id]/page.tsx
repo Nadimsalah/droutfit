@@ -121,20 +121,35 @@ export default function WidgetPage() {
         }, 400)
 
         try {
-            const publicUrl = await uploadImage(userFile)
+            const publicUserUrl = await uploadImage(userFile)
 
-            if (true) { // Mock success as NanoBanana removed
-                if (product?.id) {
-                    setRemainingTries(prev => prev !== null ? Math.max(0, prev - 1) : null)
-                }
+            // Call the real AI API
+            const response = await fetch("/api/virtual-try-on", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    imageUrls: [publicUserUrl, product.image],
+                    productId: product.id,
+                    type: "person"
+                }),
+            });
 
-                clearInterval(progressInterval)
-                setProgress(100)
-                setTimeout(() => {
-                    setResultImage(publicUrl) // Using original image as placeholder
-                    setStep("result")
-                }, 800)
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Generation failed");
             }
+
+            if (product.id) {
+                setRemainingTries(prev => prev !== null ? Math.max(0, prev - 1) : null)
+            }
+
+            clearInterval(progressInterval)
+            setProgress(100)
+            setTimeout(() => {
+                setResultImage(data.result_url)
+                setStep("result")
+            }, 800)
         } catch (error) {
             clearInterval(progressInterval)
             alert("Generation failed: " + (error as Error).message)
