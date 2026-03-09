@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: DrOutfit Ultra-Safe v8
- * Plugin URI: https://droutfit.com
- * Description: AI Virtual Try-On (V8.4.1 Stable)
- * Version: 8.4.1
- * Author: DrOutfit
- * Text Domain: dr-ai-v8-final
+ * Plugin Name:       DrOutfit Virtual Try-On
+ * Plugin URI:        https://droutfit.com
+ * Description:       AI Virtual Try-On (V8.4.1 Stable)
+ * Version:           8.4.1
+ * Author:            DrOutfit
+ * Text Domain:       droutfit-virtual-try-on
+ * License:           GPLv2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if (!defined('ABSPATH')) exit;
@@ -40,9 +42,9 @@ class DrOutfit_AI_v8 {
     }
 
     public function settings_init() {
-        register_setting('droutfit_settings', 'droutfit_merchant_id');
-        register_setting('droutfit_settings', 'droutfit_merchant_email');
-        register_setting('droutfit_settings', 'droutfit_access_token');
+        register_setting('droutfit_settings', 'droutfit_merchant_id', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('droutfit_settings', 'droutfit_merchant_email', ['sanitize_callback' => 'sanitize_email']);
+        register_setting('droutfit_settings', 'droutfit_access_token', ['sanitize_callback' => 'sanitize_text_field']);
 
         if (isset($_POST['droutfit_login']) && check_admin_referer('droutfit_login_action', 'droutfit_login_nonce')) {
             $email = sanitize_email($_POST['email']);
