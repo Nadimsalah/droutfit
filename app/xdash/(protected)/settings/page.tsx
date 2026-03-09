@@ -236,7 +236,7 @@ export default function SettingsPage() {
                                                             try {
                                                                 const { uploadImage } = await import("@/lib/supabase")
                                                                 setSaving(true)
-                                                                const url = await uploadImage(file, 'public')
+                                                                const url = await uploadImage(file, 'public_assets')
                                                                 handleChange('LANDING_DEMO_IMAGE', url)
                                                                 setSaving(false)
                                                             } catch (err) {
