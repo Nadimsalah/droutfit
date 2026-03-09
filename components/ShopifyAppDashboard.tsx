@@ -80,7 +80,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 supabase.from("profiles").select("id, credits, store_website").eq("id", activeUser.id).single(),
                 supabase.from("usage_logs").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id).eq("status", 200),
                 supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", activeUser.id),
-                supabase.from("usage_logs").select("id, status, created_at, latency").eq("user_id", activeUser.id).order("created_at", { ascending: false }).limit(8),
+                supabase.from("usage_logs").select("id, status, created_at, latency, error_message").eq("user_id", activeUser.id).order("created_at", { ascending: false }).limit(8),
             ]);
 
             setProfile(profileData);
@@ -392,8 +392,27 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                             {logs.map((log, i) => {
                                 const ok = log.status === 200;
                                 return (
-                                    <div key={log.id || i} className="flex items-center gap-3 px-4 py-2.5">
+                                    <div key={log.id || i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#fafafa] transition-colors group">
                                         {ok ? <CheckCircle className="w-4 h-4 text-[#008060] flex-shrink-0" /> : <XCircle className="w-4 h-4 text-[#d72c0d] flex-shrink-0" />}
+
+                                        {/* Image Thumbnail */}
+                                        {ok && (() => {
+                                            try {
+                                                const payload = JSON.parse(log.error_message || "{}");
+                                                if (payload.result_url) {
+                                                    return (
+                                                        <a href={payload.result_url} target="_blank" rel="noopener noreferrer" className="relative h-10 w-8 bg-gray-100 rounded-md overflow-hidden border border-gray-200 hover:border-blue-500 transition-all flex-shrink-0 group/img">
+                                                            <img src={payload.result_url} alt="Result" className="h-full w-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <Eye className="w-3 h-3 text-white" />
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                }
+                                            } catch (e) { }
+                                            return null;
+                                        })()}
+
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[13px] text-[#202223] font-medium">{ok ? "Try-On generated" : "Request failed"}</p>
                                             <p className="text-xs text-[#8c9196]">{formatTimeAgo(new Date(log.created_at))}{log.latency ? ` · ${log.latency}` : ""}</p>
