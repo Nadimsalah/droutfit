@@ -102,7 +102,7 @@ class DrOutfit_AI_v8 {
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 32px; height: 32px; background: #2271b1; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">Dr</div>
-                    <h1 style="margin:0; font-size: 20px; font-weight: 600;"><?php _e('DrOutfit Virtual Try-On', 'dr-ai-v8-final'); ?></h1>
+                    <h1 style="margin:0; font-size: 20px; font-weight: 600;"><?php _e('DrOutfit Virtual Try-On', 'droutfit-virtual-try-on'); ?></h1>
                     <span style="font-size: 9px; background: #f0f0f1; color: #646970; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #dcdcde;">ULTRA-SAFE v8.4</span>
                 </div>
             </div>

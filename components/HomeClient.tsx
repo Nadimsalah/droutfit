@@ -79,7 +79,7 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
 
 export default function HomeClient({ dict, locale }: { dict: any, locale: string }) {
     const [demoImage, setDemoImage] = useState<string | null>(null);
-    const [pluginUrl, setPluginUrl] = useState<string>('https://mega.nz/file/l7hzUKRK#508hD1piTRYYTXKuWSBNLDcYmrCU0tPKSLyE2zNmYDI');
+    const [pluginUrl, setPluginUrl] = useState<string>('https://mega.nz/file/J35jkIba#lW90_cAOTcDMbNWa_mCk2C-ZWoazwgAU7qipStL4PDc');
 
     useEffect(() => {
         const fetchSettings = async () => {

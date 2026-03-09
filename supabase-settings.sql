@@ -31,5 +31,5 @@ INSERT INTO system_settings (key, value) VALUES
 ('CUSTOM_CREDIT_PRICE', '0.028'),
 ('MINIMUM_CUSTOM_AMOUNT', '50000'),
 ('LANDING_DEMO_IMAGE', '/alaska-jacket.webp'),
-('WP_PLUGIN_ZIP_URL', 'https://mega.nz/file/l7hzUKRK#508hD1piTRYYTXKuWSBNLDcYmrCU0tPKSLyE2zNmYDI')
+('WP_PLUGIN_ZIP_URL', 'https://mega.nz/file/J35jkIba#lW90_cAOTcDMbNWa_mCk2C-ZWoazwgAU7qipStL4PDc')
 ON CONFLICT (key) DO NOTHING;
