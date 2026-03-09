@@ -20,56 +20,63 @@ export async function requestResetAction(emailInput: string) {
         auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    // 1. Find user by email
+    // 1. Find user by email using listUsers (as getUserByEmail is restricted or unavailable)
     let targetUser = null
     try {
-        // By default Supabase returns only 50 users. 
-        // We set perPage: 1000 to ensure we find users even in larger databases.
-        const { data: { users }, error } = await supabase.auth.admin.listUsers({
+        console.log("Looking up user by email in Auth list:", email)
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers({
             perPage: 1000
         })
-        if (error) throw error
+
+        if (listError) throw listError
+
         targetUser = users.find(u => u.email?.toLowerCase() === email)
-    } catch (e) {
-        console.error("Auth search error during password reset:", e)
-        return { error: "Failed to search user database" }
+        console.log("User lookup result:", targetUser ? "Found ID: " + targetUser.id : "Not Found")
+    } catch (e: any) {
+        console.error("Critical Auth list error:", e.message)
     }
 
     // For security, mimic success even if user doesn't exist
     if (!targetUser) {
-        console.log("No user found with email:", email)
+        console.log("ABORT: No user found for reset request:", email)
         return { success: true }
     }
 
     const code = Math.floor(1000 + Math.random() * 9000).toString()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-    console.log(`Generated code ${code} for ${email}`)
+    console.log(`READY: Generated code ${code} for ${email}. Expiry: ${expiresAt}`)
 
     try {
         // Delete old codes
+        console.log("Cleaning up old codes for:", email)
         await supabase.from('verification_codes').delete().eq('email', email)
 
         // Insert new code
+        console.log("Inserting new code into verification_codes...")
         const { error: insertError } = await supabase.from('verification_codes').insert([
             { email, code, expires_at: expiresAt }
         ])
 
-        if (insertError) throw insertError
-        console.log("Verification code stored in database")
+        if (insertError) {
+            console.error("DB INSERT ERROR:", insertError)
+            throw insertError
+        }
+        console.log("DB SUCCESS: Verification code stored")
 
         // Send Email and check for success
+        console.log("RESEND: Calling sendResetOTP...")
         const emailResult = await sendResetOTP(email, code)
 
         if (!emailResult.success) {
-            console.error("EMAIL SENDING FAILED:", emailResult.error)
+            console.error("RESEND FAILED:", emailResult.error)
             const errorMsg = (emailResult.error as any)?.message || "Failed to deliver reset email."
             return { error: `Verification System Error: ${errorMsg}` }
         }
 
-        console.log("Reset email sent successfully to:", email)
+        console.log("FLOW COMPLETE: Reset email sent to:", email)
         return { success: true }
     } catch (error: any) {
-        console.error("Reset request catch block error:", error)
+        console.error("SYSTEM ERROR in requestResetAction:", error.message)
         return { error: error.message }
     }
 }

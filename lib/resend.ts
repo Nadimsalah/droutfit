@@ -20,7 +20,8 @@ export const sendEmail = async ({
         });
 
         if (error) {
-            console.error('Resend Error:', error);
+            const partialKey = process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 6)}...` : "MISSING";
+            console.error('Resend Error (Key: ' + partialKey + '):', error);
             return { success: false, error };
         }
 
