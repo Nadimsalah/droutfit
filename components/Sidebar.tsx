@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import DashboardLanguageSelector from "@/components/DashboardLanguageSelector";
 import {
     LayoutDashboard,
     Activity,
@@ -166,8 +166,8 @@ export function Sidebar({ isOpen, onClose, dict, locale }: SidebarProps) {
                     </nav>
                 </div>
 
-                <div className="px-6 py-4 border-t border-gray-800/50">
-                    <LanguageSwitcher dict={dict} />
+                <div className="border-t border-gray-800/50 pb-6">
+                    <DashboardLanguageSelector dict={dict} locale={locale} />
                 </div>
 
                 <div className="p-4">
