@@ -9,11 +9,12 @@ CREATE TABLE IF NOT EXISTS system_settings (
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to settings
+DROP POLICY IF EXISTS "Allow public read access" ON system_settings;
 CREATE POLICY "Allow public read access" ON system_settings
     FOR SELECT USING (true);
 
 -- Allow authenticated admins to update settings
--- This policy allows full access to authenticated users (Admins)
+DROP POLICY IF EXISTS "Allow admin full access" ON system_settings;
 CREATE POLICY "Allow admin full access" ON system_settings
     FOR ALL USING (auth.role() = 'authenticated');
 

@@ -301,15 +301,40 @@ export default function SettingsPage() {
                                                     onChange={async (e) => {
                                                         const file = e.target.files?.[0]
                                                         if (file) {
-                                                            try {
-                                                                const { uploadImage } = await import("@/lib/supabase")
-                                                                setSaving(true)
-                                                                // Reuse uploadImage for zip file, it works for general bucket uploads
-                                                                const url = await uploadImage(file, 'plugins')
-                                                                handleChange('WP_PLUGIN_ZIP_URL', url)
-                                                                setSaving(false)
-                                                            } catch (err) {
-                                                                setMessage({ type: 'error', text: 'Upload failed. Please try again.' })
+                                                            setSaving(true)
+                                                            const reader = new FileReader()
+                                                            reader.readAsDataURL(file)
+                                                            reader.onload = async () => {
+                                                                try {
+                                                                    // Detect zip more robustly
+                                                                    let readyBase64 = reader.result as string;
+                                                                    if (readyBase64.startsWith("data:application/x-zip-compressed;base64,")) {
+                                                                        readyBase64 = readyBase64.replace("data:application/x-zip-compressed;base64,", "data:application/zip;base64,");
+                                                                    }
+
+                                                                    const response = await fetch('/api/upload-image', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({
+                                                                            base64Image: readyBase64,
+                                                                            bucketName: 'plugins'
+                                                                        })
+                                                                    })
+
+                                                                    const data = await response.json()
+                                                                    if (!response.ok) throw new Error(data.error || 'Upload failed')
+
+                                                                    handleChange('WP_PLUGIN_ZIP_URL', data.url)
+                                                                    setMessage({ type: 'success', text: 'Plugin ZIP uploaded successfully!' })
+                                                                    setSaving(false)
+                                                                } catch (err: any) {
+                                                                    console.error("Upload error:", err)
+                                                                    setMessage({ type: 'error', text: err.message || 'Upload failed. Please try again.' })
+                                                                    setSaving(false)
+                                                                }
+                                                            }
+                                                            reader.onerror = () => {
+                                                                setMessage({ type: 'error', text: 'Failed to read file.' })
                                                                 setSaving(false)
                                                             }
                                                         }
