@@ -59,6 +59,13 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
                 {dict.common.getStarted}
                 <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
             </Link>
+            <button
+                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-8 py-4 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group"
+            >
+                <Play className="h-5 w-5 fill-current" />
+                Live Demo
+            </button>
         </div>
     );
 }
