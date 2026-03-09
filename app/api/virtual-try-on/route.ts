@@ -221,10 +221,11 @@ export async function POST(req: NextRequest) {
             }
 
             if (logEntryId) {
+                const source = shop ? "shopify" : "droutfit";
                 await supabase.from("usage_logs").update({
                     status: 200,
                     latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ taskId, result_url: resultUrl, ...usageMetadata })
+                    error_message: JSON.stringify({ taskId, result_url: resultUrl, source, ...usageMetadata })
                 }).eq("id", logEntryId);
             }
 

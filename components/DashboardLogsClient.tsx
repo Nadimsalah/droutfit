@@ -2,6 +2,7 @@
 import { CheckCircle, Search, XCircle, Filter, Loader2, Image as ImageIcon, ExternalLink, Clock, Calendar, Hash } from "lucide-react"
 import { useEffect, useState } from "react"
 import { getLogs } from "@/lib/storage"
+import { cn } from "@/lib/utils"
 
 export default function DashboardLogsClient({ dict, locale }: { dict: any, locale: string }) {
     const [logs, setLogs] = useState<any[]>([])
@@ -30,10 +31,19 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
         } catch { return null; }
     }
 
+    const getSource = (log: any): string => {
+        try {
+            if (!log.message || !log.message.startsWith('{')) return "droutfit";
+            const meta = JSON.parse(log.message);
+            return meta.source || "droutfit";
+        } catch { return "droutfit"; }
+    }
+
     const filteredLogs = logs.filter(log =>
         log.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.status.toString().includes(searchQuery)
+        log.status.toString().includes(searchQuery) ||
+        getSource(log).toLowerCase().includes(searchQuery.toLowerCase())
     )
 
     return (
@@ -96,7 +106,8 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                         <thead>
                             <tr className="bg-[#0B0E14]">
                                 <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">{dict.logsPage.result}</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">{dict.logsPage.status}</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">Source</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50 text-center">{dict.logsPage.status}</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">{dict.logsPage.endpoint}</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">{dict.logsPage.performance}</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-gray-800/50">{dict.logsPage.timestamp}</th>
@@ -107,6 +118,7 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                             {filteredLogs.length > 0 ? (
                                 filteredLogs.map((log, i) => {
                                     const resultUrl = getResultUrl(log);
+                                    const source = getSource(log);
                                     const isSuccess = log.status >= 200 && log.status < 300;
 
                                     return (
@@ -131,12 +143,28 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 border-b border-gray-800/30 text-xs">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`h-8 px-3 rounded-lg flex items-center gap-2 font-black tracking-widest border ${isSuccess
-                                                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                                        : 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                        }`}>
+                                            <td className="px-6 py-4 border-b border-gray-800/30">
+                                                <div className={cn(
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border transition-all",
+                                                    source === "shopify"
+                                                        ? "bg-[#95BF47]/10 text-[#95BF47] border-[#95BF47]/20 shadow-[0_0_10px_rgba(149,191,71,0.1)]"
+                                                        : "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]"
+                                                )}>
+                                                    <div className={cn(
+                                                        "h-1 w-1 rounded-full animate-pulse",
+                                                        source === "shopify" ? "bg-[#95BF47]" : "bg-blue-500"
+                                                    )} />
+                                                    {source === "shopify" ? "Shopify" : "DrOutfit UI"}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 border-b border-gray-800/30 text-xs text-center">
+                                                <div className="flex justify-center">
+                                                    <div className={cn(
+                                                        "h-8 px-3 rounded-lg flex items-center gap-2 font-black tracking-widest border transition-all",
+                                                        isSuccess
+                                                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                            : 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                    )}>
                                                         {isSuccess ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                                                         {log.status}
                                                     </div>
