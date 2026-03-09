@@ -189,9 +189,23 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                             gradient: "from-yellow-400/20 to-orange-500/20"
                         },
                         {
-                            icon: <Shield className="h-6 w-6 text-blue-400" />,
-                            title: dict.homepage.hero.privacyFirst,
-                            desc: dict.homepage.hero.privacyDesc,
+                            icon: (
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src="https://cdn.worldvectorlogo.com/logos/shopify.svg"
+                                        className="h-6 w-6 object-contain"
+                                        alt="Shopify"
+                                    />
+                                    <div className="w-px h-4 bg-white/20" />
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/9/93/Wordpress_Blue_logo.png"
+                                        className="h-6 w-6 object-contain"
+                                        alt="WordPress"
+                                    />
+                                </div>
+                            ),
+                            title: "Easy Integration",
+                            desc: "Connect DrOutfit to Shopify or WordPress in just a few clicks. Our dedicated plugins ensure a stable and fast setup.",
                             gradient: "from-blue-400/20 to-cyan-500/20"
                         },
                         {
