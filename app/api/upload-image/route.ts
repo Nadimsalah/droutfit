@@ -6,6 +6,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || "");
 
 export async function POST(req: NextRequest) {
+    if (!supabaseServiceKey) {
+        return NextResponse.json({ error: "Internal Configuration Error: SUPABASE_SERVICE_ROLE_KEY is missing." }, { status: 500 });
+    }
+
     try {
         const { base64Image, bucketName = "tryimages" } = await req.json();
 
@@ -17,6 +21,21 @@ export async function POST(req: NextRequest) {
 
         if (!base64Image || typeof base64Image !== 'string') {
             return NextResponse.json({ error: "Missing or invalid image data" }, { status: 400 });
+        }
+
+        // Pre-check: Does the bucket exist?
+        const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+        const bucketExists = buckets?.some(b => b.name === bucketName);
+
+        if (listError) {
+            console.error("List buckets error:", listError);
+        }
+
+        if (!bucketExists) {
+            console.error(`Bucket '${bucketName}' not found in:`, buckets?.map(b => b.name));
+            return NextResponse.json({
+                error: `Bucket '${bucketName}' not found. Available: ${buckets?.map(b => b.name).join(', ') || 'none'}`
+            }, { status: 404 });
         }
 
         // Security Patch: Sanitize input by strictly matching the base64 prefix mapping
@@ -32,6 +51,7 @@ export async function POST(req: NextRequest) {
             });
 
         if (error) {
+            console.error("Upload storage error:", error);
             throw new Error(error.message);
         }
 
@@ -41,6 +61,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ url: urlData.publicUrl });
     } catch (error: any) {
+        console.error("Critical upload error:", error);
         return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });
     }
 }
