@@ -242,6 +242,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                     src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
                                     alt="Shopify"
                                     className="h-20 md:h-32 w-auto object-contain"
+                                    style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
                                 />
                             </div>
                         </div>
