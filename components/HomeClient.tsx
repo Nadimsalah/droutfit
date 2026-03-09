@@ -237,22 +237,12 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                         </div>
 
                         <div className="flex-1 flex justify-center items-center relative z-10">
-                            <div className="relative group/logo">
-                                {/* Decorative Ring */}
-                                <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-150 group-hover/logo:bg-green-500/40 transition-all duration-700" />
-
-                                <div className="bg-[#1A1F2B] border border-white/10 p-10 rounded-[3rem] shadow-2xl relative z-10 group-hover/logo:rotate-3 transition-transform duration-500">
-                                    <img
-                                        src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
-                                        alt="Shopify"
-                                        className="h-16 md:h-24 w-auto object-contain brightness-0 invert"
-                                    />
-                                </div>
-
-                                {/* Floating Elements */}
-                                <div className="absolute -top-4 -right-4 bg-green-500 text-black p-3 rounded-2xl shadow-xl animate-bounce">
-                                    <Zap className="h-6 w-6 fill-current" />
-                                </div>
+                            <div className="relative">
+                                <img
+                                    src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
+                                    alt="Shopify"
+                                    className="h-20 md:h-32 w-auto object-contain"
+                                />
                             </div>
                         </div>
                     </div>
