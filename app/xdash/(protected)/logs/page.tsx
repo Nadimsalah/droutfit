@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { getSystemLogsAction } from "@/app/xdash/(protected)/settings/actions"
 import { Loader2, Server, CheckCircle2, XCircle, Clock, RefreshCw, Image as ImageIcon, Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, User, ShoppingBag, Hash } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type Log = {
     id: string
@@ -18,6 +19,7 @@ type Log = {
         input_images?: string[]
         tokens_used?: number
         estimated_cost?: number
+        source?: string
     }
 }
 
@@ -27,7 +29,7 @@ export default function LogsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
 
-    const itemsPerPage = 15
+    const itemsPerPage = 10
 
     const fetchLogs = async () => {
         setLoading(true)
@@ -51,11 +53,13 @@ export default function LogsPage() {
             const fullName = log.user.full_name?.toLowerCase() || ""
             const email = log.user.email?.toLowerCase() || ""
             const taskId = log.meta.taskId?.toLowerCase() || ""
+            const source = log.meta.source?.toLowerCase() || ""
 
             return storeName.includes(lowerTerm) ||
                 fullName.includes(lowerTerm) ||
                 email.includes(lowerTerm) ||
-                taskId.includes(lowerTerm)
+                taskId.includes(lowerTerm) ||
+                source.includes(lowerTerm)
         })
     }, [logs, searchTerm])
 
@@ -132,6 +136,7 @@ export default function LogsPage() {
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Sequence Date</th>
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Entity Identity</th>
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Task Metadata</th>
+                                <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Source</th>
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5 text-center">Resources</th>
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">Status</th>
                                 <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5 text-center">Output</th>
@@ -196,6 +201,20 @@ export default function LogsPage() {
                                                     <Hash className="h-2.5 w-2.5" />
                                                     REF: {log.id.split('-')[0].toUpperCase()}
                                                 </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className={cn(
+                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border transition-all",
+                                                log.meta.source === "shopify"
+                                                    ? "bg-[#95BF47]/10 text-[#95BF47] border-[#95BF47]/20 shadow-[0_0_10px_rgba(149,191,71,0.1)]"
+                                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]"
+                                            )}>
+                                                <div className={cn(
+                                                    "h-1 w-1 rounded-full animate-pulse",
+                                                    log.meta.source === "shopify" ? "bg-[#95BF47]" : "bg-blue-500"
+                                                )} />
+                                                {log.meta.source === "shopify" ? "Shopify" : "DrOutfit UI"}
                                             </div>
                                         </td>
                                         <td className="p-6">
