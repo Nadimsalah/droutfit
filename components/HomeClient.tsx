@@ -241,14 +241,13 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/10 transition-colors" />
 
                             <div className="space-y-6">
-                                <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
+                                <div className="inline-flex items-center bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
                                     <img
                                         src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
                                         alt="Shopify"
-                                        className="h-8 w-auto object-contain"
+                                        className="h-10 w-auto object-contain"
                                         style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
                                     />
-                                    <span className="text-xl font-black text-white">Shopify</span>
                                 </div>
                                 <h3 className="text-2xl md:text-3xl font-black text-white">Shopify Merchant?</h3>
                                 <p className="text-gray-400 text-lg leading-relaxed">
