@@ -8,12 +8,15 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
     const [logs, setLogs] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 10
 
     const fetchLogs = async () => {
         setIsLoading(true)
         try {
             const data = await getLogs()
             setLogs(data)
+            setCurrentPage(1) // Reset to page 1 on refresh
         } finally {
             setIsLoading(false)
         }
@@ -46,6 +49,11 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
         getSource(log).toLowerCase().includes(searchQuery.toLowerCase())
     )
 
+    // Pagination logic
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const paginatedLogs = filteredLogs.slice(startIndex, startIndex + itemsPerPage)
+
     return (
         <div className="space-y-8 pb-20 max-w-7xl mx-auto" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -73,7 +81,10 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                         type="text"
                         placeholder={dict.logsPage.searchPlaceholder}
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value)
+                            setCurrentPage(1)
+                        }}
                         className="w-full pl-12 pr-4 py-3.5 bg-[#0B0E14] border border-gray-800/50 rounded-xl text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-blue-500/50 transition-all text-left"
                     />
                 </div>
@@ -115,11 +126,11 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                             </tr>
                         </thead>
                         <tbody className="text-gray-300">
-                            {filteredLogs.length > 0 ? (
-                                filteredLogs.map((log, i) => {
+                            {paginatedLogs.length > 0 ? (
+                                paginatedLogs.map((log, i) => {
                                     const resultUrl = getResultUrl(log);
                                     const source = getSource(log);
-                                    const isSuccess = log.status >= 200 && log.status < 300;
+                                    const isSuccess = log.status >= 200 && log.status < 350; // Include 202
 
                                     return (
                                         <tr key={log.id} className={`group hover:bg-white/[0.03] transition-all cursor-default ${i % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.01]'}`}>
@@ -204,7 +215,7 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-32 text-center">
+                                    <td colSpan={7} className="px-6 py-32 text-center">
                                         <div className="flex flex-col items-center gap-4 opacity-50">
                                             <ImageIcon className="h-12 w-12 text-gray-700" />
                                             <p className="text-gray-500 text-sm font-black uppercase tracking-widest">{dict.logsPage.noTransactions}</p>
@@ -219,12 +230,23 @@ export default function DashboardLogsClient({ dict, locale }: { dict: any, local
                 <div className="p-6 bg-[#0B0E14] flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
                         {dict.logsPage.totalTrace}: <span className="text-blue-500">{filteredLogs.length} {dict.logsPage.records}</span>
+                        {totalPages > 1 && (
+                            <span className="ml-4 opacity-50">Page {currentPage} of {totalPages}</span>
+                        )}
                     </p>
                     <div className="flex gap-2">
-                        <button className="px-6 py-2 rounded-xl bg-[#13171F] border border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-30 active:scale-95 cursor-pointer">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-6 py-2 rounded-xl bg-[#13171F] border border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-20 active:scale-95 cursor-pointer"
+                        >
                             {dict.logsPage.previous}
                         </button>
-                        <button className="px-6 py-2 rounded-xl bg-[#13171F] border border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="px-6 py-2 rounded-xl bg-[#13171F] border border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-20 active:scale-95 cursor-pointer"
+                        >
                             {dict.logsPage.next}
                         </button>
                     </div>

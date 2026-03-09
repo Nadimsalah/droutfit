@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
             if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
 
             const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const [personData, garmentData] = await Promise.all([
                 (async () => {

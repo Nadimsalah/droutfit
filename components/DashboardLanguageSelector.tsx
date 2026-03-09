@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Languages, Globe, X, Check } from "lucide-react";
+import { Globe, X, Check } from "lucide-react";
 
 interface DashboardLanguageSelectorProps {
     dict: any;
@@ -14,9 +14,9 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
     const router = useRouter();
 
     const languages = [
-        { code: "en", name: "English", country: "United States", flag: "🇺🇸" },
-        { code: "fr", name: "Français", country: "France", flag: "🇫🇷" },
-        { code: "ar", name: "العربية", country: "Saudi Arabia", flag: "🇸🇦" },
+        { code: "en", name: "English", country: "US", flag: "🇺🇸" },
+        { code: "fr", name: "Français", country: "FR", flag: "🇫🇷" },
+        { code: "ar", name: "العربية", country: "SA", flag: "🇸🇦" },
     ];
 
     const currentLang = languages.find(l => l.code === locale) || languages[0];
@@ -39,45 +39,30 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
         <div className="px-4">
             <button
                 onClick={() => setIsOpen(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group shadow-lg"
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group"
             >
-                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-500 ring-1 ring-blue-500/20">
+                <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform duration-500">
                     {currentLang.flag}
                 </div>
                 <div className="flex flex-col text-left flex-1 min-w-0">
-                    <span className="text-white text-xs font-black uppercase tracking-widest">{dict?.common?.selectLanguage || "Language"}</span>
-                    <span className="text-gray-500 text-[10px] font-bold uppercase tracking-tighter truncate">
+                    <span className="text-white text-[11px] font-black uppercase tracking-widest leading-none mb-1">{dict?.common?.selectLanguage || "Language"}</span>
+                    <span className="text-gray-500 text-[9px] font-bold uppercase tracking-tighter truncate opacity-60">
                         {currentLang.name} • {currentLang.country}
                     </span>
                 </div>
-                <Globe className="h-4 w-4 text-gray-600 group-hover:text-blue-500 transition-colors mr-1" />
+                <Globe className="h-3.5 w-3.5 text-gray-600 group-hover:text-blue-500 transition-colors mr-1" />
             </button>
 
-            {/* Premium Popup Modal */}
+            {/* Clean minimalist Popup */}
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                     <div
-                        className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="relative w-full max-w-sm bg-[#0B0F17] border border-white/10 rounded-3xl shadow-none overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Header */}
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-white text-lg font-black tracking-tight">{dict?.common?.selectLanguage || "Select Language"}</h3>
-                                <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">{dict?.common?.globalExperience || "Global Experience"}</p>
-                            </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        {/* List */}
-                        <div className="p-3 space-y-1">
+                    <div className="relative w-full max-w-[280px] bg-[#0E1219] border border-white/10 rounded-[2rem] shadow-none overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-2 space-y-1">
                             {languages.map((lang) => {
                                 const isActive = locale === lang.code;
                                 return (
@@ -85,37 +70,35 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
                                         key={lang.code}
                                         onClick={() => handleLanguageChange(lang.code)}
                                         className={cn(
-                                            "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group relative overflow-hidden",
+                                            "w-full flex items-center justify-between p-3 rounded-[1.25rem] transition-all duration-200 group relative",
                                             isActive
-                                                ? "bg-blue-600/10 border border-blue-500/20 text-white"
-                                                : "hover:bg-white/5 border border-transparent text-gray-400 hover:text-white"
+                                                ? "bg-white/5 text-white"
+                                                : "hover:bg-white/[0.03] text-gray-400 hover:text-white"
                                         )}
                                     >
-                                        <div className={cn(
-                                            "h-12 w-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-500 group-hover:scale-110",
-                                            isActive ? "bg-blue-600/20 ring-2 ring-blue-500/30" : "bg-white/5"
-                                        )}>
-                                            {lang.flag}
-                                        </div>
-                                        <div className="flex flex-col text-left flex-1">
-                                            <span className="text-sm font-black tracking-tight">{lang.name}</span>
-                                            <span className="text-[10px] uppercase tracking-widest font-bold opacity-40">{lang.country}</span>
-                                        </div>
-                                        {isActive && (
-                                            <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center">
-                                                <Check className="h-3 w-3 text-white" />
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn(
+                                                "h-10 w-10 rounded-xl flex items-center justify-center text-xl transition-all duration-500",
+                                                isActive ? "bg-white/10" : "bg-white/[0.02]"
+                                            )}>
+                                                {lang.flag}
                                             </div>
+                                            <div className="flex flex-col text-left">
+                                                <span className="text-xs font-bold tracking-tight">{lang.name}</span>
+                                                <span className="text-[9px] uppercase tracking-widest font-bold opacity-30">{lang.country}</span>
+                                            </div>
+                                        </div>
+
+                                        {isActive ? (
+                                            <div className="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center mr-1">
+                                                <Check className="h-2.5 w-2.5 text-white" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-2 w-2 rounded-full border border-white/10 mr-2 group-hover:border-white/20 transition-colors" />
                                         )}
                                     </button>
                                 );
                             })}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="p-6 bg-white/[0.02] border-t border-white/5 text-center">
-                            <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em] leading-relaxed">
-                                {dict?.common?.poweredBy || "Powered by Droutfit Vision AI"}
-                            </p>
                         </div>
                     </div>
                 </div>
