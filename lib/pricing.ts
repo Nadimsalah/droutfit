@@ -13,7 +13,8 @@ export const DEFAULT_PRICING = {
     MINIMUM_CUSTOM_AMOUNT: 50000,
     // AI Provider Settings
     GEMINI_API_KEY: '',
-    LANDING_DEMO_IMAGE: '/alaska-jacket.webp'
+    LANDING_DEMO_IMAGE: '/alaska-jacket.webp',
+    WP_PLUGIN_ZIP_URL: '/plugins/droutfit-try-on.zip'
 }
 
 export type PricingConfig = typeof DEFAULT_PRICING

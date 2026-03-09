@@ -65,12 +65,16 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
 
 export default function HomeClient({ dict, locale }: { dict: any, locale: string }) {
     const [demoImage, setDemoImage] = useState<string | null>(null);
+    const [pluginUrl, setPluginUrl] = useState<string>('/plugins/droutfit-try-on.zip');
 
     useEffect(() => {
         const fetchSettings = async () => {
             const settings = await getPricing();
             if (settings.LANDING_DEMO_IMAGE) {
                 setDemoImage(settings.LANDING_DEMO_IMAGE);
+            }
+            if (settings.WP_PLUGIN_ZIP_URL) {
+                setPluginUrl(settings.WP_PLUGIN_ZIP_URL);
             }
         };
         fetchSettings();
@@ -284,7 +288,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                             </div>
 
                             <a
-                                href="/plugins/droutfit-try-on.zip"
+                                href={pluginUrl}
                                 className="mt-10 inline-flex items-center justify-center gap-3 px-8 py-5 bg-blue-600 text-white rounded-full font-black text-lg hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 group"
                                 download
                             >
@@ -292,20 +296,6 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                 DrOutfit Try On
                             </a>
                         </div>
-                    </div>
-
-                    {/* Centered Signup Button */}
-                    <div className="flex flex-col items-center pt-8">
-                        <Link
-                            href={`/${locale}/signup`}
-                            className="px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full font-black text-xl transition-all shadow-2xl shadow-blue-500/20 hover:scale-105 flex items-center gap-3 group"
-                        >
-                            Sign up Free
-                            <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "rotate-180" : "group-hover:translate-x-1")} />
-                        </Link>
-                        <p className="mt-4 text-gray-500 text-sm font-black uppercase tracking-widest">
-                            No credit card required
-                        </p>
                     </div>
                 </div>
             </section>

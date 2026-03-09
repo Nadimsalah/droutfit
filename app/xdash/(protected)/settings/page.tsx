@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { getPricing, PricingConfig, DEFAULT_PRICING } from "@/lib/pricing"
 import { updateAllPricingAction } from "./actions"
-import { Save, Loader2, DollarSign, RefreshCw, Cpu, Key, Image as ImageIcon, Upload } from "lucide-react"
+import { Save, Loader2, DollarSign, RefreshCw, Cpu, Key, Image as ImageIcon, Upload, Download } from "lucide-react"
 
 export default function SettingsPage() {
     const [config, setConfig] = useState<PricingConfig>(DEFAULT_PRICING)
@@ -184,8 +184,6 @@ export default function SettingsPage() {
 
                     <div className="my-8 border-t border-gray-800" />
 
-                    <div className="my-8 border-t border-gray-800" />
-
                     <div className="space-y-6">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             <ImageIcon className="h-5 w-5 text-purple-500" />
@@ -263,6 +261,79 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="my-8 border-t border-gray-800" />
+
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Upload className="h-5 w-5 text-blue-400" />
+                            WordPress Plugin Management
+                        </h2>
+
+                        <div className="grid md:grid-cols-1 gap-8">
+                            <div className="space-y-4">
+                                <div className="space-y-4 border border-gray-800 rounded-xl p-6 bg-white/[0.02]">
+                                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                                        {/* Plugin Info */}
+                                        <div className="w-full md:w-32 aspect-square rounded-xl bg-blue-500/10 border border-blue-500/20 overflow-hidden flex-shrink-0 flex items-center justify-center relative group">
+                                            <Download className="h-10 w-10 text-blue-400" />
+                                        </div>
+
+                                        {/* Upload / URL Input */}
+                                        <div className="flex-1 space-y-4 w-full">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Plugin Download URL (ZIP)</label>
+                                                <input
+                                                    type="text"
+                                                    value={config.WP_PLUGIN_ZIP_URL || ''}
+                                                    onChange={(e) => handleChange('WP_PLUGIN_ZIP_URL', e.target.value)}
+                                                    placeholder="Enter ZIP URL"
+                                                    className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="file"
+                                                    id="plugin-zip-upload"
+                                                    className="hidden"
+                                                    accept=".zip"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (file) {
+                                                            try {
+                                                                const { uploadImage } = await import("@/lib/supabase")
+                                                                setSaving(true)
+                                                                // Reuse uploadImage for zip file, it works for general bucket uploads
+                                                                const url = await uploadImage(file, 'tryimages')
+                                                                handleChange('WP_PLUGIN_ZIP_URL', url)
+                                                                setSaving(false)
+                                                            } catch (err) {
+                                                                setMessage({ type: 'error', text: 'Upload failed. Please try again.' })
+                                                                setSaving(false)
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                                <label
+                                                    htmlFor="plugin-zip-upload"
+                                                    className="px-6 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all flex items-center gap-2"
+                                                >
+                                                    <Upload className="h-3.5 w-3.5" />
+                                                    Upload New Plugin (.zip)
+                                                </label>
+                                                <p className="text-[9px] text-gray-600 font-medium italic">
+                                                    Current live version: {config.WP_PLUGIN_ZIP_URL?.split('/').pop() || 'None'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="my-8 border-t border-gray-800" />
 
                     <div className="my-8 border-t border-gray-800" />
 
