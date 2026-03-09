@@ -32,15 +32,17 @@ export async function requestOTPAction(email: string) {
         }
 
         // Send email and check for success
+        console.log(`[OTP-SIGNUP] Calling Resend for ${email} with code ${code}`)
         const { sendOTP } = await import('@/lib/resend')
         const emailResult = await sendOTP(email, code)
 
         if (!emailResult.success) {
-            console.error("Resend Error during OTP send:", emailResult.error)
+            console.error("[OTP-SIGNUP] Resend FAILED:", emailResult.error)
             const errorMsg = (emailResult.error as any)?.message || "Failed to deliver verification email."
             return { error: `Email Error: ${errorMsg}` }
         }
 
+        console.log(`[OTP-SIGNUP] SUCCESS: Email sent to ${email}`)
         return { success: true }
     } catch (error: any) {
         console.error("OTP request error:", error)
