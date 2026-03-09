@@ -61,7 +61,7 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="relative w-full max-w-sm bg-[#0B0F17] border border-white/10 rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="relative w-full max-w-sm bg-[#0B0F17] border border-white/10 rounded-3xl shadow-none overflow-hidden animate-in zoom-in-95 duration-300">
                         {/* Header */}
                         <div className="p-6 border-b border-white/5 flex items-center justify-between">
                             <div>
@@ -92,7 +92,7 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
                                         )}
                                     >
                                         <div className={cn(
-                                            "h-12 w-12 rounded-xl flex items-center justify-center text-2xl shadow-2xl transition-all duration-500 group-hover:scale-110",
+                                            "h-12 w-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-500 group-hover:scale-110",
                                             isActive ? "bg-blue-600/20 ring-2 ring-blue-500/30" : "bg-white/5"
                                         )}>
                                             {lang.flag}
@@ -102,7 +102,7 @@ export default function DashboardLanguageSelector({ dict, locale }: DashboardLan
                                             <span className="text-[10px] uppercase tracking-widest font-bold opacity-40">{lang.country}</span>
                                         </div>
                                         {isActive && (
-                                            <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                                            <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center">
                                                 <Check className="h-3 w-3 text-white" />
                                             </div>
                                         )}
