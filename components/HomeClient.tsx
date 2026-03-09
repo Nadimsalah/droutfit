@@ -16,8 +16,10 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
     const searchParams = useSearchParams();
     const [isShopify, setIsShopify] = useState(false);
     const [shop, setShop] = useState("");
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const urlParams = new URL(window.location.href).searchParams;
         const shopParam = searchParams.get('shop') || urlParams.get('shop');
         const embedded = window.self !== window.top ||
@@ -31,6 +33,15 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
         }
     }, [searchParams]);
 
+    if (!mounted) {
+        return (
+            <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center min-h-[80px]">
+                <div className="px-8 py-4 bg-white/10 w-40 h-14 rounded-full animate-pulse" />
+                <div className="px-8 py-4 bg-white/5 w-40 h-14 rounded-full animate-pulse" />
+            </div>
+        );
+    }
+
     if (isShopify) {
         return (
             <div className="flex flex-col gap-6 items-center w-full max-w-lg mx-auto">
@@ -38,15 +49,24 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
                     <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                     {dict.homepage.hero.shopifyIntegrated}
                 </div>
-                <Link
-                    href={`/${locale}/dashboard/shopify/connect?shop=${shop}`}
-                    className="w-full px-8 py-6 bg-blue-600 text-white rounded-full font-black text-2xl hover:bg-blue-500 transition-all flex items-center justify-center gap-4 group shadow-[0_0_50px_rgba(37,99,235,0.4)] animate-bounce"
-                >
-                    <ShoppingBag className="h-8 w-8" />
-                    {dict.navbar.connectShopify}
-                    <ArrowRight className={cn("h-6 w-6 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
-                </Link>
-                <p className="text-blue-400 font-bold animate-pulse">
+                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                    <Link
+                        href={`/${locale}/dashboard/shopify/connect?shop=${shop}`}
+                        className="flex-1 px-8 py-6 bg-blue-600 text-white rounded-full font-black text-xl hover:bg-blue-500 transition-all flex items-center justify-center gap-4 group shadow-[0_0_50px_rgba(37,99,235,0.4)]"
+                    >
+                        <ShoppingBag className="h-6 w-6" />
+                        {dict.navbar.connectShopify}
+                        <ArrowRight className={cn("h-6 w-6 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
+                    </Link>
+                    <button
+                        onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full font-black text-lg transition-all flex items-center justify-center gap-2"
+                    >
+                        <Play className="h-5 w-5 fill-current" />
+                        Live Demo
+                    </button>
+                </div>
+                <p className="text-blue-400 font-bold">
                     {dict.homepage.hero.shopifyStep1}
                 </p>
             </div>
@@ -59,17 +79,13 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
                 {dict.common.getStarted}
                 <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
             </Link>
-            <a
-                href="#demo"
-                onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+            <button
+                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
                 className="px-8 py-4 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full font-black text-lg transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(37,99,235,0.1)]"
             >
                 <Play className="h-5 w-5 fill-current" />
                 Live Demo
-            </a>
+            </button>
         </div>
     );
 }
