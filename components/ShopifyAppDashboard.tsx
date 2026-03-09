@@ -12,6 +12,30 @@ import type { Locale } from "@/lib/i18n-config";
 
 type View = "loading" | "login" | "not_connected" | "dashboard";
 
+const Shell = ({ children, view, user, loadData }: { children: React.ReactNode, view: string, user: any, loadData: () => void }) => (
+    <div className="min-h-screen bg-[#f6f6f7] font-sans">
+        <header className="bg-white border-b border-[#e1e3e5] px-5 py-3 flex items-center justify-between sticky top-0 z-10">
+            <div className="flex items-center gap-2.5">
+                <img
+                    src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
+                    alt="DrOutfit"
+                    className="h-6 w-auto"
+                />
+                <span className="font-semibold text-[#202223] text-sm">AI Try-On</span>
+                {view === "dashboard" && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#e3f1df] text-[#008060] border border-[#a8d5a2] font-medium">Connected</span>
+                )}
+            </div>
+            {user && view === "dashboard" && (
+                <button onClick={() => loadData()} className="text-[#6d7175] hover:text-[#202223] transition-colors">
+                    <RefreshCw className="w-4 h-4" />
+                </button>
+            )}
+        </header>
+        {children}
+    </div>
+);
+
 export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
     const [view, setView] = useState<View>("loading");
     const [user, setUser] = useState<any>(null);
@@ -142,33 +166,9 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
     const credits = profile?.credits ?? 0;
     const shopSearch = typeof window !== "undefined" ? window.location.search : "";
 
-    const Shell = ({ children }: { children: React.ReactNode }) => (
-        <div className="min-h-screen bg-[#f6f6f7] font-sans">
-            <header className="bg-white border-b border-[#e1e3e5] px-5 py-3 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-2.5">
-                    <img
-                        src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
-                        alt="DrOutfit"
-                        className="h-6 w-auto"
-                    />
-                    <span className="font-semibold text-[#202223] text-sm">AI Try-On</span>
-                    {view === "dashboard" && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#e3f1df] text-[#008060] border border-[#a8d5a2] font-medium">Connected</span>
-                    )}
-                </div>
-                {user && view === "dashboard" && (
-                    <button onClick={() => loadData()} className="text-[#6d7175] hover:text-[#202223] transition-colors">
-                        <RefreshCw className="w-4 h-4" />
-                    </button>
-                )}
-            </header>
-            {children}
-        </div>
-    );
-
     // ─── LOADING ────────────────────────────────────────────────
     if (view === "loading") return (
-        <Shell>
+        <Shell view={view} user={user} loadData={loadData}>
             <div className="flex items-center justify-center min-h-[calc(100vh-57px)]">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-5 h-5 border-2 border-[#5c6ac4] border-t-transparent rounded-full animate-spin" />
@@ -180,7 +180,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── LOGIN ──────────────────────────────────────────────────
     if (view === "login") return (
-        <Shell>
+        <Shell view={view} user={user} loadData={loadData}>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 py-12">
                 <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-7 w-full max-w-sm">
                     <div className="flex justify-center mb-6">
@@ -265,7 +265,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── NOT CONNECTED ──────────────────────────────────────────
     if (view === "not_connected") return (
-        <Shell>
+        <Shell view={view} user={user} loadData={loadData}>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 py-12">
                 <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-7 w-full max-w-sm">
                     <div className="w-12 h-12 rounded-xl bg-[#fff3cd] border border-[#ffd79d] flex items-center justify-center mx-auto mb-5">
@@ -306,7 +306,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── DASHBOARD ──────────────────────────────────────────────
     return (
-        <Shell>
+        <Shell view={view} user={user} loadData={loadData}>
             <div className="max-w-2xl mx-auto p-5 space-y-4">
 
                 {/* Store banner */}
