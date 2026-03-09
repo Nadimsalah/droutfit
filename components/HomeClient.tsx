@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getPricing } from "@/lib/pricing";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
-import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
+import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag, Download } from "lucide-react";
 import Link from "next/link";
 import SwipeableDemo from "@/components/SwipeableDemo";
 import { useSearchParams } from "next/navigation";
@@ -284,12 +284,12 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                             </div>
 
                             <a
-                                href="/plugins/dr-ai-v8-4-1-signup.zip"
+                                href="/plugins/droutfit-try-on.zip"
                                 className="mt-10 inline-flex items-center justify-center gap-3 px-8 py-5 bg-blue-600 text-white rounded-full font-black text-lg hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 group"
                                 download
                             >
-                                <Smartphone className="h-5 w-5" />
-                                Download Plugin
+                                <Download className="h-5 w-5" />
+                                DrOutfit Try On
                             </a>
                         </div>
                     </div>
