@@ -305,7 +305,7 @@ export default function SettingsPage() {
                                                                 const { uploadImage } = await import("@/lib/supabase")
                                                                 setSaving(true)
                                                                 // Reuse uploadImage for zip file, it works for general bucket uploads
-                                                                const url = await uploadImage(file, 'tryimages')
+                                                                const url = await uploadImage(file, 'plugins')
                                                                 handleChange('WP_PLUGIN_ZIP_URL', url)
                                                                 setSaving(false)
                                                             } catch (err) {

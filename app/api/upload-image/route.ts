@@ -14,39 +14,48 @@ export async function POST(req: NextRequest) {
         const { base64Image, bucketName = "tryimages" } = await req.json();
 
         // Security Patch: Restrict allowed buckets
-        const allowedBuckets = ["tryimages", "public_assets", "avatars", "logos"];
+        const allowedBuckets = ["tryimages", "public_assets", "avatars", "logos", "plugins"];
         if (!allowedBuckets.includes(bucketName)) {
             return NextResponse.json({ error: "Unauthorized bucket target" }, { status: 403 });
         }
 
         if (!base64Image || typeof base64Image !== 'string') {
-            return NextResponse.json({ error: "Missing or invalid image data" }, { status: 400 });
+            return NextResponse.json({ error: "Missing or invalid data" }, { status: 400 });
+        }
+
+        // Detect file type and extension
+        let contentType = "image/jpeg";
+        let extension = "jpg";
+
+        if (base64Image.startsWith("data:application/zip;base64,")) {
+            contentType = "application/zip";
+            extension = "zip";
+        } else if (base64Image.startsWith("data:image/png;base64,")) {
+            contentType = "image/png";
+            extension = "png";
+        } else if (base64Image.startsWith("data:image/webp;base64,")) {
+            contentType = "image/webp";
+            extension = "webp";
         }
 
         // Pre-check: Does the bucket exist?
         const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
         const bucketExists = buckets?.some(b => b.name === bucketName);
 
-        if (listError) {
-            console.error("List buckets error:", listError);
-        }
-
         if (!bucketExists) {
-            console.error(`Bucket '${bucketName}' not found in:`, buckets?.map(b => b.name));
-            return NextResponse.json({
-                error: `Bucket '${bucketName}' not found. Available: ${buckets?.map(b => b.name).join(', ') || 'none'}`
-            }, { status: 404 });
+            // Auto-create bucket if it doesn't exist (optional, but safer to check)
+            await supabaseAdmin.storage.createBucket(bucketName, { public: true });
         }
 
-        // Security Patch: Sanitize input by strictly matching the base64 prefix mapping
-        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+        // Sanitize input
+        const base64Data = base64Image.split(',')[1] || base64Image;
         const buffer = Buffer.from(base64Data, "base64");
-        const fileName = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+        const fileName = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}.${extension}`;
 
         const { error } = await supabaseAdmin.storage
             .from(bucketName)
             .upload(fileName, buffer, {
-                contentType: "image/jpeg",
+                contentType: contentType,
                 upsert: true
             });
 
