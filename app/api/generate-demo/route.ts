@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
                     candidates_tokens: candidatesTokens
                 };
 
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                // Artificial delay removed for performance and to avoid AbortErrors
             } catch (err) {
                 console.error("Google AI Demo 2.5 Error:", err);
                 throw err;

@@ -105,7 +105,12 @@ export default function InteractiveTryOnSection({
             setStatus("success");
             setProgress(100);
         } catch (err: any) {
-            setErrorMsg(err.message);
+            console.error("Try-on error:", err);
+            if (err.name === 'AbortError') {
+                setErrorMsg("The request was interrupted. Please try again.");
+            } else {
+                setErrorMsg(err.message);
+            }
             setStatus("error");
         } finally {
             clearInterval(interval);
