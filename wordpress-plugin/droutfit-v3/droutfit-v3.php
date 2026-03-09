@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name: DrOutfit Virtual Try-On Pro
+ * Plugin Name: DrOutfit AI Try-On v3
  * Plugin URI: https://droutfit.com
- * Description: AI-Powered Virtual Try-On for WooCommerce.
- * Version: 1.1.0
+ * Description: AI-Powered Virtual Try-On for WooCommerce. (Native Version)
+ * Version: 3.0.0
  * Author: DrOutfit
- * Text Domain: droutfit-pro
+ * Text Domain: droutfit-v3
  */
 
 if (!defined('ABSPATH')) exit;
 
-class DrOutfit_Pro {
+class DrOutfit_AI_v3 {
     public function __construct() {
         // Add settings page
         add_action('admin_menu', [$this, 'add_admin_menu']);
@@ -19,17 +19,23 @@ class DrOutfit_Pro {
         // Inject button into WooCommerce
         add_action('woocommerce_after_add_to_cart_button', [$this, 'inject_tryon_button']);
         
+        // Add meta box to product page
+        add_action('add_meta_boxes', [$this, 'add_product_meta_box']);
+        add_action('save_post', [$this, 'save_product_meta']);
+
         // Enqueue scripts
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
     public function add_admin_menu() {
-        add_options_page(
+        add_menu_page(
             'DrOutfit Settings',
-            'DrOutfit Try-On',
+            'DrOutfit',
             'manage_options',
             'droutfit-pro',
-            [$this, 'settings_page']
+            [$this, 'settings_page'],
+            'dashicons-smiley', // Icon
+            56 // Position (below WooCommerce)
         );
     }
 
@@ -165,6 +171,38 @@ class DrOutfit_Pro {
         <?php
     }
 
+    public function add_product_meta_box() {
+        add_meta_box(
+            'droutfit_product_settings',
+            'DrOutfit Virtual Try-On',
+            [$this, 'render_product_meta_box'],
+            'product',
+            'side',
+            'default'
+        );
+    }
+
+    public function render_product_meta_box($post) {
+        $enabled = get_post_meta($post->ID, '_droutfit_enabled', true);
+        if ($enabled === '') $enabled = 'yes'; // Default to enabled
+        ?>
+        <p>
+            <label for="droutfit_enabled">
+                <input type="checkbox" name="droutfit_enabled" id="droutfit_enabled" value="yes" <?php checked($enabled, 'yes'); ?>>
+                <?php _e('Show Try-On button', 'droutfit-pro'); ?>
+            </label>
+        </p>
+        <?php
+    }
+
+    public function save_product_meta($post_id) {
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+        if (!current_user_can('edit_post', $post_id)) return;
+
+        $enabled = isset($_POST['droutfit_enabled']) ? 'yes' : 'no';
+        update_post_meta($post_id, '_droutfit_enabled', $enabled);
+    }
+
     public function inject_tryon_button() {
         global $product;
         if (!$product) return;
@@ -172,11 +210,12 @@ class DrOutfit_Pro {
         $merchant_id = get_option('droutfit_merchant_id');
         if (!$merchant_id) return;
 
+        // Check if enabled for this specific product
+        $enabled = get_post_meta($product->get_id(), '_droutfit_enabled', true);
+        if ($enabled === 'no') return;
+
         $product_id = $product->get_id();
         $engine_url = 'https://droutfit.com';
-
-
-        if (!$engine_url) return;
 
         // The widget URL structure: {engine_url}/widget/{product_id}?shop=wordpress
         $widget_url = rtrim($engine_url, '/') . "/widget/" . $product_id . "?shop=wordpress";
@@ -184,18 +223,19 @@ class DrOutfit_Pro {
         echo '<button type="button" 
                 id="droutfit-pro-btn" 
                 class="button alt" 
-                style="margin-top: 10px; width: 100%; height: 50px; border-radius: 12px; background: linear-gradient(90deg, #2563eb, #7c3aed); color: white; border: none; font-weight: bold; cursor: pointer; display: flex; items-center: center; justify-content: center; gap: 8px;"
+                style="margin-top: 15px; width: 100%; height: 50px; border-radius: 12px; background: linear-gradient(90deg, #2563eb, #7c3aed); color: white; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);"
                 data-url="' . esc_attr($widget_url) . '">
                 <span style="font-size: 1.2em;">✨</span> Virtual Try-On
               </button>';
     }
 
     public function enqueue_assets() {
-        if (is_product()) {
-            wp_enqueue_script('droutfit-widget', plugin_dir_url(__FILE__) . 'assets/js/droutfit-widget.js', [], '1.0.0', true);
+        // Enqueue on single product pages OR anywhere WooCommerce styles are present (for Elementor compatibility)
+        if (is_product() || current_theme_supports('woocommerce') || class_exists('WooCommerce')) {
+            wp_enqueue_script('droutfit-widget', plugin_dir_url(__FILE__) . 'assets/js/droutfit-widget.js', [], '1.1.0', true);
             wp_enqueue_style('droutfit-style', plugin_dir_url(__FILE__) . 'assets/css/droutfit-style.css');
         }
     }
 }
 
-new DrOutfit_Pro();
+new DrOutfit_AI_v3();

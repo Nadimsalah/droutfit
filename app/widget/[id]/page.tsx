@@ -28,6 +28,41 @@ function WidgetContent() {
         const loadProduct = async () => {
             try {
                 const id = params.id as string
+                const shop = searchParams.get("shop")
+                const merchantId = searchParams.get("m")
+                const wpName = searchParams.get("name")
+                const wpImage = searchParams.get("image")
+
+                // UUID Regex
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+                if (!uuidRegex.test(id) && shop === "wordpress" && merchantId && wpImage) {
+                    // This is a JIT sync for WordPress
+                    const syncRes = await fetch('/api/wp/sync-product', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            merchant_id: merchantId,
+                            external_id: id,
+                            name: wpName,
+                            image: wpImage
+                        })
+                    })
+                    const syncData = await syncRes.json()
+
+                    if (syncData.success && syncData.product) {
+                        setProduct({
+                            id: syncData.product.id,
+                            name: syncData.product.name,
+                            image: syncData.product.image,
+                            storeUrl: syncData.product.store_url
+                        })
+                        setRemainingTries(5)
+                        setLoading(false)
+                        return
+                    }
+                }
+
                 const stored = await getProductByIdPublic(id)
 
                 if (stored) {
@@ -51,7 +86,7 @@ function WidgetContent() {
             }
         }
         loadProduct()
-    }, [params.id])
+    }, [params.id, searchParams])
 
     if (loading) {
         return (
