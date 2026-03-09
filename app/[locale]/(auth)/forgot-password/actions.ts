@@ -23,11 +23,15 @@ export async function requestResetAction(emailInput: string) {
     // 1. Find user by email
     let targetUser = null
     try {
-        const { data: { users }, error } = await supabase.auth.admin.listUsers()
+        // By default Supabase returns only 50 users. 
+        // We set perPage: 1000 to ensure we find users even in larger databases.
+        const { data: { users }, error } = await supabase.auth.admin.listUsers({
+            perPage: 1000
+        })
         if (error) throw error
         targetUser = users.find(u => u.email?.toLowerCase() === email)
     } catch (e) {
-        console.error("Auth search error:", e)
+        console.error("Auth search error during password reset:", e)
         return { error: "Failed to search user database" }
     }
 
