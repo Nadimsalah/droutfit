@@ -78,6 +78,17 @@
             "shopifyDesc": "Intégrez de manière transparente le widget d'essai virtuel IA le plus réaliste dans votre boutique Shopify. Augmentez la confiance et les ventes de votre boutique avec des essais de qualité professionnelle.",
             "enterpriseTitle": "Standard basé sur l'API",
             "enterpriseDesc": "Le standard d'entreprise pour l'essai virtuel basé sur l'API. Augmentez les conversions et réduisez les retours avec une IA réaliste."
+        },
+        "integrations": {
+            "title": "Intégrez avec votre ",
+            "titleAccent": "Plateforme préférée",
+            "description": "Choisissez votre plateforme de boutique et commencez en quelques minutes. DrOutfit fonctionne parfaitement avec les principaux moteurs d'e-commerce au monde.",
+            "shopifyBadge": "Marchand Shopify ?",
+            "shopifyDesc": "Connectez DrOutfit à votre boutique en quelques clics. C'est simple, rapide et conçu pour évoluer avec votre marque.",
+            "shopifyCta": "Lancer l'intégration Shopify",
+            "wpBadge": "Prêt pour WooCommerce",
+            "wpDesc": "Vous utilisez WordPress ? Téléchargez notre plugin dédié et ultra-stable pour WooCommerce et passez en direct instantanément.",
+            "wpCta": "Essayer DrOutfit"
         }
     },
     "demoSection": {

@@ -78,6 +78,17 @@
             "shopifyDesc": "Seamlessly integrate the most realistic AI Virtual Try-On widget into your Shopify store. Increase your store's confidence and sales with professional-grade try-ons.",
             "enterpriseTitle": "API-Driven Standard",
             "enterpriseDesc": "The enterprise standard for API-driven virtual try-on. Increase conversions and reduce returns with realistic AI."
+        },
+        "integrations": {
+            "title": "Integrate with Your ",
+            "titleAccent": "Fav Platform",
+            "description": "Choose your store platform and get started in minutes. DrOutfit works seamlessly with the world's leading e-commerce engines.",
+            "shopifyBadge": "Shopify Merchant?",
+            "shopifyDesc": "Connect DrOutfit to your store in just a few clicks. It's easy, fast, and built to scale with your brand.",
+            "shopifyCta": "Start Shopify Integration",
+            "wpBadge": "WooCommerce Ready",
+            "wpDesc": "Using WordPress? Download our dedicated, ultra-stable plugin for WooCommerce and go live instantly.",
+            "wpCta": "DrOutfit Try On"
         }
     },
     "demoSection": {

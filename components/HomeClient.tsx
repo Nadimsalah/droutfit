@@ -230,13 +230,6 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                     ))}
                 </div>
 
-                <div className="text-center w-full flex flex-col items-center justify-center">
-                    <p className="text-sm font-bold text-gray-400 mb-6 uppercase tracking-widest">{dict.homepage.features.subtitle}</p>
-                    <button className="px-10 py-5 bg-white text-black rounded-full font-black text-lg transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 hover:scale-105 hover:bg-gray-100">
-                        <Play className="h-5 w-5 fill-current" />
-                        {dict.footer.demo}
-                    </button>
-                </div>
             </section>
 
             <InteractiveTryOnSection dict={dict} locale={locale} demoImage={demoImage} />
@@ -246,10 +239,10 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                 <div className="max-w-7xl mx-auto space-y-12">
                     <div className="text-center space-y-4 mb-12">
                         <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                            Integrate with Your <span className="text-blue-400">Fav Platform</span>
+                            {dict.homepage.integrations.title} <span className="text-blue-400">{dict.homepage.integrations.titleAccent}</span>
                         </h2>
                         <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                            Choose your store platform and get started in minutes. DrOutfit works seamlessly with the world's leading e-commerce engines.
+                            {dict.homepage.integrations.description}
                         </p>
                     </div>
 
@@ -267,9 +260,9 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                         style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
                                     />
                                 </div>
-                                <h3 className="text-2xl md:text-3xl font-black text-white">Shopify Merchant?</h3>
+                                <h3 className="text-2xl md:text-3xl font-black text-white">{dict.homepage.integrations.shopifyBadge}</h3>
                                 <p className="text-gray-400 text-lg leading-relaxed">
-                                    Connect DrOutfit to your store in just a few clicks. It's easy, fast, and built to scale with your brand.
+                                    {dict.homepage.integrations.shopifyDesc}
                                 </p>
                             </div>
 
@@ -277,13 +270,13 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                 href={`/${locale}/dashboard`}
                                 className="mt-10 inline-flex items-center justify-center gap-3 px-8 py-5 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all shadow-xl shadow-white/5 group"
                             >
-                                Start Shopify Integration
+                                {dict.homepage.integrations.shopifyCta}
                                 <ArrowRight className={cn("h-5 w-5 transition-transform group-hover:translate-x-1", locale === 'ar' && "rotate-180")} />
                             </Link>
                         </div>
 
                         {/* WordPress Card */}
-                        <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500">
+                        <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl hover:border-blue-500/30 transition-all duration-500" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors" />
 
                             <div className="space-y-6">
@@ -295,9 +288,9 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                     />
                                     <span className="text-xl font-black text-white">WordPress</span>
                                 </div>
-                                <h3 className="text-2xl md:text-3xl font-black text-white">WooCommerce Ready</h3>
+                                <h3 className="text-2xl md:text-3xl font-black text-white">{dict.homepage.integrations.wpBadge}</h3>
                                 <p className="text-gray-400 text-lg leading-relaxed">
-                                    Using WordPress? Download our dedicated, ultra-stable plugin for WooCommerce and go live instantly.
+                                    {dict.homepage.integrations.wpDesc}
                                 </p>
                             </div>
 
@@ -307,7 +300,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                                 download
                             >
                                 <Download className="h-5 w-5" />
-                                DrOutfit Try On
+                                {dict.homepage.integrations.wpCta}
                             </a>
                         </div>
                     </div>
