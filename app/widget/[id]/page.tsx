@@ -1,3 +1,5 @@
+"use client";
+
 import { useParams, useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { Upload, X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon } from "lucide-react"
