@@ -1,14 +1,14 @@
-"use client"
-
-import { useParams } from "next/navigation"
-import { useState, useRef, useEffect } from "react"
+import { useParams, useSearchParams } from "next/navigation"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { Upload, X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon } from "lucide-react"
 import { uploadImage } from "@/lib/supabase"
 // Removed NanoBanana import
 import { getProductByIdPublic, incrementProductUsage } from "@/lib/storage"
 
-export default function WidgetPage() {
+function WidgetContent() {
     const params = useParams()
+    const searchParams = useSearchParams()
+    const shop = searchParams.get("shop")
     const [step, setStep] = useState<"upload" | "processing" | "result">("upload")
     const [userImage, setUserImage] = useState<string | null>(null)
     const [userFile, setUserFile] = useState<File | null>(null)
@@ -130,6 +130,7 @@ export default function WidgetPage() {
                 body: JSON.stringify({
                     imageUrls: [publicUserUrl, product.image],
                     productId: product.id,
+                    shop: shop,
                     type: "person"
                 }),
             });
@@ -378,5 +379,17 @@ export default function WidgetPage() {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-100 rounded-full blur-[100px] opacity-50"></div>
             </div>
         </div>
+    )
+}
+
+export default function WidgetPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+            </div>
+        }>
+            <WidgetContent />
+        </Suspense>
     )
 }

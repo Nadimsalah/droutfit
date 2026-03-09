@@ -134,6 +134,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Daily try-on limit reached for this IP." }, { status: 429 });
         }
 
+        const referer = req.headers.get("referer") || "";
+        const source = (shop || referer.includes("myshopify.com") || referer.includes("shopify.com")) ? "shopify" : "droutfit";
+
         const startTime = Date.now();
         let logEntryId: string | null = null;
         try {
@@ -144,6 +147,7 @@ export async function POST(req: NextRequest) {
                 status: 202,
                 latency: null,
                 product_id: (productId && isUUID(productId)) ? productId : null,
+                error_message: JSON.stringify({ source }),
                 ...((profile as any).ip_limit ? { ip_address: ip } : {})
             }]).select().single();
             if (logEntry) logEntryId = logEntry.id;
@@ -221,7 +225,6 @@ export async function POST(req: NextRequest) {
             }
 
             if (logEntryId) {
-                const source = shop ? "shopify" : "droutfit";
                 await supabase.from("usage_logs").update({
                     status: 200,
                     latency: `${Date.now() - startTime}ms`,
