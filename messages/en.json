@@ -35,7 +35,7 @@
         "terms": "Terms of Service",
         "contact": "Contact Us",
         "features": "Features",
-        "demo": "Live Demo",
+        "demo": "Get Started",
         "createAccount": "Create Account",
         "readyToRevolutionize": "Ready to revolutionize your brand?",
         "joinNextGen": "Join the next generation of e-commerce. AI virtual try-on is the future of digital storefronts.",
@@ -71,7 +71,7 @@
             "title1": "Built for Scale.",
             "title2": "Powered by AI.",
             "description": "Our state-of-the-art vision models process thousands of garments per minute, providing hyper-realistic results that outclass traditional mannequins and simple overlays.",
-            "subtitle": "Stop guessing. Start seeing."
+            "subtitle": "Live Demo"
         },
         "seo": {
             "shopifyTitle": "Shopify Virtual Try-On",
