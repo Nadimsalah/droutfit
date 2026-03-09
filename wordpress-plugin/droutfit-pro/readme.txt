@@ -22,7 +22,7 @@ This plugin bridges your WooCommerce store with the DrOutfit AI Virtual Try-On e
 
 == Installation ==
 
-1. Upload the `droutfit-tryon` folder to the `/wp-content/plugins/` directory.
+1. Upload the `droutfit-pro` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Go to `Settings -> DrOutfit Try-On` and enter your Next.js Engine URL.
 4. The "Virtual Try-On" button will automatically appear on your product pages!

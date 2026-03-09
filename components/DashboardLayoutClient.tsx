@@ -46,9 +46,11 @@ export default function DashboardLayoutClient({
 
     return (
         <div className="flex h-screen bg-[#0B0E14] font-sans overflow-hidden text-white" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-            <Suspense fallback={<div className="w-72 bg-[#0F1116] border-r border-gray-800/50 hidden md:block" />}>
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} dict={dict} locale={locale} />
-            </Suspense>
+            {!isEmbedded && (
+                <Suspense fallback={<div className="w-72 bg-[#0F1116] border-r border-gray-800/50 hidden md:block" />}>
+                    <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} dict={dict} locale={locale} />
+                </Suspense>
+            )}
             <div className={`flex flex-1 flex-col overflow-hidden w-full relative`}>
 
                 {/* Return to Shopify Banner */}
@@ -68,17 +70,19 @@ export default function DashboardLayoutClient({
                         </Link>
                     </div>
                 )}
-                <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
-                    <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
+                {!isEmbedded && (
+                    <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl z-20 sticky top-0">
+                        <div className="flex items-center gap-2">
+                            <img src="/logo.png" alt="Dr Outfit" className="h-8 w-auto object-contain" />
+                        </div>
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                        >
+                            <Menu className="h-6 w-6" />
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                    >
-                        <Menu className="h-6 w-6" />
-                    </button>
-                </div>
+                )}
 
                 {/* Background decorative blur */}
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
