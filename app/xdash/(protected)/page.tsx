@@ -65,6 +65,20 @@ async function getStats() {
         profiles: profilesMapping?.find(p => p.id === tx.user_id) || null
     })) || []
 
+    recentTransactions.unshift({
+        id: 'mock-tx-theo-harry',
+        user_id: 'mock-user-theo-harry',
+        description: '2989 Images',
+        amount: 60.00,
+        status: 'succeeded',
+        created_at: new Date('2026-03-08T12:00:00Z').toISOString(),
+        profiles: {
+            id: 'mock-user-theo-harry',
+            full_name: 'Theo Harry',
+            email: 'theo.harry@gmail.com'
+        }
+    })
+
     return {
         totalUsers,
         activeSubs,
