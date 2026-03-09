@@ -94,93 +94,73 @@ class DrOutfit_Pro {
         delete_transient('droutfit_error');
         delete_transient('droutfit_success');
         ?>
-        <div class="wrap" style="max-width: 800px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
-            
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="width: 44px; height: 44px; background: #2563eb; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Dr</div>
-                    <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">DrOutfit Dashboard</h1>
+        <div class="wrap">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 32px; height: 32px; background: #2271b1; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">Dr</div>
+                    <h1 style="margin:0; font-size: 20px; font-weight: 600;"><?php _e('DrOutfit Virtual Try-On', 'droutfit-pro'); ?></h1>
+                    <span style="font-size: 9px; background: #f0f0f1; color: #646970; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #dcdcde;">NATIVE V2.0</span>
                 </div>
             </div>
 
             <?php if ($error): ?>
-                <div style="padding: 15px; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; color: #dc2626; margin-bottom: 20px; font-weight: 500;">
-                    <?php echo esc_html($error); ?>
-                </div>
+                <div class="notice notice-error is-dismissible"><p><?php echo esc_html($error); ?></p></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
-                <div style="padding: 15px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; color: #16a34a; margin-bottom: 20px; font-weight: 500;">
-                    <?php echo esc_html($success); ?>
-                </div>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html($success); ?></p></div>
             <?php endif; ?>
 
-            <?php if (!$merchant_id): ?>
-                <!-- Login View -->
-                <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h2 style="margin: 0; font-size: 20px; color: #334155;">Connect your Store</h2>
-                        <p style="color: #64748b; margin-top: 5px;">Enter your DrOutfit credentials to activate virtual try-on.</p>
-                    </div>
-
+            <div class="card" style="max-width: 800px; margin-top: 20px; padding: 30px; border-radius: 8px;">
+                <?php if (!$merchant_id): ?>
+                    <h2><?php _e('Connect to DrOutfit', 'droutfit-pro'); ?></h2>
+                    <p><?php _e('Log in with your DrOutfit account to enable AI Virtual Try-On for your WooCommerce products.', 'droutfit-pro'); ?></p>
+                    
                     <form method="post" action="">
                         <?php wp_nonce_field('droutfit_login_action', 'droutfit_login_nonce'); ?>
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 8px;">Email Address</label>
-                            <input type="email" name="email" required style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;" placeholder="you@example.com">
-                        </div>
-                        <div style="margin-bottom: 30px;">
-                            <label style="display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 8px;">Password</label>
-                            <input type="password" name="password" required style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;" placeholder="••••••••">
-                        </div>
-                        <button type="submit" name="droutfit_login" value="1" style="width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-                            Login & Connect
-                        </button>
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="email"><?php _e('Email Address', 'droutfit-pro'); ?></label></th>
+                                <td><input name="email" type="email" id="email" value="" class="regular-text" required placeholder="you@example.com"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="password"><?php _e('Password', 'droutfit-pro'); ?></label></th>
+                                <td><input name="password" type="password" id="password" value="" class="regular-text" required placeholder="••••••••"></td>
+                            </tr>
+                        </table>
+                        <p class="submit">
+                            <button type="submit" name="droutfit_login" value="1" class="button button-primary button-large" style="padding: 0 30px; height: 40px;"><?php _e('Login & Connect', 'droutfit-pro'); ?></button>
+                        </p>
                     </form>
-
-                    <div style="margin-top: 25px; text-align: center; border-top: 1px solid #f1f5f9; pt: 20px;">
-                        <p style="color: #64748b; font-size: 14px;">Don't have an account? <a href="https://droutfit.com/en/signup" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;">Sign up for free</a></p>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Connected View -->
-                <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
-                    <div style="display: flex; gap: 30px; align-items: center;">
-                        <div style="flex: 1;">
-                            <p style="text-transform: uppercase; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; margin-bottom: 5px;">Status</p>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%;"></div>
-                                <span style="font-weight: 600; color: #1e293b;">Active & Connected</span>
-                            </div>
-                        </div>
-                        <div style="flex: 1; border-left: 1px solid #f1f5f9; padding-left: 30px;">
-                            <p style="text-transform: uppercase; font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; margin-bottom: 5px;">Available Credits</p>
-                            <span style="font-size: 24px; font-weight: 800; color: #2563eb;"><?php echo esc_html($this->get_credits($merchant_id)); ?></span>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 40px; padding: 25px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9;">
-                        <div style="margin-bottom: 15px;">
-                            <p style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px;">Connected Account</p>
-                            <p style="font-size: 15px; font-weight: 600; color: #1e293b; margin: 0;"><?php echo esc_html($merchant_email); ?></p>
+                    <p class="description"><?php _e("Don't have an account?", 'droutfit-pro'); ?> <a href="https://droutfit.com/en/signup" target="_blank"><?php _e('Create one for free', 'droutfit-pro'); ?></a></p>
+                <?php else: ?>
+                    <div style="display: flex; gap: 40px; margin-bottom: 30px;">
+                        <div>
+                            <p style="margin:0; font-size: 11px; text-transform: uppercase; color: #646970; font-weight: 600;"><?php _e('Connection Status', 'droutfit-pro'); ?></p>
+                            <p style="margin:5px 0 0; font-size: 16px; font-weight: 600; color: #00a32a;"><span class="dashicons dashicons-yes-alt" style="color: #00a32a; margin-top: -2px;"></span> <?php _e('Connected', 'droutfit-pro'); ?></p>
                         </div>
                         <div>
-                            <p style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px;">Merchant ID</p>
-                            <code style="font-size: 13px; color: #334155;"><?php echo esc_html($merchant_id); ?></code>
+                            <p style="margin:0; font-size: 11px; text-transform: uppercase; color: #646970; font-weight: 600;"><?php _e('Available Credits', 'droutfit-pro'); ?></p>
+                            <p style="margin:5px 0 0; font-size: 24px; font-weight: 800; color: #2271b1;"><?php echo esc_html($this->get_credits($merchant_id)); ?></p>
                         </div>
                     </div>
 
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center;">
-                        <a href="https://droutfit.com/dashboard" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 14px;">Open DrOutfit Portal ↗</a>
+                    <div style="background: #f6f7f7; padding: 20px; border-radius: 6px; border: 1px solid #dcdcde; margin-bottom: 30px;">
+                        <p style="margin: 0 0 10px;"><strong><?php _e('Account Email:', 'droutfit-pro'); ?></strong> <?php echo esc_html($merchant_email); ?></p>
+                        <p style="margin: 0;"><strong><?php _e('Merchant ID:', 'droutfit-pro'); ?></strong> <code style="font-size: 11px;"><?php echo esc_html($merchant_id); ?></code></p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <a href="https://droutfit.com/dashboard" target="_blank" class="button"><?php _e('Open DrOutfit Dashboard', 'droutfit-pro'); ?> <span class="dashicons dashicons-external" style="font-size: 14px; margin-top: 4px;"></span></a>
                         
-                        <form method="post" action="">
+                        <form method="post" action="" onsubmit="return confirm('Are you sure you want to disconnect?');">
                             <?php wp_nonce_field('droutfit_disconnect_action', 'droutfit_disconnect_nonce'); ?>
                             <input type="hidden" name="disconnect" value="true">
-                            <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 14px;">Disconnect Store</button>
+                            <button type="submit" style="color: #d63638; background: none; border: none; padding: 0; font-size: 13px; cursor: pointer; text-decoration: underline;"><?php _e('Disconnect Store', 'droutfit-pro'); ?></button>
                         </form>
                     </div>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
     }

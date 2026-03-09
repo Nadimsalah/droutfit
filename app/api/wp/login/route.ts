@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
     try {
@@ -10,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
         }
 
-        const supabase = createAdminClient();
+        const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
         // 1. Authenticate user using Supabase auth
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -19,7 +22,8 @@ export async function POST(req: Request) {
         });
 
         if (authError || !authData.user) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+            console.error("WP Login Auth Error:", authError?.message || "User not found");
+            return NextResponse.json({ error: authError?.message || "Invalid credentials" }, { status: 401 });
         }
 
         const userId = authData.user.id;

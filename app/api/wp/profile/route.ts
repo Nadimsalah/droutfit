@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function GET(req: Request) {
     try {
@@ -14,7 +17,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Merchant ID is required" }, { status: 400 });
         }
 
-        const supabase = createAdminClient();
+        const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
