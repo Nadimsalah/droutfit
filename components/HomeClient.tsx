@@ -209,6 +209,56 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                 </div>
             </section>
 
+            {/* Shopify Integration Section */}
+            <section className="py-24 px-6 relative overflow-hidden">
+                <div className="max-w-5xl mx-auto">
+                    <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden group shadow-2xl">
+                        {/* Background Glow */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/10 transition-colors duration-700" />
+
+                        <div className="flex-1 space-y-6 text-center md:text-start relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-[10px] font-black text-green-400 uppercase tracking-[0.2em]">
+                                <ShoppingBag className="h-3 w-3" />
+                                {dict.homepage.shopifyIntegration.badge}
+                            </div>
+                            <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">
+                                {dict.homepage.shopifyIntegration.title}
+                            </h2>
+                            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+                                {dict.homepage.shopifyIntegration.description}
+                            </p>
+                            <Link
+                                href={`/${locale}/dashboard`}
+                                className="inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all shadow-xl shadow-white/5"
+                            >
+                                {dict.homepage.shopifyIntegration.cta}
+                                <ArrowRight className={cn("h-5 w-5", locale === 'ar' && "rotate-180")} />
+                            </Link>
+                        </div>
+
+                        <div className="flex-1 flex justify-center items-center relative z-10">
+                            <div className="relative group/logo">
+                                {/* Decorative Ring */}
+                                <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-150 group-hover/logo:bg-green-500/40 transition-all duration-700" />
+
+                                <div className="bg-[#1A1F2B] border border-white/10 p-10 rounded-[3rem] shadow-2xl relative z-10 group-hover/logo:rotate-3 transition-transform duration-500">
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
+                                        alt="Shopify"
+                                        className="h-16 md:h-24 w-auto object-contain brightness-0 invert"
+                                    />
+                                </div>
+
+                                {/* Floating Elements */}
+                                <div className="absolute -top-4 -right-4 bg-green-500 text-black p-3 rounded-2xl shadow-xl animate-bounce">
+                                    <Zap className="h-6 w-6 fill-current" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <InteractiveTryOnSection dict={dict} locale={locale} />
             <PricingSection dict={dict} locale={locale} />
 

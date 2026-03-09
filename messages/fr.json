@@ -59,6 +59,12 @@
             "shopifyIntegrated": "Intégré à Shopify",
             "shopifyStep1": "Étape 1 : Liez vos comptes pour partager les crédits"
         },
+        "shopifyIntegration": {
+            "badge": "Marchand Shopify ?",
+            "title": "Intégration en une minute",
+            "description": "Vous utilisez Shopify ? Connectez DrOutfit à votre boutique en quelques clics. C'est simple, rapide et conçu pour évoluer avec votre marque.",
+            "cta": "Lancer l'intégration Shopify"
+        },
         "features": {
             "badge": "Pourquoi choisir Droutfit",
             "title1": "Conçu pour l'échelle.",

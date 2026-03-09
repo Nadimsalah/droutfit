@@ -14,7 +14,6 @@ async function debugUser(emailToFind) {
     console.log("--- Searching for User:", emailToFind, "---");
 
     try {
-        // 1. Try direct find
         const { data: { users }, error } = await supabase.auth.admin.listUsers({
             perPage: 1000
         });
@@ -30,10 +29,8 @@ async function debugUser(emailToFind) {
                 last_sign_in: user.last_sign_in_at
             });
         } else {
-            console.log("User NOT found in Auth list (first 1000).");
-            console.log("Total users in this page:", users.length);
+            console.log("User NOT found in Auth list.");
 
-            // Try to find if user exists at all in profiles
             const { data: profile, error: pError } = await supabase
                 .from('profiles')
                 .select('id, email')
@@ -41,9 +38,9 @@ async function debugUser(emailToFind) {
                 .single();
 
             if (profile) {
-                console.log("User exists in 'profiles' table but NOT in Auth list users!", profile);
+                console.log("User exists in 'profiles' table!", profile);
             } else {
-                console.log("User NOT found in profiles either.");
+                console.log("User NOT found in database at all.");
             }
         }
 
@@ -52,5 +49,5 @@ async function debugUser(emailToFind) {
     }
 }
 
-// Search for the user's email from the screenshot/metadata
+debugUser('nadim.s.eddine@gmail.com');
 debugUser('salaheddinenadim@gmail.com');

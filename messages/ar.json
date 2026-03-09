@@ -59,6 +59,12 @@
             "shopifyIntegrated": "متكامل مع Shopify",
             "shopifyStep1": "الخطوة 1: اربط حساباتك لمشاركة الأرصدة"
         },
+        "shopifyIntegration": {
+            "badge": "تاجر Shopify؟",
+            "title": "تكامل في دقيقة واحدة",
+            "description": "هل تستخدم Shopify؟ اربط DrOutfit بمتجرك ببضع نقرات فقط. إنه سهل وسريع ومصمم ليتوسع مع علامتك التجارية.",
+            "cta": "ابدأ تكامل Shopify"
+        },
         "features": {
             "badge": "لماذا Droutfit؟",
             "title1": "أداء قابل للتوسع.",
