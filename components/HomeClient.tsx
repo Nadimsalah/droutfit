@@ -209,8 +209,10 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                 </div>
             </section>
 
+            <InteractiveTryOnSection dict={dict} locale={locale} />
+
             {/* Shopify Integration Section */}
-            <section className="py-24 px-6 relative overflow-hidden">
+            <section id="shopify" className="py-24 px-6 relative overflow-hidden">
                 <div className="max-w-5xl mx-auto">
                     <div className="bg-gradient-to-br from-[#131720] to-[#0B0E14] border border-white/5 rounded-[2.5rem] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden group shadow-2xl">
                         {/* Background Glow */}
@@ -262,8 +264,6 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                     </div>
                 </div>
             </section>
-
-            <InteractiveTryOnSection dict={dict} locale={locale} />
             <PricingSection dict={dict} locale={locale} />
 
 
