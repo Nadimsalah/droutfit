@@ -262,17 +262,6 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
             <InteractiveTryOnSection dict={dict} locale={locale} />
             <PricingSection dict={dict} locale={locale} />
 
-            {/* Keyword Content */}
-            <section className="py-24 px-6 bg-[#0B0E14] border-y border-white/5">
-                <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-                    <div className="space-y-4">
-                        <h3 className="text-white font-bold text-lg">{dict.homepage.seo.shopifyTitle}</h3>
-                        <p className="text-gray-500 text-sm leading-relaxed">
-                            {dict.homepage.seo.shopifyDesc}
-                        </p>
-                    </div>
-                </div>
-            </section>
 
             <div className="bg-[#050608] pb-12 flex flex-col items-center justify-center gap-12 px-6">
                 <div className="max-w-4xl mx-auto w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
