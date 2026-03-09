@@ -29,10 +29,35 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }
 
+        // Fetch recent logs
+        const { data: logsData } = await supabase
+            .from('usage_logs')
+            .select('id, created_at, status, error_message')
+            .eq('user_id', merchantId)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        const logs = (logsData || []).map(log => {
+            let resultUrl = null;
+            if (log.status === 200 && log.error_message) {
+                try {
+                    const parsed = JSON.parse(log.error_message);
+                    resultUrl = parsed.result_url;
+                } catch (e) { }
+            }
+            return {
+                id: log.id,
+                date: log.created_at,
+                status: log.status,
+                image: resultUrl
+            };
+        });
+
         return NextResponse.json({
             success: true,
             credits: profile.credits || 0,
-            store_website: profile.store_website
+            store_website: profile.store_website,
+            logs
         });
 
     } catch (err: any) {

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: DrOutfit Ultra-Safe v8
  * Plugin URI: https://droutfit.com
- * Description: AI Virtual Try-On (V8 Ultra-Reliable Fix)
- * Version: 8.0.0
+ * Description: AI Virtual Try-On (V8.4 Dashboard Fix)
+ * Version: 8.4.0
  * Author: DrOutfit
  * Text Domain: dr-ai-v8-final
  */
@@ -78,6 +78,12 @@ class DrOutfit_AI_v8 {
         }
     }
 
+    private function get_dashboard_data($merchant_id) {
+        $response = wp_remote_get('https://droutfit.com/api/wp/profile?merchant_id=' . $merchant_id);
+        if (is_wp_error($response)) return null;
+        return json_decode(wp_remote_retrieve_body($response), true);
+    }
+
     public function settings_page() {
         $merchant_id = get_option('droutfit_merchant_id');
         $merchant_email = get_option('droutfit_merchant_email');
@@ -85,36 +91,84 @@ class DrOutfit_AI_v8 {
         $success = get_transient('droutfit_success');
         delete_transient('droutfit_error');
         delete_transient('droutfit_success');
+
+        $data = $merchant_id ? $this->get_dashboard_data($merchant_id) : null;
+        $credits = isset($data['credits']) ? $data['credits'] : 0;
+        $logs = isset($data['logs']) ? $data['logs'] : [];
         ?>
         <div class="wrap">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 32px; height: 32px; background: #2271b1; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">Dr</div>
-                    <h1 style="margin:0; font-size: 20px; font-weight: 600;"><?php _e('DrOutfit Virtual Try-On', 'droutfit-pro'); ?></h1>
-                    <span style="font-size: 9px; background: #f0f0f1; color: #646970; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #dcdcde;">ULTRA-SAFE v8</span>
+                    <h1 style="margin:0; font-size: 20px; font-weight: 600;"><?php _e('DrOutfit Virtual Try-On', 'dr-ai-v8-final'); ?></h1>
+                    <span style="font-size: 9px; background: #f0f0f1; color: #646970; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #dcdcde;">ULTRA-SAFE v8.4</span>
                 </div>
             </div>
 
             <?php if ($error): ?><div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
             <?php if ($success): ?><div class="notice notice-success"><p><?php echo esc_html($success); ?></p></div><?php endif; ?>
 
-            <div class="card" style="max-width: 800px; padding: 30px; border-radius: 8px;">
-                <?php if (!$merchant_id): ?>
+            <?php if (!$merchant_id): ?>
+                <div class="card" style="max-width: 600px; padding: 30px; border-radius: 8px;">
                     <h2>Connect to DrOutfit</h2>
+                    <p>Log in with your DrOutfit account to enable AI Virtual Try-On for your WooCommerce products.</p>
                     <form method="post">
                         <?php wp_nonce_field('droutfit_login_action', 'droutfit_login_nonce'); ?>
-                        <p><label>Email: <input name="email" type="email" class="regular-text" required></label></p>
-                        <p><label>Password: <input name="password" type="password" class="regular-text" required></label></p>
-                        <p><button type="submit" name="droutfit_login" value="1" class="button button-primary">Login & Connect</button></p>
+                        <p><label style="display:block; margin-bottom:5px;">Email</label><input name="email" type="email" class="regular-text" required style="width:100%"></p>
+                        <p><label style="display:block; margin-bottom:5px;">Password</label><input name="password" type="password" class="regular-text" required style="width:100%"></p>
+                        <p style="margin-top:20px;"><button type="submit" name="droutfit_login" value="1" class="button button-primary button-large" style="width:100%; height:45px;">Login & Connect</button></p>
                     </form>
-                <?php else: ?>
-                    <p><strong>Connected as:</strong> <?php echo esc_html($merchant_email); ?></p>
-                    <form method="post">
-                        <?php wp_nonce_field('droutfit_disconnect_action', 'droutfit_disconnect_nonce'); ?>
-                        <button type="submit" name="disconnect" class="button">Disconnect</button>
-                    </form>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php else: ?>
+                <div style="display: grid; grid-template-columns: 300px 1fr; gap: 20px;">
+                    <!-- Sidebar Stats -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="card" style="margin:0; padding: 20px; border-radius: 12px;">
+                            <p style="margin:0; font-size: 11px; text-transform: uppercase; color: #646970; font-weight: 600;">Available Credits</p>
+                            <p style="margin:10px 0; font-size: 32px; font-weight: 800; color: #2271b1;"><?php echo esc_html($credits); ?></p>
+                            <a href="https://droutfit.com/dashboard" target="_blank" class="button button-primary" style="width:100%; text-align:center; height:35px; line-height:33px; border-radius:6px; background:#2271b1;">Top Up Credits ✨</a>
+                        </div>
+
+                        <div class="card" style="margin:0; padding: 20px; border-radius: 12px; background: #f6f7f7;">
+                            <p style="margin:0 0 10px; font-size:13px;"><strong>Account:</strong><br><?php echo esc_html($merchant_email); ?></p>
+                            <form method="post" onsubmit="return confirm('Are you sure?');">
+                                <?php wp_nonce_field('droutfit_disconnect_action', 'droutfit_disconnect_nonce'); ?>
+                                <button type="submit" name="disconnect" style="color: #d63638; background: none; border: none; padding: 0; font-size: 12px; cursor: pointer; text-decoration: underline;">Disconnect Store</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Main History -->
+                    <div class="card" style="margin:0; padding: 25px; border-radius: 12px; min-height: 400px;">
+                        <h2 style="margin-top:0;">Recent Try-On History</h2>
+                        <?php if (empty($logs)): ?>
+                            <div style="padding: 40px; text-align: center; color: #646970;">
+                                <span class="dashicons dashicons-camera" style="font-size: 40px; width: 40px; height: 40px; opacity: 0.3;"></span>
+                                <p>No try-on sessions found yet.</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px;">
+                                <?php foreach ($logs as $log): ?>
+                                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; position: relative;">
+                                        <?php if ($log['image']): ?>
+                                            <div style="aspect-ratio: 3/4; background: #f3f4f6; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                                <img src="<?php echo esc_url($log['image']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </div>
+                                        <?php else: ?>
+                                            <div style="aspect-ratio: 3/4; background: #f3f4f6; display:flex; align-items:center; justify-content:center; color:#9ca3af;">
+                                                <span class="dashicons dashicons-warning" title="Status: <?php echo esc_attr($log['status']); ?>"></span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div style="padding: 8px; border-top: 1px solid #f3f4f6;">
+                                            <p style="margin:0; font-size: 10px; color: #646970;"><?php echo date('M d, H:i', strtotime($log['date'])); ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -209,6 +263,17 @@ class DrOutfit_AI_v8 {
                     window.dr_vto_open_v8(btn);
                 }
             });
+
+            // Listener for close message from iframe
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'droutfit-close') {
+                    const overlay = document.getElementById('dr-v8-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.remove(), 300);
+                    }
+                }
+            }, false);
         })();
         </script>
         <?php

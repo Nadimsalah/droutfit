@@ -378,10 +378,16 @@ function WidgetContent() {
                                 <button
                                     className="col-span-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
                                     onClick={() => {
-                                        if (product.storeUrl) window.open(product.storeUrl, '_blank')
+                                        if (shop === "wordpress") {
+                                            window.parent.postMessage({ type: 'droutfit-close' }, '*')
+                                            return
+                                        }
+                                        if (product.storeUrl && product.storeUrl.startsWith('http')) {
+                                            window.open(product.storeUrl, '_blank')
+                                        }
                                     }}
                                 >
-                                    Shop Now
+                                    {shop === "wordpress" ? "Close & Done" : "Shop Now"}
                                     <ShoppingBag className="h-4 w-4" />
                                 </button>
                             </div>

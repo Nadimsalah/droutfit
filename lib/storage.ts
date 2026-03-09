@@ -109,10 +109,10 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 
 export async function getProductByIdPublic(id: string): Promise<Product | undefined> {
     // No auth check - public access for widget
-    // Validate UUID format to avoid Postgres errors
+    // Validate UUID format OR wp_product prefix
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
-        console.warn('Invalid UUID provided to getProductByIdPublic:', id);
+    if (!uuidRegex.test(id) && !id.startsWith('wp_product:')) {
+        console.warn('Invalid ID provided to getProductByIdPublic:', id);
         return undefined;
     }
 
