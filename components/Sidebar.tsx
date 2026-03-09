@@ -20,7 +20,8 @@ import {
     Globe,
     LogOut,
     X,
-    ChevronRight
+    ChevronRight,
+    Puzzle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -41,6 +42,7 @@ export function Sidebar({ isOpen, onClose, dict, locale }: SidebarProps) {
         { name: dict.dashboard.overview, href: `/${locale}/dashboard`, icon: LayoutDashboard },
         { name: dict.dashboard.products, href: `/${locale}/dashboard/products`, icon: Zap },
         { name: dict.dashboard.logs, href: `/${locale}/dashboard/logs`, icon: ScrollText },
+        { name: dict.dashboard.integrations || 'Integrations', href: `/${locale}/dashboard/integrations`, icon: Puzzle },
         { name: dict.dashboard.billing, href: `/${locale}/dashboard/billing`, icon: CreditCard },
     ]
 
