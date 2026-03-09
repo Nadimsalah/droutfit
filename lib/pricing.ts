@@ -12,7 +12,8 @@ export const DEFAULT_PRICING = {
     CUSTOM_CREDIT_PRICE: 0.028,
     MINIMUM_CUSTOM_AMOUNT: 50000,
     // AI Provider Settings
-    GEMINI_API_KEY: ''
+    GEMINI_API_KEY: '',
+    LANDING_DEMO_IMAGE: '/alaska-jacket.webp'
 }
 
 export type PricingConfig = typeof DEFAULT_PRICING

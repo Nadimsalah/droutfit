@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
+import { getPricing } from "@/lib/pricing";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
 import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag } from "lucide-react";
@@ -63,6 +64,17 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
 }
 
 export default function HomeClient({ dict, locale }: { dict: any, locale: string }) {
+    const [demoImage, setDemoImage] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const settings = await getPricing();
+            if (settings.LANDING_DEMO_IMAGE) {
+                setDemoImage(settings.LANDING_DEMO_IMAGE);
+            }
+        };
+        fetchSettings();
+    }, []);
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
@@ -209,7 +221,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                 </div>
             </section>
 
-            <InteractiveTryOnSection dict={dict} locale={locale} />
+            <InteractiveTryOnSection dict={dict} locale={locale} demoImage={demoImage} />
 
             {/* Shopify Integration Section */}
             <section id="shopify" className="py-24 px-6 relative overflow-hidden">

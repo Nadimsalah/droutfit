@@ -19,7 +19,15 @@ import {
     Activity
 } from "lucide-react";
 
-export default function InteractiveTryOnSection({ dict, locale }: { dict: any, locale: string }) {
+export default function InteractiveTryOnSection({
+    dict,
+    locale,
+    demoImage
+}: {
+    dict: any,
+    locale: string,
+    demoImage: string | null
+}) {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [status, setStatus] = useState<"idle" | "uploading" | "processing" | "success" | "error">("idle");
@@ -36,8 +44,8 @@ export default function InteractiveTryOnSection({ dict, locale }: { dict: any, l
         price: "$50.00",
         originalPrice: "$65.00",
         description: dict.demoSection.productDesc,
-        image: "/alaska-jacket.webp",
-        garmentUrl: "/alaska-jacket.webp",
+        image: demoImage || "/alaska-jacket.webp",
+        garmentUrl: demoImage || "/alaska-jacket.webp",
         rating: 4.9,
         reviews: 128
     };
