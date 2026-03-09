@@ -327,7 +327,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     <div className={`rounded-xl border p-4 ${credits === 0 ? "bg-[#fff3f2] border-[#feb8b2]" : credits < 10 ? "bg-[#fff3cd] border-[#ffd79d]" : "bg-[#e3f1df] border-[#a8d5a2]"}`}>
                         <p className="text-[11px] text-[#6d7175] uppercase tracking-wide mb-1.5">Credits</p>
                         <p className={`text-3xl font-bold ${credits === 0 ? "text-[#d72c0d]" : credits < 10 ? "text-[#916a00]" : "text-[#008060]"}`}>{credits}</p>
@@ -337,11 +337,6 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                         <p className="text-[11px] text-[#6d7175] uppercase tracking-wide mb-1.5">Try-Ons</p>
                         <p className="text-3xl font-bold text-[#202223]">{stats?.tryOns ?? "—"}</p>
                         <p className="text-[10px] text-[#6d7175] mt-1">total</p>
-                    </div>
-                    <div className="rounded-xl border border-[#e1e3e5] bg-white p-4">
-                        <p className="text-[11px] text-[#6d7175] uppercase tracking-wide mb-1.5">Products</p>
-                        <p className="text-3xl font-bold text-[#202223]">{stats?.products ?? "—"}</p>
-                        <p className="text-[10px] text-[#6d7175] mt-1">with widget</p>
                     </div>
                 </div>
 
@@ -357,14 +352,10 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 )}
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                     <Link href={`https://droutfit.com/${locale}/dashboard/billing`} target="_blank"
                         className="flex items-center justify-center gap-2 bg-[#5c6ac4] hover:bg-[#4959bd] text-white px-4 py-3 rounded-xl font-medium text-sm transition-colors">
                         <Zap className="w-4 h-4" />Top up
-                    </Link>
-                    <Link href={`https://droutfit.com/${locale}/dashboard/products`} target="_blank"
-                        className="flex items-center justify-center gap-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] px-4 py-3 rounded-xl font-medium text-sm transition-colors">
-                        <Package className="w-4 h-4" />Products<ExternalLink className="w-3 h-3 opacity-40" />
                     </Link>
                 </div>
 
