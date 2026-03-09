@@ -55,17 +55,21 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
 
     return (
         <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
-            <Link href={`/${locale}/dashboard`} className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+            <Link href={`/${locale}/dashboard`} className="px-8 py-4 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 {dict.common.getStarted}
                 <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
             </Link>
-            <button
-                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group"
+            <a
+                href="#demo"
+                onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-8 py-4 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full font-black text-lg transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(37,99,235,0.1)]"
             >
                 <Play className="h-5 w-5 fill-current" />
                 Live Demo
-            </button>
+            </a>
         </div>
     );
 }
