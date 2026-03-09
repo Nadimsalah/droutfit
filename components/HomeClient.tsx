@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getPricing } from "@/lib/pricing";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
-import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag, Download } from "lucide-react";
+import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag, Download, Code } from "lucide-react";
 import Link from "next/link";
 import SwipeableDemo from "@/components/SwipeableDemo";
 import { useSearchParams } from "next/navigation";
@@ -33,59 +33,46 @@ function HeroActions({ dict, locale }: { dict: any, locale: string }) {
         }
     }, [searchParams]);
 
-    if (!mounted) {
-        return (
-            <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center min-h-[80px]">
-                <div className="px-8 py-4 bg-white/10 w-40 h-14 rounded-full animate-pulse" />
-                <div className="px-8 py-4 bg-white/5 w-40 h-14 rounded-full animate-pulse" />
-            </div>
-        );
-    }
+    // We render a stable structure for hydration, then fill in client-side specifics
+    return (
+        <div className="flex flex-col sm:flex-row gap-6 pt-4 justify-center items-center min-h-[80px]">
+            {/* Live Demo Button - Always Visible */}
+            <a
+                href="#demo"
+                onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full font-black text-xl transition-all flex items-center justify-center gap-3 group shadow-[0_0_50px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95 whitespace-nowrap"
+            >
+                <Play className="h-6 w-6 fill-current" />
+                Live Demo
+            </a>
 
-    if (isShopify) {
-        return (
-            <div className="flex flex-col gap-6 items-center w-full max-w-lg mx-auto">
-                <div className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                    {dict.homepage.hero.shopifyIntegrated}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
+            {/* Link Button - Conditional logic handled after mount to avoid mismatch */}
+            {mounted ? (
+                isShopify ? (
                     <Link
                         href={`/${locale}/dashboard/shopify/connect?shop=${shop}`}
-                        className="flex-1 px-8 py-6 bg-blue-600 text-white rounded-full font-black text-xl hover:bg-blue-500 transition-all flex items-center justify-center gap-4 group shadow-[0_0_50px_rgba(37,99,235,0.4)]"
+                        className="w-full sm:w-auto px-10 py-5 bg-white text-black rounded-full font-black text-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-4 group shadow-2xl hover:scale-105 active:scale-95 whitespace-nowrap"
                     >
                         <ShoppingBag className="h-6 w-6" />
                         {dict.navbar.connectShopify}
                         <ArrowRight className={cn("h-6 w-6 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
                     </Link>
-                    <button
-                        onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full font-black text-lg transition-all flex items-center justify-center gap-2"
+                ) : (
+                    <Link
+                        href={`/${locale}/dashboard`}
+                        className="w-full sm:w-auto px-10 py-5 bg-white text-black rounded-full font-black text-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-3 group shadow-2xl hover:scale-105 active:scale-95 whitespace-nowrap"
                     >
-                        <Play className="h-5 w-5 fill-current" />
-                        Live Demo
-                    </button>
-                </div>
-                <p className="text-blue-400 font-bold">
-                    {dict.homepage.hero.shopifyStep1}
-                </p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center items-center">
-            <Link href={`/${locale}/dashboard`} className="px-8 py-4 bg-white text-black rounded-full font-black text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-                {dict.common.getStarted}
-                <ArrowRight className={cn("h-5 w-5 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
-            </Link>
-            <button
-                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full font-black text-lg transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_rgba(37,99,235,0.1)]"
-            >
-                <Play className="h-5 w-5 fill-current" />
-                Live Demo
-            </button>
+                        {dict.common.getStarted}
+                        <ArrowRight className={cn("h-6 w-6 transition-transform", locale === 'ar' ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1")} />
+                    </Link>
+                )
+            ) : (
+                /* Static placeholder for SSR to match initial client shell */
+                <div className="w-full sm:w-auto px-10 py-5 bg-white/10 rounded-full animate-pulse min-w-[200px]" />
+            )}
         </div>
     );
 }
@@ -216,21 +203,7 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                             gradient: "from-yellow-400/20 to-orange-500/20"
                         },
                         {
-                            icon: (
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src="https://cdn.worldvectorlogo.com/logos/shopify.svg"
-                                        className="h-6 w-6 object-contain"
-                                        alt="Shopify"
-                                    />
-                                    <div className="w-px h-4 bg-white/20" />
-                                    <img
-                                        src="https://upload.wikimedia.org/wikipedia/commons/9/93/Wordpress_Blue_logo.png"
-                                        className="h-6 w-6 object-contain"
-                                        alt="WordPress"
-                                    />
-                                </div>
-                            ),
+                            icon: <Code className="h-8 w-8 text-blue-400" />,
                             title: "Easy Integration",
                             desc: "Connect DrOutfit to Shopify or WordPress in just a few clicks. Our dedicated plugins ensure a stable and fast setup.",
                             gradient: "from-blue-400/20 to-cyan-500/20"
