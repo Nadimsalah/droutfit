@@ -31,6 +31,7 @@
   --color-border: var(--border);
 
   --animate-scan: scan 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 3s infinite;
 
   @keyframes scan {
 
@@ -41,6 +42,15 @@
 
     50% {
       top: 100%
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
     }
   }
 }

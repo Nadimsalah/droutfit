@@ -237,13 +237,26 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                         </div>
 
                         <div className="flex-1 flex justify-center items-center relative z-10">
-                            <div className="relative">
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
-                                    alt="Shopify"
-                                    className="h-20 md:h-32 w-auto object-contain"
-                                    style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
-                                />
+                            <div className="relative group/logo">
+                                {/* Liquid Glass Background */}
+                                <div className="absolute inset-0 bg-white/5 backdrop-blur-2xl rounded-[3rem] border border-white/10 shadow-[0_0_80px_rgba(255,255,255,0.02)] scale-110 group-hover:scale-125 transition-transform duration-700" />
+
+                                {/* Animated Glow Pulse */}
+                                <div className="absolute inset-0 bg-green-500/10 blur-[60px] rounded-full animate-pulse group-hover:bg-green-500/20 transition-colors" />
+
+                                {/* Moving Glass Highlight */}
+                                <div className="absolute inset-0 rounded-[3rem] overflow-hidden">
+                                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                                </div>
+
+                                <div className="bg-white/5 border border-white/10 p-10 md:p-14 rounded-[3rem] shadow-2xl relative z-10 group-hover:rotate-1 transition-transform duration-500 backdrop-blur-md">
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png"
+                                        alt="Shopify"
+                                        className="h-16 md:h-24 w-auto object-contain"
+                                        style={{ filter: "invert(1) hue-rotate(180deg) brightness(2)" }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
