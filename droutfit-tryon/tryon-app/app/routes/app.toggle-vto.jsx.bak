@@ -7,10 +7,10 @@ export const loader = async ({ request }) => {
     const productId = url.searchParams.get("id");
 
     if (!productId) {
-        console.error("No product ID found in URL:", request.url);
         return redirect("/app");
     }
 
+    // Use GraphQL to check and toggle the 'no-try-on' tag
     try {
         // 1. Get current tags
         const response = await admin.graphql(
@@ -26,13 +26,8 @@ export const loader = async ({ request }) => {
             }
         );
 
-        const resJson = await response.json();
-        if (!resJson.data?.product) {
-            console.error("Product not found via GraphQL:", productId);
-            return redirect("/app");
-        }
-
-        const currentTags = resJson.data.product.tags;
+        const { data } = await response.json();
+        const currentTags = data.product.tags;
 
         // 2. Determine new tags
         let newTags = [];
@@ -65,6 +60,8 @@ export const loader = async ({ request }) => {
             }
         );
 
+        // Redirect back to the product page in Shopify Admin
+        // The format for product info is "gid://shopify/Product/123456789"
         const rawId = productId.split("/").pop();
         return redirect(`https://${session.shop}/admin/products/${rawId}`);
     } catch (error) {
