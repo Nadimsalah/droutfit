@@ -9,8 +9,45 @@ import { supabase } from "../supabase";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
+
+  // Auto-create Metafield Definition for Droutfit Try On
+  try {
+    const response = await admin.graphql(
+      `#graphql
+      mutation CreateMetafieldDefinition($definition: MetafieldDefinitionInput!) {
+        metafieldDefinitionCreate(definition: $definition) {
+          createdDefinition {
+            id
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+      {
+        variables: {
+          definition: {
+            name: "Droutfit Try On",
+            namespace: "droutfit",
+            key: "is_enabled",
+            description: "Turn the Virtual Try-On button On or Off.",
+            type: "boolean",
+            ownerType: "PRODUCT"
+          }
+        }
+      }
+    );
+    const data = await response.json();
+    if (data.data?.metafieldDefinitionCreate?.userErrors?.length) {
+      // It's perfectly normal if it already exists (has been taken error)
+      console.log("Metafield validation (likely exists):", data.data.metafieldDefinitionCreate.userErrors);
+    }
+  } catch (err) {
+    console.error("Failed to create metafield definition automatically:", err);
+  }
 
   // Fetch the profile for this merchant
   let { data: profile } = await supabase
