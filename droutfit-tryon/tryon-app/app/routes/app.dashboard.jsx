@@ -129,6 +129,9 @@ export default function Dashboard() {
     return (
         <Page fullWidth>
             <TitleBar title="DrOutfit Dashboard" />
+            <Box padding="400" background="bg-surface-critical-subdued">
+                <Text tone="critical" fontWeight="bold">DEBUG: IF YOU SEE THIS, THE NEW DASHBOARD IS ACTIVE</Text>
+            </Box>
 
             <BlockStack gap="500">
                 <Layout>
