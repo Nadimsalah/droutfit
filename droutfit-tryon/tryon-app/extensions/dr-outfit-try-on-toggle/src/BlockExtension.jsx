@@ -1,20 +1,23 @@
-import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import "@shopify/ui-extensions/preact";
+import {
+  extension,
+  AdminBlock,
+  BlockStack,
+  Box,
+  Text,
+  Switch,
+  InlineStack,
+  Divider,
+} from "@shopify/ui-extensions/admin";
 
-export default async () => {
-  render(<Extension />, document.body);
-}
-
-function Extension() {
-  const [tags, setTags] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const productId = shopify.data.product.id;
+export default extension("admin.product-details.block.render", (root, { data, query }) => {
+  let tags = [];
+  let loading = true;
+  let updating = false;
+  const productId = data.selected[0].id;
 
   async function fetchTags() {
     try {
-      const response = await shopify.query(
+      const result = await query(
         `query getProduct($id: ID!) {
           product(id: $id) {
             tags
@@ -22,31 +25,26 @@ function Extension() {
         }`,
         { variables: { id: productId } }
       );
-      setTags(response.data.product.tags);
+      tags = result.data.product.tags;
+      loading = false;
+      render();
     } catch (e) {
       console.error("Failed to fetch tags:", e);
-    } finally {
-      setLoading(false);
     }
   }
 
-  useEffect(() => {
-    fetchTags();
-  }, []);
-
-  const isEnabled = !tags.includes('no-try-on');
-
   async function handleToggle(newValue) {
-    setUpdating(true);
-    // newValue is true if the switch is ON (Enabled), false if OFF (Disabled)
-    // If it's ON (true), we REMOVE the 'no-try-on' tag.
-    // If it's OFF (false), we ADD the 'no-try-on' tag.
-    const newTags = newValue
-      ? tags.filter(t => t !== 'no-try-on')
-      : [...tags, 'no-try-on'];
+    if (updating) return;
+    updating = true;
+    render();
+
+    const isCurrentlyEnabled = !tags.includes("no-try-on");
+    const newTags = isCurrentlyEnabled
+      ? [...tags, "no-try-on"]
+      : tags.filter((t) => t !== "no-try-on");
 
     try {
-      await shopify.query(
+      await query(
         `mutation updateProduct($id: ID!, $tags: [String!]) {
           productUpdate(input: { id: $id, tags: $tags }) {
             product { id tags }
@@ -54,34 +52,51 @@ function Extension() {
         }`,
         { variables: { id: productId, tags: newTags } }
       );
-      setTags(newTags);
+      tags = newTags;
     } catch (e) {
       console.error("Update failed:", e);
     } finally {
-      setUpdating(false);
+      updating = false;
+      render();
     }
   }
 
-  if (loading) return <s-admin-block><s-text>Connecting to DrOutfit...</s-text></s-admin-block>;
+  function render() {
+    root.replaceChildren(
+      root.createComponent(
+        AdminBlock,
+        { title: "DrOutfit Try On Control" },
+        root.createComponent(
+          BlockStack,
+          { gap: true },
+          root.createComponent(
+            Box,
+            { padding: "base" },
+            root.createComponent(
+              InlineStack,
+              { align: "space-between", blockAlign: "center" },
+              root.createComponent(
+                BlockStack,
+                { gap: "none" },
+                root.createComponent(Text, { fontWeight: "bold" }, "Show Try-On Button"),
+                root.createComponent(
+                  Text,
+                  { tone: "subdued", size: "small" },
+                  "Toggle to hide/show the button on your store."
+                )
+              ),
+              root.createComponent(Switch, {
+                checked: !tags.includes("no-try-on"),
+                onChange: handleToggle,
+                disabled: loading || updating,
+              })
+            )
+          )
+        )
+      )
+    );
+  }
 
-  return (
-    <s-admin-block heading="DrOutfit Try On Settings">
-      <s-box padding="400">
-        <s-inline-stack align="space-between" vertical-align="center">
-          <s-stack direction="block" gap="100">
-            <s-text type="strong" size="large">Show Try-On Button</s-text>
-            <s-text tone="subdued">
-              Toggle this switch to instantly hide or show the Virtual Try-On button on this product.
-            </s-text>
-          </s-stack>
-
-          <s-switch
-            checked={isEnabled}
-            on-change={handleToggle}
-            disabled={updating}
-          />
-        </s-inline-stack>
-      </s-box>
-    </s-admin-block>
-  );
-}
+  fetchTags();
+  render(); // Initial render with loading state
+});
