@@ -35,7 +35,8 @@ export const loader = async ({ request }) => {
             key: "is_enabled",
             description: "Turn the Virtual Try-On button On or Off.",
             type: "boolean",
-            ownerType: "PRODUCT"
+            ownerType: "PRODUCT",
+            pin: true
           }
         }
       }
