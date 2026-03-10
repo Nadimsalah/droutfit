@@ -145,15 +145,12 @@
   }
 </style>
 
-{% assign show_droutfit = true %}
-{% for tag in product.tags %}
-  {% assign lowercase_tag = tag | downcase %}
-  {% if lowercase_tag == 'no-try-on' or lowercase_tag == 'hide-try-on' %}
-    {% assign show_droutfit = false %}
-  {% endif %}
-{% endfor %}
+{% assign droutfit_enabled = product.metafields.droutfit.is_enabled %}
+{% if droutfit_enabled == blank %}
+  {% assign droutfit_enabled = true %}
+{% endif %}
 
-{% if show_droutfit %}
+{% if droutfit_enabled == true or droutfit_enabled == 'true' %}
 <div id="droutfit-tryon-container">
   <button id="droutfit-tryon-btn-{{ section.id }}" class="droutfit-btn">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
