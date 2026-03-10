@@ -36,11 +36,14 @@ function Extension() {
 
   const isEnabled = !tags.includes('no-try-on');
 
-  async function toggleVTO() {
+  async function handleToggle(newValue) {
     setUpdating(true);
-    const newTags = isEnabled
-      ? [...tags, 'no-try-on']
-      : tags.filter(t => t !== 'no-try-on');
+    // newValue is true if the switch is ON (Enabled), false if OFF (Disabled)
+    // If it's ON (true), we REMOVE the 'no-try-on' tag.
+    // If it's OFF (false), we ADD the 'no-try-on' tag.
+    const newTags = newValue
+      ? tags.filter(t => t !== 'no-try-on')
+      : [...tags, 'no-try-on'];
 
     try {
       await shopify.query(
@@ -59,34 +62,25 @@ function Extension() {
     }
   }
 
-  if (loading) return <s-admin-block><s-text>Loading...</s-text></s-admin-block>;
+  if (loading) return <s-admin-block><s-text>Connecting to DrOutfit...</s-text></s-admin-block>;
 
   return (
-    <s-admin-block heading="DrOutfit Try On Control">
+    <s-admin-block heading="DrOutfit Try On Settings">
       <s-box padding="400">
-        <s-stack direction="block" gap="400">
-          <s-inline-stack align="space-between" vertical-align="center">
-            <s-stack direction="block" gap="100">
-              <s-text type="strong">Status:</s-text>
-              <s-text tone={isEnabled ? "success" : "critical"}>
-                {isEnabled ? "✨ ENABLED (Button Visible)" : "❌ DISABLED (Hidden)"}
-              </s-text>
-            </s-stack>
+        <s-inline-stack align="space-between" vertical-align="center">
+          <s-stack direction="block" gap="100">
+            <s-text type="strong" size="large">Show Try-On Button</s-text>
+            <s-text tone="subdued">
+              Toggle this switch to instantly hide or show the Virtual Try-On button on this product.
+            </s-text>
+          </s-stack>
 
-            <s-button
-              on-press={toggleVTO}
-              loading={updating}
-              primary={!isEnabled}
-              tone={isEnabled ? "critical" : "default"}
-            >
-              {isEnabled ? "Disable Try-On" : "Enable Try-On"}
-            </s-button>
-          </s-inline-stack>
-
-          <s-text tone="subdued" size="small">
-            Use this toggle to hide/show the DrOutfit button on your website for this specific product.
-          </s-text>
-        </s-stack>
+          <s-switch
+            checked={isEnabled}
+            on-change={handleToggle}
+            disabled={updating}
+          />
+        </s-inline-stack>
       </s-box>
     </s-admin-block>
   );
