@@ -6,7 +6,7 @@ create table if not exists public.profiles (
     store_name text,
     store_website text,
     store_domain text,
-    credits integer default 5,
+    credits integer default 100,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -14,12 +14,15 @@ create table if not exists public.profiles (
 -- Enable RLS on profiles
 alter table public.profiles enable row level security;
 
+drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile" on public.profiles
     for select using (auth.uid() = id);
 
+drop policy if exists "Users can insert their own profile" on public.profiles;
 create policy "Users can insert their own profile" on public.profiles
     for insert with check (auth.uid() = id);
 
+drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile" on public.profiles
     for update using (auth.uid() = id);
 
@@ -38,9 +41,11 @@ create table if not exists public.products (
 alter table public.products enable row level security;
 
 -- Products Policies
+drop policy if exists "Users can manage their own products" on public.products;
 create policy "Users can manage their own products" on public.products
     for all using (auth.uid() = user_id);
 
+drop policy if exists "Public can view products" on public.products;
 create policy "Public can view products" on public.products
     for select using (true);
 
@@ -60,6 +65,7 @@ create table if not exists public.usage_logs (
 alter table public.usage_logs enable row level security;
 
 -- Usage Logs Policies
+drop policy if exists "Users can view their own logs" on public.usage_logs;
 create policy "Users can view their own logs" on public.usage_logs
     for select using (auth.uid() = user_id);
 
@@ -68,7 +74,7 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
     insert into public.profiles (id, full_name, credits)
-    values (new.id, new.raw_user_meta_data->>'full_name', 5);
+    values (new.id, new.raw_user_meta_data->>'full_name', 100);
     return new;
 end;
 $$ language plpgsql security definer;

@@ -139,11 +139,12 @@ export default function Navbar({ dict, locale }: { dict: any, locale: string }) 
                             { name: dict.navbar.howItWorks, id: 'how-it-works' },
                             { name: dict.navbar.pricing, id: 'pricing' },
                             { name: dict.navbar.shopify, id: 'shopify' },
-                            { name: dict.navbar.wordpress, id: 'wordpress' }
+                            { name: dict.navbar.wordpress, id: 'wordpress' },
+                            { name: dict.navbar.apiDocs, id: 'api-docs', href: `/${locale}/docs` }
                         ].map((item) => (
                             <Link
                                 key={item.id}
-                                href={`/${locale}#${item.id}`}
+                                href={item.href || `/${locale}#${item.id}`}
                                 className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group"
                             >
                                 {item.name}
@@ -255,11 +256,12 @@ export default function Navbar({ dict, locale }: { dict: any, locale: string }) 
                             { name: dict.navbar.howItWorks, id: 'how-it-works' },
                             { name: dict.navbar.pricing, id: 'pricing' },
                             { name: dict.navbar.shopify, id: 'shopify' },
-                            { name: dict.navbar.wordpress, id: 'wordpress' }
+                            { name: dict.navbar.wordpress, id: 'wordpress' },
+                            { name: dict.navbar.apiDocs, id: 'api-docs', href: `/${locale}/docs` }
                         ].map((item, i) => (
                             <Link
                                 key={item.id}
-                                href={`/${locale}#${item.id}`}
+                                href={item.href || `/${locale}#${item.id}`}
                                 onClick={() => setIsOpen(false)}
                                 className="text-2xl font-bold text-gray-300 hover:text-white transition-colors w-full text-center py-2 border-b border-white/5 hover:border-white/20"
                                 style={{ transitionDelay: `${i * 50}ms` }}

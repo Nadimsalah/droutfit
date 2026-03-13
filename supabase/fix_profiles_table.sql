@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
     INSERT INTO public.profiles (id, full_name, credits)
-    VALUES (new.id, new.raw_user_meta_data->>'full_name', 5);
+    VALUES (new.id, new.raw_user_meta_data->>'full_name', 100);
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -63,4 +63,4 @@ CREATE TRIGGER on_auth_user_created
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- 4. Give credits to anyone missing them (optional safety)
-UPDATE public.profiles SET credits = 5 WHERE credits IS NULL;
+UPDATE public.profiles SET credits = 100 WHERE credits IS NULL;

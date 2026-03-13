@@ -6,30 +6,34 @@ import {
   Text,
   Switch,
   InlineStack,
-  Divider,
 } from "@shopify/ui-extensions/admin";
 
 export default extension("admin.product-details.block.render", (root, { data, query }) => {
-  let tags = [];
+  let isEnabled = true; // Default to true
   let loading = true;
   let updating = false;
   const productId = data.selected[0].id;
 
-  async function fetchTags() {
+  async function fetchData() {
     try {
       const result = await query(
         `query getProduct($id: ID!) {
           product(id: $id) {
-            tags
+            metafield(namespace: "droutfit", key: "is_enabled") {
+              value
+            }
           }
         }`,
         { variables: { id: productId } }
       );
-      tags = result.data.product.tags;
+
+      const metafieldValue = result.data.product?.metafield?.value;
+      // Metafield value comes as a string "true" or "false"
+      isEnabled = metafieldValue === null || metafieldValue === "true";
       loading = false;
       render();
     } catch (e) {
-      console.error("Failed to fetch tags:", e);
+      console.error("Failed to fetch metafield:", e);
     }
   }
 
@@ -38,21 +42,39 @@ export default extension("admin.product-details.block.render", (root, { data, qu
     updating = true;
     render();
 
-    const isCurrentlyEnabled = !tags.includes("no-try-on");
-    const newTags = isCurrentlyEnabled
-      ? [...tags, "no-try-on"]
-      : tags.filter((t) => t !== "no-try-on");
-
     try {
-      await query(
-        `mutation updateProduct($id: ID!, $tags: [String!]) {
-          productUpdate(input: { id: $id, tags: $tags }) {
-            product { id tags }
+      const result = await query(
+        `mutation setMetafield($metafields: [MetafieldsSetInput!]!) {
+          metafieldsSet(metafields: $metafields) {
+            metafields {
+              id
+              value
+            }
+            userErrors {
+              message
+            }
           }
         }`,
-        { variables: { id: productId, tags: newTags } }
+        {
+          variables: {
+            metafields: [
+              {
+                ownerId: productId,
+                namespace: "droutfit",
+                key: "is_enabled",
+                type: "boolean",
+                value: String(newValue)
+              }
+            ]
+          }
+        }
       );
-      tags = newTags;
+
+      if (result.data.metafieldsSet.userErrors.length > 0) {
+        console.error("Mutation errors:", result.data.metafieldsSet.userErrors);
+      } else {
+        isEnabled = newValue;
+      }
     } catch (e) {
       console.error("Update failed:", e);
     } finally {
@@ -65,7 +87,7 @@ export default extension("admin.product-details.block.render", (root, { data, qu
     root.replaceChildren(
       root.createComponent(
         AdminBlock,
-        { title: "DrOutfit Try On Control" },
+        { title: "DrOutfit Try-On" },
         root.createComponent(
           BlockStack,
           { gap: true },
@@ -78,15 +100,15 @@ export default extension("admin.product-details.block.render", (root, { data, qu
               root.createComponent(
                 BlockStack,
                 { gap: "none" },
-                root.createComponent(Text, { fontWeight: "bold" }, "Show Try-On Button"),
+                root.createComponent(Text, { fontWeight: "bold" }, "Enable Virtual Try-On"),
                 root.createComponent(
                   Text,
                   { tone: "subdued", size: "small" },
-                  "Toggle to hide/show the button on your store."
+                  "Show the try-on button for this product."
                 )
               ),
               root.createComponent(Switch, {
-                checked: !tags.includes("no-try-on"),
+                checked: isEnabled,
                 onChange: handleToggle,
                 disabled: loading || updating,
               })
@@ -97,6 +119,6 @@ export default extension("admin.product-details.block.render", (root, { data, qu
     );
   }
 
-  fetchTags();
-  render(); // Initial render with loading state
+  fetchData();
+  render();
 });

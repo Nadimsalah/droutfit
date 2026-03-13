@@ -145,8 +145,8 @@
   }
 </style>
 
-{% assign droutfit_enabled = product.metafields.droutfit.is_enabled %}
-{% if droutfit_enabled == blank %}
+{% assign droutfit_enabled = product.metafields.droutfit.is_enabled.value %}
+{% if droutfit_enabled == null %}
   {% assign droutfit_enabled = true %}
 {% endif %}
 

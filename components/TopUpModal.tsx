@@ -25,8 +25,10 @@ export function TopUpModal({ isOpen, onClose, dict, locale }: TopUpModalProps) {
             try {
                 const pricingData = await getPricing()
                 setPricing(pricingData)
-            } catch (error) {
-                console.error("Failed to fetch pricing:", error)
+            } catch (error: any) {
+                if (error.name !== 'AbortError') {
+                    console.error("Failed to fetch pricing:", error)
+                }
             } finally {
                 setIsCheckingSubscription(false)
             }
@@ -66,6 +68,7 @@ export function TopUpModal({ isOpen, onClose, dict, locale }: TopUpModalProps) {
             const response = await fetch('/api/whop/checkout-credits', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: null as any,
                 body: JSON.stringify({ credits, user_id: user.id })
             })
 

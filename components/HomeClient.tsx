@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getPricing } from "@/lib/pricing";
 import InteractiveTryOnSection from "@/components/InteractiveTryOnSection";
 import PricingSection from "@/components/PricingSection";
-import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag, Download, Code } from "lucide-react";
+import { ArrowRight, Zap, Shield, BarChart3, CheckCircle2, Play, Smartphone, ShoppingBag, Download, Code, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import SwipeableDemo from "@/components/SwipeableDemo";
 import { useSearchParams } from "next/navigation";
@@ -83,12 +83,18 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
 
     useEffect(() => {
         const fetchSettings = async () => {
-            const settings = await getPricing();
-            if (settings.LANDING_DEMO_IMAGE) {
-                setDemoImage(settings.LANDING_DEMO_IMAGE);
-            }
-            if (settings.WP_PLUGIN_ZIP_URL) {
-                setPluginUrl(settings.WP_PLUGIN_ZIP_URL);
+            try {
+                const settings = await getPricing();
+                if (settings.LANDING_DEMO_IMAGE) {
+                    setDemoImage(settings.LANDING_DEMO_IMAGE);
+                }
+                if (settings.WP_PLUGIN_ZIP_URL) {
+                    setPluginUrl(settings.WP_PLUGIN_ZIP_URL);
+                }
+            } catch (error: any) {
+                if (error.name !== 'AbortError') {
+                    console.error("HomeClient fetchSettings error:", error);
+                }
             }
         };
         fetchSettings();
@@ -340,6 +346,11 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                         <p className="text-gray-500 text-sm leading-relaxed">
                             {dict.homepage.seo.enterpriseDesc}
                         </p>
+                        <div className="flex items-center gap-3 bg-white/[0.03] px-3 py-1.5 rounded-lg border border-white/5 w-fit">
+                            <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons@master/flat/visa.svg" alt="Visa" className="h-3 w-auto" />
+                            <div className="w-[1px] h-2 bg-white/10" />
+                            <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons@master/flat/mastercard.svg" alt="Mastercard" className="h-3 w-auto" />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-12 w-full lg:w-auto">
@@ -372,8 +383,9 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                 <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-gray-600 text-[10px] font-black uppercase tracking-widest gap-6">
                     <p>© {new Date().getFullYear()} Droutfit. {dict.common.allRightsReserved}</p>
                     <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
-                        <div className="flex items-center gap-4 text-gray-400">
-                            {dict.footer.securedBy}
+                        <div className="flex items-center gap-2 text-blue-500/80">
+                            <ShieldCheck className="h-4 w-4" />
+                            <span>{dict.footer.moneyBack}</span>
                         </div>
                         <LanguageSwitcher dict={dict} />
                     </div>

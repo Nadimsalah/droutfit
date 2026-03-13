@@ -57,6 +57,17 @@ export async function POST(req: NextRequest) {
 
         let merchantId: string | null = null;
 
+        // 0. Try X-API-Key authentication (Priority)
+        const apiKey = req.headers.get("x-api-key");
+        if (apiKey) {
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("api_key", apiKey)
+                .single();
+            if (profile) merchantId = profile.id;
+        }
+
         // 1. Identify Merchant
         // A. Try finding by productId (internal UUID)
         if (productId && isUUID(productId)) {
@@ -169,20 +180,21 @@ export async function POST(req: NextRequest) {
             if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
 
             const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
             const [personData, garmentData] = await Promise.all([
                 (async () => {
                     let url = imageUrls[0];
                     if (url.startsWith('//')) url = 'https:' + url;
-                    const resp = await fetch(url);
+                    // Bypassing the framework's abort signal to prevent "aborted without reason"
+                    const resp = await fetch(url, { signal: null } as any);
                     const buffer = await resp.arrayBuffer();
                     return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
                 })(),
                 (async () => {
                     let url = imageUrls[1];
                     if (url.startsWith('//')) url = 'https:' + url;
-                    const resp = await fetch(url);
+                    const resp = await fetch(url, { signal: null } as any);
                     const buffer = await resp.arrayBuffer();
                     return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
                 })()
@@ -259,12 +271,26 @@ export async function GET(req: NextRequest) {
         const shop = searchParams.get("shop");
 
         if (!productId && !shop) {
-            return NextResponse.json({ error: "Missing productId or shop" }, { status: 400 });
+            return NextResponse.json({ 
+                error: "Missing required parameters", 
+                message: "Please provide either 'productId' or 'shop' as a query parameter. For generation, use the POST method as described in the documentation."
+            }, { status: 400 });
         }
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
         let merchantId: string | null = null;
+
+        // 0. Try X-API-Key authentication (Priority)
+        const apiKey = req.headers.get("x-api-key");
+        if (apiKey) {
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("api_key", apiKey)
+                .single();
+            if (profile) merchantId = profile.id;
+        }
 
         // 1. Identify Merchant
         if (productId && isUUID(productId)) {

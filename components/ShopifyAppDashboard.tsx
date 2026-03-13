@@ -136,6 +136,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
             const res = await fetch("/api/shopify-connect", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                signal: null as any,
                 body: JSON.stringify({
                     userId: user.id,
                     shopDomain: shop,
@@ -352,10 +353,14 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 )}
 
                 {/* Actions */}
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <Link href={`https://droutfit.com/${locale}/dashboard/billing`} target="_blank"
                         className="flex items-center justify-center gap-2 bg-[#5c6ac4] hover:bg-[#4959bd] text-white px-4 py-3 rounded-xl font-medium text-sm transition-colors">
                         <Zap className="w-4 h-4" />Top up
+                    </Link>
+                    <Link href="/app/dashboard"
+                        className="flex items-center justify-center gap-2 bg-white border border-[#e1e3e5] hover:bg-[#f6f6f7] text-[#202223] px-4 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                        <Package className="w-4 h-4" />Manage Try-On Products
                     </Link>
                 </div>
 

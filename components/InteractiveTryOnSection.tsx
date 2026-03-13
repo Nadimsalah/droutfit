@@ -90,6 +90,8 @@ export default function InteractiveTryOnSection({
             const response = await fetch('/api/generate-demo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // Bypass framework abort to prevent "aborted without reason" during complex AI processing
+                signal: null as any,
                 body: JSON.stringify({
                     userImageUrl: base64Image,
                     garmentUrl: product.garmentUrl
@@ -338,6 +340,13 @@ export default function InteractiveTryOnSection({
                                         <ShoppingCart className="w-5 h-5" />
                                         {dict.demoSection.addToCart}
                                     </button>
+
+                                    <div className="flex items-center justify-center gap-2 pt-2 text-blue-500/60">
+                                        <ShieldCheck className="w-4 h-4" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                            {dict.demoSection.guarantee}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

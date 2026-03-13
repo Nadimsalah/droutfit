@@ -45,6 +45,29 @@ class DrOutfit_AI_v8 {
         register_setting('droutfit_settings', 'droutfit_merchant_id', ['sanitize_callback' => 'sanitize_text_field']);
         register_setting('droutfit_settings', 'droutfit_merchant_email', ['sanitize_callback' => 'sanitize_email']);
         register_setting('droutfit_settings', 'droutfit_access_token', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('droutfit_settings', 'droutfit_api_key', ['sanitize_callback' => 'sanitize_text_field']);
+
+        if (isset($_POST['droutfit_connect_api']) && check_admin_referer('droutfit_login_action', 'droutfit_login_nonce')) {
+            $api_key = sanitize_text_field($_POST['api_key']);
+            
+            $response = wp_remote_get('https://droutfit.com/api/wp/profile?api_key=' . $api_key, [
+                'timeout' => 15
+            ]);
+
+            if (!is_wp_error($response)) {
+                $body = json_decode(wp_remote_retrieve_body($response), true);
+                if (isset($body['success']) && $body['success']) {
+                    update_option('droutfit_merchant_id', $body['user']['id']);
+                    update_option('droutfit_merchant_email', $body['user']['email']);
+                    update_option('droutfit_api_key', $api_key);
+                    set_transient('droutfit_success', 'Successfully connected via API Key!', 30);
+                } else {
+                    set_transient('droutfit_error', 'Invalid API Key: ' . ($body['error'] ?? 'Please check your key in the dashboard.'), 30);
+                }
+            }
+            wp_redirect(admin_url('admin.php?page=droutfit-v8'));
+            exit;
+        }
 
         if (isset($_POST['droutfit_login']) && check_admin_referer('droutfit_login_action', 'droutfit_login_nonce')) {
             $email = sanitize_email($_POST['email']);
@@ -75,13 +98,18 @@ class DrOutfit_AI_v8 {
             delete_option('droutfit_merchant_id');
             delete_option('droutfit_merchant_email');
             delete_option('droutfit_access_token');
+            delete_option('droutfit_api_key');
             wp_redirect(admin_url('admin.php?page=droutfit-v8'));
             exit;
         }
     }
 
     private function get_dashboard_data($merchant_id) {
-        $response = wp_remote_get('https://droutfit.com/api/wp/profile?merchant_id=' . $merchant_id);
+        $api_key = get_option('droutfit_api_key');
+        $url = 'https://droutfit.com/api/wp/profile?merchant_id=' . $merchant_id;
+        if ($api_key) $url .= '&api_key=' . $api_key;
+        
+        $response = wp_remote_get($url);
         if (is_wp_error($response)) return null;
         return json_decode(wp_remote_retrieve_body($response), true);
     }
@@ -89,6 +117,7 @@ class DrOutfit_AI_v8 {
     public function settings_page() {
         $merchant_id = get_option('droutfit_merchant_id');
         $merchant_email = get_option('droutfit_merchant_email');
+        $api_key = get_option('droutfit_api_key');
         $error = get_transient('droutfit_error');
         $success = get_transient('droutfit_success');
         delete_transient('droutfit_error');
@@ -111,17 +140,46 @@ class DrOutfit_AI_v8 {
             <?php if ($success): ?><div class="notice notice-success"><p><?php echo esc_html($success); ?></p></div><?php endif; ?>
 
             <?php if (!$merchant_id): ?>
-                <div class="card" style="max-width: 600px; padding: 30px; border-radius: 8px;">
-                    <h2>Connect to DrOutfit</h2>
-                    <p>Log in with your DrOutfit account to enable AI Virtual Try-On for your WooCommerce products.</p>
-                    <form method="post">
-                        <?php wp_nonce_field('droutfit_login_action', 'droutfit_login_nonce'); ?>
-                        <p><label style="display:block; margin-bottom:5px;">Email</label><input name="email" type="email" class="regular-text" required style="width:100%"></p>
-                        <p><label style="display:block; margin-bottom:5px;">Password</label><input name="password" type="password" class="regular-text" required style="width:100%"></p>
-                        <p style="margin-top:20px;"><button type="submit" name="droutfit_login" value="1" class="button button-primary button-large" style="width:100%; height:45px;">Login & Connect</button></p>
-                    </form>
-                    <p style="margin-top: 20px; text-align: center; color: #646970; font-size: 13px;">
-                        Don't have an account? <a href="https://droutfit.com/en/signup" target="_blank" style="color: #2271b1; text-decoration: none; font-weight: 600;">Create one for free</a>
+                <div class="card" style="max-width: 600px; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 style="margin-top:0;"><?php _e('Connect to DrOutfit', 'droutfit-virtual-try-on'); ?></h2>
+                    <p style="color: #646970;"><?php _e('Choose your preferred connection method to enable AI Virtual Try-On.', 'droutfit-virtual-try-on'); ?></p>
+                    
+                    <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 30px;">
+                        <!-- Option 1: API Key -->
+                        <div style="padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <h3 style="margin:0 0 15px; font-size: 14px; color: #1e293b;"><?php _e('Option 1: Connect with API Key (Recommended)', 'droutfit-virtual-try-on'); ?></h3>
+                            <form method="post">
+                                <?php wp_nonce_field('droutfit_login_action', 'droutfit_login_nonce'); ?>
+                                <div style="display: flex; gap: 10px;">
+                                    <input name="api_key" type="text" class="regular-text" placeholder="dr_..." required style="flex:1; border-radius: 8px; border: 1px solid #cbd5e1; height: 40px;">
+                                    <button type="submit" name="droutfit_connect_api" value="1" class="button button-primary" style="height: 40px; border-radius: 8px; background: #2563eb;"><?php _e('Connect', 'droutfit-virtual-try-on'); ?></button>
+                                </div>
+                                <p style="font-size: 11px; color: #64748b; margin: 10px 0 0;">
+                                    <?php _e('Find your key in', 'droutfit-virtual-try-on'); ?> <a href="https://droutfit.com/dashboard/integrations" target="_blank" style="color: #2563eb; text-decoration: none;">Dashboard > Integrations</a>
+                                </p>
+                            </form>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <hr style="flex:1; border: 0; border-top: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase;"><?php _e('OR', 'droutfit-virtual-try-on'); ?></span>
+                            <hr style="flex:1; border: 0; border-top: 1px solid #e2e8f0;">
+                        </div>
+
+                        <!-- Option 2: Login -->
+                        <div style="padding: 20px; background: white; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <h3 style="margin:0 0 15px; font-size: 14px; color: #1e293b;"><?php _e('Option 2: Account Login', 'droutfit-virtual-try-on'); ?></h3>
+                            <form method="post">
+                                <?php wp_nonce_field('droutfit_login_action', 'droutfit_login_nonce'); ?>
+                                <p><label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: 600; color: #475569;">Email</label><input name="email" type="email" class="regular-text" required style="width:100%; border-radius: 8px; border: 1px solid #cbd5e1;"></p>
+                                <p><label style="display:block; margin-bottom:5px; font-size: 12px; font-weight: 600; color: #475569;">Password</label><input name="password" type="password" class="regular-text" required style="width:100%; border-radius: 8px; border: 1px solid #cbd5e1;"></p>
+                                <p style="margin-top:20px;"><button type="submit" name="droutfit_login" value="1" class="button button-large" style="width:100%; height:45px; border-radius: 8px; font-weight: 600;"><?php _e('Login & Connect', 'droutfit-virtual-try-on'); ?></button></p>
+                            </form>
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 30px; text-align: center; color: #646970; font-size: 13px;">
+                        Don't have an account? <a href="https://droutfit.com/signup" target="_blank" style="color: #2271b1; text-decoration: none; font-weight: 600;">Create one for free</a>
                     </p>
                 </div>
             <?php else: ?>
@@ -136,6 +194,14 @@ class DrOutfit_AI_v8 {
 
                         <div class="card" style="margin:0; padding: 20px; border-radius: 12px; background: #f6f7f7;">
                             <p style="margin:0 0 10px; font-size:13px;"><strong>Account:</strong><br><?php echo esc_html($merchant_email); ?></p>
+                            
+                            <?php if ($api_key): ?>
+                                <p style="margin:15px 0 5px; font-size:11px; color:#646970; font-weight:600; text-transform:uppercase;">API Key</p>
+                                <div style="display:flex; gap:5px; margin-bottom:20px;">
+                                    <input type="password" value="<?php echo esc_attr($api_key); ?>" readonly style="flex:1; background:#eee; border:1px solid #ddd; height:30px; border-radius:6px; font-family:monospace; font-size:11px;" onfocus="this.type='text'" onblur="this.type='password'">
+                                </div>
+                            <?php endif; ?>
+
                             <form method="post" onsubmit="return confirm('Are you sure?');">
                                 <?php wp_nonce_field('droutfit_disconnect_action', 'droutfit_disconnect_nonce'); ?>
                                 <button type="submit" name="disconnect" style="color: #d63638; background: none; border: none; padding: 0; font-size: 12px; cursor: pointer; text-decoration: underline;">Disconnect Store</button>

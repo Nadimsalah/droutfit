@@ -6,7 +6,7 @@
 do $$
 begin
   if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'credits') then
-    alter table public.profiles add column credits integer default 0;
+    alter table public.profiles add column credits integer default 100;
   end if;
 
   if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'is_subscribed') then
@@ -30,7 +30,7 @@ begin
     new.raw_user_meta_data->>'first_name',
     new.raw_user_meta_data->>'last_name',
     coalesce(new.created_at, now()),
-    0,     -- Default credits
+    100,     -- Default credits
     false  -- Default subscription
   )
   on conflict (id) do update
@@ -43,7 +43,7 @@ $$ language plpgsql security definer;
 
 -- 3. Backfill Defaults for Existing Users
 update public.profiles 
-set credits = 0 
+set credits = 100 
 where credits is null;
 
 update public.profiles 

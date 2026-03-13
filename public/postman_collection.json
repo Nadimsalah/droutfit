@@ -1,0 +1,94 @@
+{
+	"info": {
+		"_postman_id": "droutfit-api-collection",
+		"name": "DrOutfit AI API",
+		"description": "Official collection for DrOutfit AI Virtual Try-On API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Virtual Try-On",
+			"item": [
+				{
+					"name": "Generate Try-On",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-API-Key",
+								"value": "YOUR_API_KEY",
+								"description": "Found in Dashboard > Integrations"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": \"YOUR_PRODUCT_UUID\",\n    \"imageUrls\": [\n        \"https://droutfit.com/demo-images/person.jpg\",\n        \"https://droutfit.com/alaska-jacket.webp\"\n    ],\n    \"shop\": \"example.com\"\n}"
+						},
+						"url": {
+							"raw": "https://droutfit.com/api/virtual-try-on",
+							"protocol": "https",
+							"host": [
+								"droutfit",
+								"com"
+							],
+							"path": [
+								"api",
+								"virtual-try-on"
+							]
+						},
+						"description": "Triggers the AI engine to generate a virtual try-on image. Requires a secure X-API-Key header (recommended) or productId/shop domain."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Limits & Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "YOUR_API_KEY",
+								"description": "Found in Dashboard > Integrations"
+							}
+						],
+						"url": {
+							"raw": "https://droutfit.com/api/virtual-try-on?productId=YOUR_PRODUCT_UUID",
+							"protocol": "https",
+							"host": [
+								"droutfit",
+								"com"
+							],
+							"path": [
+								"api",
+								"virtual-try-on"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "YOUR_PRODUCT_UUID"
+								},
+								{
+									"key": "shop",
+									"value": "example.com",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Returns the current IP rate limit status and remaining credits for the merchant. Supports X-API-Key header or productId/shop query parameters."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://droutfit.com"
+		}
+	]
+}

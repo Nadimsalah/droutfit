@@ -126,9 +126,9 @@ export default function Index() {
                   <InlineStack gap="300">
                     <Button
                       url="/app/dashboard"
-                      variant="secondary"
+                      variant="primary"
                     >
-                      View Detailed Analytics
+                      Manage My Products (ON/OFF)
                     </Button>
                     <Button
                       url="/app/connect"

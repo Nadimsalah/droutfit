@@ -315,6 +315,7 @@ export default function SettingsPage() {
                                                                     const response = await fetch('/api/upload-image', {
                                                                         method: 'POST',
                                                                         headers: { 'Content-Type': 'application/json' },
+                                                                        signal: null as any,
                                                                         body: JSON.stringify({
                                                                             base64Image: readyBase64,
                                                                             bucketName: 'plugins'

@@ -164,6 +164,7 @@ function WidgetContent() {
             const response = await fetch("/api/virtual-try-on", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                signal: null as any,
                 body: JSON.stringify({
                     imageUrls: [publicUserUrl, product.image],
                     productId: product.id,
@@ -188,9 +189,11 @@ function WidgetContent() {
                 setResultImage(data.result_url)
                 setStep("result")
             }, 800)
-        } catch (error) {
+        } catch (error: any) {
             clearInterval(progressInterval)
-            alert("Generation failed: " + (error as Error).message)
+            if (error.name === 'AbortError') return;
+
+            alert("Generation failed: " + error.message)
             setStep("upload")
         }
     }

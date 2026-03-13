@@ -77,6 +77,15 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
 
     const packages = [
         {
+            id: 'package_0',
+            amount: pricing.FREE_AMOUNT || 100,
+            price: 0,
+            label: dict.pricingSection.packages.free,
+            desc: dict.pricingSection.packages.freeDesc,
+            icon: <CheckCircle2 className="h-5 w-5 text-green-400" />,
+            color: "green"
+        },
+        {
             id: 'package_1',
             amount: pricing.PACKAGE_1_AMOUNT,
             price: pricing.PACKAGE_1_PRICE,
@@ -91,6 +100,7 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
             price: pricing.PACKAGE_2_PRICE,
             label: dict.pricingSection.packages.growth,
             desc: dict.pricingSection.packages.growthDesc,
+            popular: true,
             icon: <Flame className="h-5 w-5 text-orange-400" />,
             color: "orange"
         },
@@ -100,7 +110,6 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
             price: pricing.PACKAGE_3_PRICE,
             label: dict.pricingSection.packages.elite,
             desc: dict.pricingSection.packages.eliteDesc,
-            popular: true,
             icon: <Sparkles className="h-6 w-6 text-purple-400" />,
             color: "purple"
         }
@@ -110,6 +119,10 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
         setMounted(true)
         getPricing().then(p => {
             setPricing(p)
+        }).catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error("Pricing fetch failed:", err)
+            }
         })
     }, [])
 
@@ -141,7 +154,7 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
 
                 <div
                     ref={scrollContainerRef}
-                    className="flex md:grid md:grid-cols-3 gap-5 md:gap-7 overflow-x-auto pb-10 pt-4 snap-x snap-mandatory no-scrollbar -mx-6 px-6 md:mx-0 md:px-0"
+                    className="flex lg:grid lg:grid-cols-4 gap-4 md:gap-5 overflow-x-auto pb-10 pt-4 snap-x snap-mandatory no-scrollbar -mx-6 px-6 md:mx-0 md:px-0"
                 >
                     {packages.map((pkg, idx) => (
                         <motion.div
@@ -246,15 +259,20 @@ export default function PricingSection({ dict, locale }: { dict: any, locale: st
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-10">
+                    <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-10 gap-y-4">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 text-green-500" />
                             <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{dict.pricingSection.whopManaged}</span>
                         </div>
-                        <div className="h-6 w-[1px] bg-white/10 hidden md:block" />
+                        <div className="h-6 w-[1px] bg-white/10 hidden lg:block" />
                         <div className="flex items-center gap-2">
                             <MousePointer2 className="h-4 w-4 text-blue-400" />
                             <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{dict.pricingSection.instantSetup}</span>
+                        </div>
+                        <div className="h-6 w-[1px] bg-white/10 hidden lg:block" />
+                        <div className="flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{dict.pricingSection.guarantee}</span>
                         </div>
                     </div>
                 </motion.div>

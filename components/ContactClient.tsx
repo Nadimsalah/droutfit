@@ -36,6 +36,7 @@ function ContactContent({ dict, locale }: { dict: any, locale: string }) {
             const response = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: null as any,
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
@@ -48,10 +49,12 @@ ${dict.contactPage.form.messageLabel}: ${formData.message}`
             if (!response.ok) throw new Error("Failed to send")
 
             setStatus("success")
-        } catch (err) {
-            console.error(err)
-            setStatus("error")
-            setTimeout(() => setStatus("idle"), 3000)
+        } catch (err: any) {
+            if (err.name !== 'AbortError') {
+                console.error(err)
+                setStatus("error")
+                setTimeout(() => setStatus("idle"), 3000)
+            }
         }
     }
 

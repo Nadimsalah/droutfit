@@ -15,6 +15,7 @@ export async function uploadImage(file: File, bucket: string = 'tryimages'): Pro
                 const response = await fetch('/api/upload-image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    signal: null as any,
                     body: JSON.stringify({
                         base64Image: reader.result,
                         bucketName: bucket
