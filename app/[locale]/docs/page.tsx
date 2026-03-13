@@ -2,6 +2,7 @@ import { getDictionary } from "@/lib/get-dictionary"
 import DocsClient from "@/components/DocsClient"
 import type { Locale } from "@/lib/i18n-config"
 import type { Metadata } from 'next'
+import { Suspense } from "react"
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
     const { locale } = await props.params;
@@ -15,5 +16,9 @@ export async function generateMetadata(props: { params: Promise<{ locale: string
 export default async function DocsPage(props: { params: Promise<{ locale: Locale }> }) {
     const { locale } = await props.params;
     const dict = await getDictionary(locale)
-    return <DocsClient dict={dict} locale={locale} />
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#050608]" />}>
+            <DocsClient dict={dict} locale={locale} />
+        </Suspense>
+    )
 }
