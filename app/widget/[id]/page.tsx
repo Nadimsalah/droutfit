@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
-import { X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon, Upload } from "lucide-react"
+import { X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon, Upload, Activity } from "lucide-react"
 // Removed NanoBanana import
 import { getProductByIdPublic, incrementProductUsage } from "@/lib/storage"
 import { optimizeImageForGemini } from "@/lib/image-processing"
@@ -33,12 +33,10 @@ function WidgetContent() {
                 const wpName = searchParams.get("name") || searchParams.get("product_name") || searchParams.get("title") || searchParams.get("productName")
                 const wpImage = searchParams.get("image") || searchParams.get("product_image") || searchParams.get("img") || searchParams.get("productImage")
 
-                console.log(`[WIDGET] Loading Product: ID=${id}, M=${merchantId}, IMG=${wpImage}`);
 
                 // 1. Attempt JIT Sync if params are present
                 if (merchantId && wpImage) {
                     try {
-                        console.log(`[WIDGET] Triggering JIT Sync for ${id}...`);
                         const syncRes = await fetch('/api/wp/sync-product', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -87,7 +85,6 @@ function WidgetContent() {
 
                 // 3. Absolute Fallback: Direct Mode (Zero-DB mode)
                 if (wpImage) {
-                    console.log("[WIDGET] Using Direct Mode (Zero-DB fallback)");
                     setProduct({
                         id: id,
                         name: wpName as string || "Virtual Try-On Product",
@@ -135,18 +132,19 @@ function WidgetContent() {
                                 : error || "We couldn't initialize the try-on tool for this product."}
                         </p>
                     </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Integration Required</h3>
+                    <p className="text-gray-500 text-sm mb-6">
+                        The product you are looking for does not exist or has been removed from this store's DrOutfit account.
+                    </p>
 
-                    {!searchParams.get('image') && !searchParams.get('img') && !searchParams.get('product_image') && (
-                        <div className="w-full p-6 bg-blue-50/50 rounded-2xl border border-blue-100 text-start space-y-3">
-                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest italic">Developer Tip:</p>
-                            <p className="text-[11px] text-gray-600 leading-relaxed">
-                                Make sure to include the <strong>image</strong> parameter in your widget URL if this is a custom integration.
-                            </p>
-                            <code className="block p-2 bg-white rounded-lg border border-blue-100 text-[9px] font-mono text-gray-400 select-all break-all">
-                                ...?image=https://store.com/item.jpg
-                            </code>
-                        </div>
-                    )}
+
+                    <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-xs text-left">
+                        <p className="font-bold mb-1 italic">Developer Tip:</p>
+                        <p>Make sure to include the <strong>image</strong> parameter in your widget URL if this is a custom integration.</p>
+                        <code className="block mt-2 bg-white/50 p-2 rounded border border-amber-200">
+                            ...?image=https://store.com/item.jpg
+                        </code>
+                    </div>
 
                     <a href="https://droutfit.com" target="_blank" className="w-full">
                         <button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold transition-all">
