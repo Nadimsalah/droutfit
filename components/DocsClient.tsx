@@ -115,22 +115,40 @@ export default function DocsClient({ dict, locale }: { dict: any, locale: string
                                 <p className="text-sm text-gray-300">
                                     To show the AI Try-On tool on your store, simply link to the following URL pattern. If the product isn't already in our database, we will dynamically use the image and name provided in the URL.
                                 </p>
+
+                                <div className="bg-blue-600/5 border border-blue-600/20 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 group">
+                                    <div className="h-14 w-14 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                                        <Database className="h-6 w-6 text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-white italic uppercase mb-1 tracking-tight">Zero Configuration Needed</h4>
+                                        <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                                            Our engine is designed to be plug-and-play. You <span className="text-blue-400 font-bold">don't need to manually upload</span> your products to our dashboard. Simply pass your store's product image URL and title directly to the widget, and we'll handle the rest in real-time.
+                                        </p>
+                                    </div>
+                                </div>
                                 
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3 text-xs font-black text-gray-500 uppercase tracking-widest">
                                         <Code className="h-4 w-4" /> URL Pattern
                                     </div>
-                                    <div className="p-4 bg-white/[0.02] rounded-xl font-mono text-xs text-blue-400 break-all border border-white/5">
+                                    <div className="p-4 bg-white/[0.02] rounded-xl font-mono text-xs text-blue-400 break-all border border-white/5 relative group">
                                         https://droutfit.com/widget/<span className="text-orange-300">[PRODUCT_ID]</span>?m=<span className="text-green-400">[YOUR_KEY]</span>&image=<span className="text-purple-400">[IMG_URL]</span>&name=<span className="text-white">[NAME]</span>
+                                        <button 
+                                            onClick={() => copyToClipboard(`https://droutfit.com/widget/[PRODUCT_ID]?m=[YOUR_KEY]&image=[IMG_URL]&name=[NAME]`, 'url-p')}
+                                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all"
+                                        >
+                                            <Copy className="h-3 w-3" />
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                                     <div className="space-y-3">
                                         <h4 className="text-sm font-bold text-white">Using JS (Recommended)</h4>
-                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto">
+                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto leading-relaxed border border-white/5">
 {`function openTryOn(id, name, img) {
-  const mid = "YOUR_API_KEY";
+  const mid = "YOUR_API_KEY"; // From Dashboard
   const url = \`https://droutfit.com/widget/\${id}?m=\${mid}&image=\${img}&name=\${name}\`;
   window.open(url, 'DrOutfit', 'width=500,height=800');
 }`}
@@ -138,7 +156,7 @@ export default function DocsClient({ dict, locale }: { dict: any, locale: string
                                     </div>
                                     <div className="space-y-3">
                                         <h4 className="text-sm font-bold text-white">Using Iframe</h4>
-                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto">
+                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto leading-relaxed border border-white/5">
 {`<iframe 
   src="https://droutfit.com/widget/ID?m=KEY&image=IMG"
   width="100%" 

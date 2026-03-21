@@ -10,7 +10,7 @@
 
     // Global Object
     window.DrOutfit = {
-        open: function (productId) {
+        open: function (productId, productName, productImage, merchantId) {
             // Create Overlay
             var overlay = document.createElement('div');
             overlay.id = 'droutfit-modal-overlay';
@@ -70,9 +70,15 @@
                 }, 300);
             };
 
+            // Construct URL
+            var url = baseUrl + '/widget/' + productId + '?shop=custom';
+            if (productName) url += '&name=' + encodeURIComponent(productName);
+            if (productImage) url += '&image=' + encodeURIComponent(productImage);
+            if (merchantId) url += '&m=' + encodeURIComponent(merchantId);
+
             // Create Iframe
             var iframe = document.createElement('iframe');
-            iframe.src = baseUrl + '/widget/' + productId;
+            iframe.src = url;
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
@@ -100,6 +106,9 @@
         for (var i = 0; i < scripts.length; i++) {
             var script = scripts[i];
             var productId = script.getAttribute('data-product-id');
+            var productName = script.getAttribute('data-product-name');
+            var productImage = script.getAttribute('data-product-image');
+            var merchantId = script.getAttribute('data-merchant-id');
 
             // Only process if it hasn't been processed yet and has a product ID
             if (productId && !script.getAttribute('data-droutfit-processed')) {
@@ -107,8 +116,13 @@
 
                 var containerClass = script.getAttribute('data-container-class');
 
+                var url = baseUrl + '/widget/' + productId + '?shop=custom';
+                if (productName) url += '&name=' + encodeURIComponent(productName);
+                if (productImage) url += '&image=' + encodeURIComponent(productImage);
+                if (merchantId) url += '&m=' + encodeURIComponent(merchantId);
+
                 var iframe = document.createElement('iframe');
-                iframe.src = baseUrl + '/widget/' + productId;
+                iframe.src = url;
                 iframe.width = '100%';
                 iframe.height = '600px';
                 iframe.style.border = 'none';

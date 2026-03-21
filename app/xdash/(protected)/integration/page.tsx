@@ -40,6 +40,12 @@ export default function IntegrationPage() {
                         <h2 className="text-xl font-black text-white uppercase italic">1. Universal Widget</h2>
                     </div>
                     <div className="bg-[#0B0E14] border border-white/5 rounded-3xl p-8 space-y-6">
+                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                            <Zap className="h-5 w-5 text-indigo-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                                <span className="text-white font-black italic uppercase text-[10px]">Zero Data Sync Needed:</span> No need to manually upload products. Just pass the product image URL directly in the widget link.
+                            </p>
+                        </div>
                         <p className="text-gray-400 text-sm leading-relaxed">Add a "Try-On" button to any store platform in seconds using our universal widget pattern.</p>
                         
                         <div className="space-y-4">
