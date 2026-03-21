@@ -29,11 +29,25 @@ export async function getProducts(): Promise<Product[]> {
         return [];
     }
 
+    // Fetch usage counts from usage_logs for these products to bypass the static 'usage' field
+    const { data: usageData } = await supabase
+        .from('usage_logs')
+        .select('product_id')
+        .eq('status', 200)
+        .in('product_id', (dbProducts || []).map(p => p.id));
+
+    const usageMap: Record<string, number> = {};
+    usageData?.forEach(log => {
+        if (log.product_id) {
+            usageMap[log.product_id] = (usageMap[log.product_id] || 0) + 1;
+        }
+    });
+
     const mappedProducts: Product[] = (dbProducts || []).map(p => ({
         id: p.id,
         name: p.name,
         image: p.image,
-        usage: p.usage || 0,
+        usage: usageMap[p.id] || 0, // Use real log count
         storeUrl: p.store_url,
         user_id: p.user_id
     }));
@@ -97,11 +111,17 @@ export async function getProductById(id: string): Promise<Product | undefined> {
         return undefined;
     }
 
+    const { count: usageCount } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('product_id', id)
+        .eq('status', 200);
+
     return {
         id: data.id,
         name: data.name,
         image: data.image,
-        usage: data.usage || 0,
+        usage: usageCount || 0,
         storeUrl: data.store_url,
         user_id: data.user_id
     };
