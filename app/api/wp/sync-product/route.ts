@@ -22,7 +22,11 @@ export async function POST(req: Request) {
                 .select('id')
                 .eq('api_key', merchant_id)
                 .single();
-            if (profile) userId = profile.id;
+            if (profile) {
+                userId = profile.id;
+            } else {
+                return NextResponse.json({ error: "Invalid API Key or Merchant ID" }, { status: 401 });
+            }
         }
 
         // Try to find if this product already exists for this merchant 

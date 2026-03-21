@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
     const isPublicStaticOrApi =
         pathname.startsWith('/api') ||
         pathname.startsWith('/widget') ||
+        pathname.startsWith('/product') ||
         pathname.startsWith('/xdash') ||
         pathname === '/icon.png' ||
         pathname === '/robots.txt' ||

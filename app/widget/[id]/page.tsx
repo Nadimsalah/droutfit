@@ -35,52 +35,63 @@ function WidgetContent() {
 
                 console.log(`[WIDGET] Loading Product: ID=${id}, M=${merchantId}, IMG=${wpImage}`);
 
+                // 1. Attempt JIT Sync if params are present
                 if (merchantId && wpImage) {
-                    console.log(`[WIDGET] Triggering JIT Sync for ${id}...`);
-                    // This is a JIT sync for WordPress
-                    const syncRes = await fetch('/api/wp/sync-product', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            merchant_id: merchantId,
-                            external_id: id,
-                            name: wpName,
-                            image: wpImage
+                    try {
+                        console.log(`[WIDGET] Triggering JIT Sync for ${id}...`);
+                        const syncRes = await fetch('/api/wp/sync-product', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                merchant_id: merchantId,
+                                external_id: id,
+                                name: wpName,
+                                image: wpImage
+                            })
                         })
-                    })
-                    const syncData = await syncRes.json()
+                        const syncData = await syncRes.json()
 
-                    if (syncData.success && syncData.product) {
+                        if (syncData.success && syncData.product) {
+                            setProduct({
+                                id: syncData.product.id,
+                                name: syncData.product.name,
+                                image: syncData.product.image,
+                                storeUrl: syncData.product.store_url
+                            })
+                            setRemainingTries(5)
+                            setLoading(false)
+                            return
+                        }
+                    } catch (syncErr) {
+                        console.warn("[WIDGET] JIT Sync failed, falling back to direct mode.", syncErr);
+                    }
+                }
+
+                // 2. Fallback to existing database record
+                try {
+                    const stored = await getProductByIdPublic(id)
+                    if (stored) {
                         setProduct({
-                            id: syncData.product.id,
-                            name: syncData.product.name,
-                            image: syncData.product.image,
-                            storeUrl: syncData.product.store_url
+                            id: stored.id,
+                            name: stored.name || "Virtual Try-On Product",
+                            image: stored.image,
+                            storeUrl: stored.storeUrl
                         })
                         setRemainingTries(5)
                         setLoading(false)
                         return
                     }
+                } catch (dbErr) {
+                    console.warn("[WIDGET] DB lookup failed, checking for direct params.", dbErr);
                 }
 
-                const stored = await getProductByIdPublic(id)
-
-                if (stored) {
-                    setProduct({
-                        id: stored.id,
-                        name: stored.name || "Virtual Try-On Product",
-                        image: stored.image,
-                        storeUrl: stored.storeUrl
-                    })
-
-                    // Mocked limit as NanoBanana is removed
-                    setRemainingTries(5)
-                } else if (wpImage) {
-                    // Fallback: If not found in DB but we have image parameters, use them directly
+                // 3. Absolute Fallback: Direct Mode (Zero-DB mode)
+                if (wpImage) {
+                    console.log("[WIDGET] Using Direct Mode (Zero-DB fallback)");
                     setProduct({
                         id: id,
-                        name: wpName || "Virtual Try-On Product",
-                        image: wpImage,
+                        name: wpName as string || "Virtual Try-On Product",
+                        image: wpImage as string,
                         storeUrl: searchParams.get("store") || undefined
                     })
                     setRemainingTries(5)
@@ -100,30 +111,53 @@ function WidgetContent() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+                    <p className="text-gray-400 text-sm font-bold animate-pulse italic">Initializing DrOutfit Engine...</p>
+                </div>
             </div>
         )
     }
 
     if (error || !product) {
         return (
-            <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-sm">
-                    <X className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Product Not Found</h3>
-                    <p className="text-gray-500 text-sm mb-4">
-                        The product you are looking for does not exist or has been removed.
-                    </p>
+            <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-full max-w-[400px] bg-white rounded-[32px] p-10 shadow-xl border border-gray-100 flex flex-col items-center gap-6">
+                    <div className="h-20 w-20 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                        <ShoppingBag className="h-10 w-10" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-black text-gray-900 leading-tight">Integration Required</h2>
+                        <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                            {error === "Product not found" 
+                                ? "The product you are looking for does not exist or has been removed from this store's DrOutfit account." 
+                                : error || "We couldn't initialize the try-on tool for this product."}
+                        </p>
+                    </div>
+
                     {!searchParams.get('image') && !searchParams.get('img') && !searchParams.get('product_image') && (
-                        <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-xs text-left">
-                            <p className="font-bold mb-1">💡 Integration Tip:</p>
-                            <p>Make sure to include the <strong>image</strong> parameter in the URL if you're using a custom integration.</p>
-                            <code className="block mt-2 bg-white/50 p-2 rounded border border-amber-200">
-                                ...?image=URL&name=Title&merchant_id=ID
+                        <div className="w-full p-6 bg-blue-50/50 rounded-2xl border border-blue-100 text-start space-y-3">
+                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest italic">Developer Tip:</p>
+                            <p className="text-[11px] text-gray-600 leading-relaxed">
+                                Make sure to include the <strong>image</strong> parameter in your widget URL if this is a custom integration.
+                            </p>
+                            <code className="block p-2 bg-white rounded-lg border border-blue-100 text-[9px] font-mono text-gray-400 select-all break-all">
+                                ...?image=https://store.com/item.jpg
                             </code>
                         </div>
                     )}
+
+                    <a href="https://droutfit.com" target="_blank" className="w-full">
+                        <button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold transition-all">
+                            Visit DrOutfit.com
+                        </button>
+                    </a>
                 </div>
+                
+                <p className="mt-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    POWERED BY DROUTFIT.COM
+                </p>
             </div>
         )
     }
