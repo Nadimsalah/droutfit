@@ -33,7 +33,21 @@ const nextConfig: NextConfig = {
       }
     ];
   },
-  allowedDevOrigins: ["localhost:3000", "127.0.0.1:3000", "localhost:3005", "127.0.0.1:3005"]
+  allowedDevOrigins: ["localhost:3000", "localhost:3005"],
+  async redirects() {
+    return [
+      {
+        source: '/product/:id',
+        destination: '/widget/:id',
+        permanent: true,
+      },
+      {
+        source: '/product',
+        destination: '/dashboard',
+        permanent: true,
+      }
+    ];
+  }
 };
 
 export default nextConfig;

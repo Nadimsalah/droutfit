@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X, MessageSquare, ListTree } from "lucide-react"
+import { LayoutDashboard, Users, Settings, LogOut, Menu, X, MessageSquare, ListTree, Code2 } from "lucide-react"
 import { useState } from "react"
 import { logoutAction } from "../../actions"
 
@@ -99,6 +99,24 @@ export default function AdminSidebar() {
                     >
                         <ListTree className={`h-5 w-5 ${isActive('/xdash/logs') ? 'text-blue-500' : 'text-gray-500'}`} />
                         System Logs
+                    </Link>
+
+                    <div className="pt-4 pb-2">
+                        <p className="px-4 text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-2 font-black italic">B2B Integration</p>
+                    </div>
+
+                    <Link
+                        href="/xdash/integration"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/xdash/integration')
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            }`}
+                    >
+                        <div className="h-5 w-5 flex items-center justify-center">
+                            <Code2 className={`h-5 w-5 ${isActive('/xdash/integration') ? 'text-indigo-500' : 'text-gray-500'}`} />
+                        </div>
+                        Developer Portal
                     </Link>
                 </nav>
 

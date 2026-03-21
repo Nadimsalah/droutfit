@@ -27,7 +27,7 @@ export default function WidgetLayout({
 }) {
     return (
         <html lang="en">
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-transparent`}>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F8F9FB]`}>
                 {children}
             </body>
         </html>

@@ -437,16 +437,12 @@ function WidgetContent() {
                     href="https://droutfit.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 group cursor-pointer"
+                    className="flex flex-col items-center gap-1 group cursor-pointer"
                 >
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] group-hover:text-gray-500 transition-colors">
-                        Powered by
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] group-hover:text-blue-500 transition-colors">
+                        POWERED BY DROUTFIT.COM
                     </span>
-                    <img
-                        src="https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/listing-images/logo-black.png"
-                        alt="DrOutfit"
-                        className="h-4 w-auto opacity-70 group-hover:opacity-100 transition-all duration-300"
-                    />
+                    <div className="h-[2px] w-0 group-hover:w-full bg-blue-500 transition-all duration-300" />
                 </a>
             </div>
 
