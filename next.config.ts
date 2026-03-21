@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/product/:id',
+        destination: '/widget/:id',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
