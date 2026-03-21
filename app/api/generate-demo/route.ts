@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
                 garmentImageUrl: absoluteGarmentUrl,
                 apiKey: PRUNA_API_KEY
             });
-            usageMetadataRecord = { provider: 'pruna' };
+            usageMetadataRecord = { provider: 'pruna', estimated_cost: 0.01 };
         }
 
         if (!resultUrl) {
