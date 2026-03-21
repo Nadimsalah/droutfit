@@ -250,10 +250,10 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
                         <div className="p-8 border-b border-white/5 flex items-center justify-between bg-[#0B0E14]/30">
                             <div>
                                 <h3 className="text-white font-black uppercase tracking-widest text-xs flex items-center gap-3 italic">
-                                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]" />
-                                    {dict.productDetailsPage.transactionSequence}
+                                    <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)] animate-pulse" />
+                                    Try-On Visual History
                                 </h3>
-                                <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-50">{dict.productDetailsPage.historyDesc}</p>
+                                <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-50">Local Generated Results</p>
                             </div>
                             <button
                                 onClick={fetchLogs}
@@ -270,88 +270,58 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
                                 <div className="h-12 w-12 border-t-2 border-blue-500 border-r-2 border-transparent rounded-full animate-spin" />
                                 <p className="text-gray-500 font-bold uppercase tracking-widest text-[9px] animate-pulse">{dict.productDetailsPage.decryptingLogs}</p>
                             </div>
-                        ) : tryonLogs.length === 0 ? (
+                        ) : tryonLogs.filter(log => getResultUrl(log)).length === 0 ? (
                             <div className="flex-1 flex flex-col items-center justify-center py-24 text-center px-8">
                                 <div className="h-20 w-20 bg-[#0B0E14] border border-white/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl transition-transform group-hover/table:scale-110">
                                     <ImageIcon className="h-8 w-8 text-gray-800" />
                                 </div>
-                                <h4 className="text-white font-black uppercase tracking-widest text-[10px] mb-2 tracking-tighter">{dict.productDetailsPage.noSequence}</h4>
+                                <h4 className="text-white font-black uppercase tracking-widest text-[10px] mb-2 tracking-tighter">No Try-On Images Found</h4>
                                 <p className="text-gray-600 text-xs font-medium max-w-[240px] leading-relaxed mx-auto italic opacity-60">
-                                    {dict.productDetailsPage.noSequenceDesc}
+                                    When users test this product, their generated images will appear here.
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm border-separate border-spacing-0">
-                                    <thead className="bg-[#0B0E14]/50">
-                                        <tr>
-                                            <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">{dict.productDetailsPage.visual}</th>
-                                            <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">{dict.productDetailsPage.outcome}</th>
-                                            <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">{dict.productDetailsPage.latency}</th>
-                                            <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5">{dict.productDetailsPage.timestamp}</th>
-                                            <th className="p-6 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/[0.02]">
-                                        {tryonLogs.map((log, i) => {
-                                            const resultUrl = getResultUrl(log);
-                                            const isSuccess = log.status >= 200 && log.status < 300;
-                                            return (
-                                                <tr key={log.id} className="hover:bg-white/[0.02] transition-all group/row">
-                                                    <td className="p-6">
-                                                        <div className="relative h-16 w-12 rounded-xl overflow-hidden bg-[#0B0E14] border border-white/5 shadow-2xl transition-transform group-hover/row:scale-105">
-                                                            {resultUrl ? (
-                                                                <img src={resultUrl} alt={dict.productDetailsPage.visual} className="h-full w-full object-cover" />
-                                                            ) : (
-                                                                <div className="h-full w-full flex items-center justify-center">
-                                                                    <ImageIcon className="h-5 w-5 text-gray-800" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-6">
-                                                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black border uppercase tracking-widest ${isSuccess
-                                                            ? 'bg-green-500/10 text-green-400 border-green-500/20 shadow-lg shadow-green-500/5'
-                                                            : 'bg-red-500/10 text-red-500 border-red-500/20 shadow-lg shadow-red-500/5'
-                                                            }`}>
-                                                            <div className={`h-1.5 w-1.5 rounded-full ${isSuccess ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                                                            {isSuccess ? dict.productDetailsPage.success : dict.productDetailsPage.failed}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-6">
-                                                        <div className="flex items-center gap-2 text-gray-500 text-xs font-mono italic">
-                                                            <Clock className="h-3 w-3 text-gray-700" />
-                                                            {log.latency || '—'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-6">
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <div className="flex items-center gap-2 text-white font-bold text-xs tracking-tight">
-                                                                <Calendar className="h-3.5 w-3.5 text-blue-500/70" />
-                                                                {new Date(log.created_at).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' })}
-                                                            </div>
-                                                            <div className="text-[10px] text-gray-500 font-mono tracking-tighter pl-5 uppercase">
-                                                                {new Date(log.created_at).toLocaleTimeString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-6 text-right">
-                                                        {resultUrl && (
-                                                            <a
-                                                                href={resultUrl}
-                                                                target="_blank"
-                                                                className="h-10 w-10 inline-flex items-center justify-center bg-white/5 hover:bg-blue-600 hover:text-white border border-white/5 text-gray-400 rounded-xl transition-all hover:shadow-xl hover:shadow-blue-600/40 transform hover:-translate-y-0.5"
-                                                                title={dict.productDetailsPage.openResult}
-                                                            >
-                                                                <ExternalLink className="h-4 w-4" />
-                                                            </a>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                            <div className="p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative">
+                                {tryonLogs.map((log) => {
+                                    const resultUrl = getResultUrl(log);
+                                    if (!resultUrl) return null;
+                                    const isSuccess = log.status >= 200 && log.status < 300;
+                                    
+                                    return (
+                                        <div key={log.id} className="group/card relative rounded-[2rem] overflow-hidden bg-[#0a0d13] border border-white/5 shadow-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-blue-500/10 hover:border-white/10 aspect-[3/4] flex flex-col">
+                                            <div className="absolute top-3 left-3 z-10">
+                                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg ${isSuccess ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'}`}>
+                                                    <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
+                                                    {isSuccess ? 'Success' : 'Failed'}
+                                                </div>
+                                            </div>
+                                            <img 
+                                                src={resultUrl} 
+                                                alt="Virtual Try-On Result" 
+                                                className="w-full h-full object-cover z-0 transition-transform duration-700 group-hover/card:scale-110" 
+                                            />
+                                            {/* Hover Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-5">
+                                                <div className="flex items-center gap-2 text-white font-bold text-[10px] tracking-widest mb-1 uppercase">
+                                                    <Calendar className="h-3 w-3 text-blue-400" />
+                                                    {new Date(log.created_at).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' })}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-gray-400 font-mono text-xs italic">
+                                                    <Clock className="h-3 w-3" />
+                                                    {log.latency || '—'}
+                                                </div>
+                                                <a 
+                                                    href={resultUrl}
+                                                    target="_blank"
+                                                    className="mt-4 py-2.5 w-full bg-white text-black text-[10px] uppercase font-black tracking-widest rounded-xl text-center hover:bg-blue-500 hover:text-white transition-colors"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    View Generated Image
+                                                </a>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
