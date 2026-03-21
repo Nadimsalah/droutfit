@@ -93,7 +93,6 @@ export async function generatePrunaVTO(req: PrunaVTORequest): Promise<string> {
       input: {
         prompt: prompt,
         images: [personFileUrl, garmentFileUrl],
-        reference_image: "0",
         aspect_ratio: "match_input_image",
         turbo: false
       }
