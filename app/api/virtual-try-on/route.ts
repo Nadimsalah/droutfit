@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
                     await supabase.from("usage_logs").update({
                         status: 200,
                         latency: `${Date.now() - startTime}ms`,
-                        error_message: JSON.stringify({ provider: 'pruna', model: 'p-image-edit', estimated_cost: 0.01 })
+                        error_message: JSON.stringify({ provider: 'pruna', model: 'p-image-edit', estimated_cost: 0.01, result_url: resultUrlPruna })
                     }).eq("id", logEntryId);
                 }
             } else if (PREFERRED_PROVIDER === "dashscope") {
