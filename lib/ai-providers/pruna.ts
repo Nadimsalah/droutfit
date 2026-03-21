@@ -77,9 +77,11 @@ export async function generatePrunaVTO(req: PrunaVTORequest): Promise<string> {
   console.log(`>>> [Pruna] Files ready: P=${personFileUrl}, G=${garmentFileUrl}`);
 
   // 2. Submit prediction
+  const basePrompt = "Virtual try-on: Take the clothing from the SECOND image and put it on the person in the FIRST image. The output MUST be the SAME person from the FIRST image, with the same face, same hair, same pose, and same background. ONLY change the upper-body clothing to match the SECOND image perfectly. DO NOT generate a new person.";
+  
   const prompt = req.garmentDescription 
-    ? `Virtual try-on: Photorealistic. Redress the person in the first image to wear the garment from the second image. MUST preserve the exact face, identity, pose, and background of the person in the first image. ${req.garmentDescription}`
-    : "Virtual try-on: Photorealistic. Redress the person in the first image to wear the garment from the second image. MUST preserve the exact face, identity, pose, and background of the person in the first image.";
+    ? `${basePrompt} The garment is: ${req.garmentDescription}`
+    : basePrompt;
 
   const submitResp = await fetch("https://api.pruna.ai/v1/predictions", {
     method: "POST",
