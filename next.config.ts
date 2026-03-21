@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: '/widget/:id',
         permanent: true,
       },
+      {
+        source: '/product',
+        destination: '/dashboard',
+        permanent: true,
+      }
     ];
   },
   async headers() {
@@ -42,21 +47,7 @@ const nextConfig: NextConfig = {
       }
     ];
   },
-  allowedDevOrigins: ["localhost:3000", "localhost:3005"],
-  async redirects() {
-    return [
-      {
-        source: '/product/:id',
-        destination: '/widget/:id',
-        permanent: true,
-      },
-      {
-        source: '/product',
-        destination: '/dashboard',
-        permanent: true,
-      }
-    ];
-  }
+  allowedDevOrigins: ["localhost:3000", "localhost:3005"]
 };
 
 export default nextConfig;
