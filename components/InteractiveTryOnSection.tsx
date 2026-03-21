@@ -1,23 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    Upload,
-    ShoppingCart,
-    Sparkles,
-    RefreshCw,
-    Wand2,
-    ArrowLeft,
-    Check,
-    ShieldCheck,
-    Zap,
-    Image as ImageIcon,
-    Star,
-    Info,
-    Camera,
-    Activity
-} from "lucide-react";
+import { Upload, Camera, RotateCcw, Sparkles, ShoppingCart, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 import { optimizeImageForGemini } from "@/lib/image-processing";
 
 export default function InteractiveTryOnSection({
@@ -31,368 +16,336 @@ export default function InteractiveTryOnSection({
 }) {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
-    const [status, setStatus] = useState<"idle" | "uploading" | "processing" | "success" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
     const [progress, setProgress] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [view, setView] = useState<"details" | "tryon">("details");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const scrollTargetRef = useRef<HTMLDivElement>(null);
 
-    const product = {
-        name: dict.demoSection.productName,
-        brand: dict.demoSection.productBrand,
-        price: "$50.00",
-        originalPrice: "$65.00",
-        description: dict.demoSection.productDesc,
-        image: demoImage || "/alaska-jacket.webp",
-        garmentUrl: demoImage || "/alaska-jacket.webp",
-        rating: 4.9,
-        reviews: 128
-    };
+    const garmentUrl = demoImage || "/alaska-jacket.webp";
+    const garmentImage = demoImage || "/alaska-jacket.webp";
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setUploadedImage(imageUrl);
+            const preview = URL.createObjectURL(file);
+            setUploadedImage(preview);
             setResultImage(null);
             setErrorMsg(null);
-            setView("tryon");
             setStatus("processing");
             handleTryOn(file);
-
-            setTimeout(() => {
-                scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
         }
     };
 
     const handleTryOn = async (file: File) => {
         setProgress(0);
-        setErrorMsg(null);
-
         const interval = setInterval(() => {
-            setProgress(prev => {
-                if (prev >= 98) return prev;
-                const jump = Math.floor(Math.random() * 5) + 1;
-                return Math.min(prev + jump, 98);
-            });
-        }, 300);
+            setProgress(prev => prev >= 92 ? prev : prev + Math.random() * 4 + 1);
+        }, 400);
 
         try {
-            // Optimization Pipeline: Resize to 1024px, WebP 75%
             const { base64: base64Image, metadata } = await optimizeImageForGemini(file);
-            console.log(">>> [Cost-Optimization] Optimized image for upload:", metadata);
 
             const response = await fetch('/api/generate-demo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                signal: undefined,
                 body: JSON.stringify({
                     userImageUrl: base64Image,
-                    garmentUrl: product.garmentUrl,
-                    metadata: {
-                        ...metadata,
-                        isMobile: window.innerWidth < 768
-                    }
+                    garmentUrl,
+                    metadata: { ...metadata, isMobile: window.innerWidth < 768 }
                 })
             });
 
-            console.log(">>> [TryOn] API Response Status:", response.status);
             const data = await response.json();
-            console.log(">>> [TryOn] API Data:", data);
+            if (!response.ok) throw new Error(data.error || "Generation failed");
+            if (!data.result_url) throw new Error("No result image returned");
 
-            if (!response.ok) {
-                console.error(">>> [TryOn] API Error Detail:", data);
-                throw new Error(data.error || "Generation failed");
-            }
-
-            if (!data.result_url) {
-                console.error(">>> [TryOn] Missing result_url in success response");
-                throw new Error("API succeeded but returned no result URL");
-            }
-
-            console.log(">>> [TryOn] Success! Setting result image:", data.result_url);
-            setResultImage(data.result_url);
-            setStatus("success");
-            setProgress(100);
-        } catch (err: any) {
-            console.error("Try-on error:", err);
-            if (err.name === 'AbortError') {
-                setErrorMsg("The request was interrupted. Please try again.");
-            } else {
-                setErrorMsg(err.message);
-            }
-            setStatus("error");
-        } finally {
             clearInterval(interval);
+            setProgress(100);
+            setTimeout(() => {
+                setResultImage(data.result_url);
+                setStatus("success");
+            }, 400);
+        } catch (err: any) {
+            clearInterval(interval);
+            setErrorMsg(err.message);
+            setStatus("error");
         }
     };
 
-    const triggerUpload = () => fileInputRef.current?.click();
-
     const reset = () => {
-        setView("details");
         setStatus("idle");
         setUploadedImage(null);
         setResultImage(null);
         setProgress(0);
+        setErrorMsg(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
+    const triggerUpload = () => fileInputRef.current?.click();
+
     return (
-        <section id="demo" className="py-24 px-6 relative overflow-hidden bg-[#050608]">
-            {/* Ambient Background Glow */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-600/10 rounded-full blur-[160px] animate-pulse" />
-                <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-600/10 rounded-full blur-[160px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <section id="demo" className="py-28 px-4 bg-[#05070a] relative overflow-hidden">
+            {/* Soft background glow */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute left-1/4 top-0 w-96 h-96 bg-blue-600/8 rounded-full blur-[120px]" />
+                <div className="absolute right-1/4 bottom-0 w-96 h-96 bg-indigo-600/8 rounded-full blur-[120px]" />
             </div>
 
-            <div className="max-w-7xl mx-auto relative z-10">
-                {/* Header with improved hierarchy */}
-                <div className="text-center mb-20 space-y-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-black text-gray-400 uppercase tracking-[0.3em]"
-                    >
-                        <ShoppingCart className="h-3 w-3 text-blue-500" /> {dict.demoSection.badge}
-                    </motion.div>
+            <div className="max-w-6xl mx-auto relative z-10">
 
-                    <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-[1] max-w-3xl mx-auto">
-                        {dict.demoSection.title1} <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
-                            {dict.demoSection.title2}
-                        </span>
+                {/* Header */}
+                <div className="text-center mb-16 space-y-5">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                        <Sparkles className="h-3 w-3 text-blue-400" />
+                        {dict.demoSection.badge || "Demo your store with AI"}
+                    </div>
+
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-tight max-w-3xl mx-auto">
+                        {dict.demoSection.title1 || "Demo Your Store with"}{" "}
+                        <span className="text-blue-400">{dict.demoSection.title2 || "AI Virtual Try-On"}</span>
                     </h2>
 
-                    <p className="text-gray-500 text-lg max-w-2xl mx-auto font-medium">
-                        {dict.demoSection.description}
+                    <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
+                        {dict.demoSection.description || "Test our hyper-realistic AI technology instantly. Give your customers the confidence to buy."}
                     </p>
                 </div>
 
-                {/* Product Layout Grid */}
-                <div ref={scrollTargetRef} className="bg-[#0D1117]/80 backdrop-blur-3xl rounded-[40px] border border-white/5 overflow-hidden shadow-2xl transition-all duration-500 hover:border-white/10 group">
-                    <div className="flex flex-col lg:flex-row min-h-[700px]">
+                {/* Main Demo Card */}
+                <div className="bg-[#0c0f14] border border-white/8 rounded-3xl overflow-hidden shadow-2xl">
+                    <div className="grid grid-cols-1 lg:grid-cols-2">
 
-                        {/* Media Section (Left) */}
-                        <div className="lg:w-[55%] relative flex items-center justify-center p-6 lg:p-12 lg:border-r border-white/5 bg-black/40">
-                            {/* Live Badge */}
-                            <div className="absolute top-8 left-8 z-40">
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                                    {dict.demoSection.environment}
-                                </div>
+                        {/* ── Left: Image Panel ── */}
+                        <div className="relative bg-black/30 min-h-[520px] flex items-center justify-center p-8 border-b lg:border-b-0 lg:border-r border-white/5">
+                            {/* Live badge */}
+                            <div className="absolute top-5 left-5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest">
+                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                                {dict.demoSection.environment || "Demo Environment"}
                             </div>
 
                             <AnimatePresence mode="wait">
-                                {view === "details" ? (
+                                {status === "idle" && (
+                                    /* Product image */
                                     <motion.div
-                                        key="product-image"
-                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        key="product"
+                                        initial={{ opacity: 0, scale: 0.97 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 1.05 }}
-                                        className="relative w-full aspect-[4/5] max-w-[450px]"
+                                        exit={{ opacity: 0, scale: 0.97 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="w-full max-w-[360px]"
                                     >
-                                        <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full group-hover:bg-blue-500/20 transition-all duration-700" />
                                         <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="relative z-10 w-full h-full object-cover rounded-[32px] shadow-3xl border border-white/5"
+                                            src={garmentImage}
+                                            alt="Product"
+                                            className="w-full aspect-[3/4] object-cover rounded-2xl shadow-xl border border-white/5"
                                         />
                                     </motion.div>
-                                ) : (
+                                )}
+
+                                {status === "processing" && (
                                     <motion.div
-                                        key="vto-result"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="w-full h-full flex items-center justify-center relative"
+                                        key="processing"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="w-full max-w-[360px] relative"
                                     >
-                                        <div className="w-full aspect-[4/5] max-w-[450px] bg-[#0B0E14] rounded-[32px] overflow-hidden relative shadow-2xl border border-white/5">
-                                            <AnimatePresence mode="wait">
-                                                {status === "processing" ? (
-                                                    <motion.div
-                                                        key="processing-overlay"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-xl z-20"
-                                                    >
-                                                        <div className="relative w-32 h-32 mb-10">
-                                                            <div className="absolute inset-0 rounded-full border-4 border-white/5" />
-                                                            <svg className="w-full h-full transform -rotate-90">
-                                                                <motion.circle
-                                                                    cx="50%" cy="50%" r="45%"
-                                                                    className="stroke-blue-500 fill-none"
-                                                                    strokeWidth="4"
-                                                                    strokeDasharray="283"
-                                                                    initial={{ strokeDashoffset: 283 }}
-                                                                    animate={{ strokeDashoffset: 283 - (283 * progress) / 100 }}
-                                                                    strokeLinecap="round"
-                                                                />
-                                                            </svg>
-                                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                                <span className="text-3xl font-black text-white">{progress}%</span>
-                                                                <Activity className="w-4 h-4 text-blue-400 mt-1 animate-pulse" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-center space-y-3 px-10">
-                                                            <h4 className="text-white text-sm font-black uppercase tracking-[0.3em]">{dict.demoSection.neuralFitting}</h4>
-                                                            <p className="text-gray-500 text-xs font-medium leading-relaxed">
-                                                                {dict.demoSection.mapping}
-                                                            </p>
-                                                        </div>
-                                                    </motion.div>
-                                                ) : status === "success" ? (
-                                                    <motion.div
-                                                        key="success-image"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="absolute inset-0"
-                                                    >
-                                                        <img src={resultImage!} alt="Try-on Result" className="w-full h-full object-cover" />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
-                                                    </motion.div>
-                                                ) : status === "error" ? (
-                                                    <motion.div 
-                                                        key="error-state"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-red-500/5"
-                                                    >
-                                                        <RefreshCw className="w-12 h-12 text-red-500 mb-6" />
-                                                        <p className="text-white font-black uppercase tracking-widest text-xs mb-2">{dict.demoSection.failed}</p>
-                                                        <p className="text-gray-500 text-[11px] text-center mb-8">{errorMsg}</p>
-                                                        <button
-                                                            onClick={triggerUpload}
-                                                            className="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest"
-                                                        >
-                                                            {dict.demoSection.tryAgain}
-                                                        </button>
-                                                    </motion.div>
-                                                ) : null}
-                                            </AnimatePresence>
-
-                                            {status === "processing" && uploadedImage && (
-                                                <img src={uploadedImage} alt="Reference" className="w-full h-full object-cover opacity-30 blur-sm scale-105" />
-                                            )}
+                                        {uploadedImage && (
+                                            <img
+                                                src={uploadedImage}
+                                                alt="Your photo"
+                                                className="w-full aspect-[3/4] object-cover rounded-2xl opacity-30 blur-sm"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+                                            {/* Progress ring */}
+                                            <div className="relative w-24 h-24">
+                                                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                                                    <motion.circle
+                                                        cx="50" cy="50" r="42"
+                                                        fill="none"
+                                                        stroke="#3b82f6"
+                                                        strokeWidth="6"
+                                                        strokeLinecap="round"
+                                                        strokeDasharray={263}
+                                                        animate={{ strokeDashoffset: 263 - (263 * progress) / 100 }}
+                                                        transition={{ duration: 0.3 }}
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <span className="text-white font-black text-xl">{Math.round(progress)}%</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-white font-bold text-sm">Generating Try-On…</p>
+                                                <p className="text-gray-500 text-xs mt-1">Powered by Pruna AI</p>
+                                            </div>
                                         </div>
+                                    </motion.div>
+                                )}
 
+                                {status === "success" && resultImage && (
+                                    <motion.div
+                                        key="result"
+                                        initial={{ opacity: 0, scale: 0.97 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="w-full max-w-[360px] relative group"
+                                    >
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest z-10 shadow-lg">
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            {dict.demoSection.tryonResult || "Try-on Result"}
+                                        </div>
+                                        <img
+                                            src={resultImage}
+                                            alt="Try-On Result"
+                                            className="w-full aspect-[3/4] object-cover rounded-2xl shadow-xl border border-white/10"
+                                        />
+                                    </motion.div>
+                                )}
+
+                                {status === "error" && (
+                                    <motion.div
+                                        key="error"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex flex-col items-center gap-4 p-8 text-center"
+                                    >
+                                        <AlertCircle className="h-12 w-12 text-red-400" />
+                                        <p className="text-white font-bold">Try-on failed</p>
+                                        <p className="text-gray-500 text-sm max-w-xs">{errorMsg}</p>
                                         <button
                                             onClick={reset}
-                                            className="absolute top-0 transform -translate-y-4 right-0 lg:-right-4 flex items-center gap-2 text-gray-400 hover:text-white transition-all font-black uppercase text-[10px] tracking-widest bg-white/5 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-md z-30 shadow-xl"
+                                            className="px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-white text-sm font-bold transition-all"
                                         >
-                                            <ArrowLeft className="w-3.5 h-3.5" /> {dict.demoSection.back}
+                                            Try Again
                                         </button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
 
-                        {/* Content Section (Right) */}
-                        <div className="lg:w-[45%] flex flex-col p-8 lg:p-16 bg-white/[0.01]">
-                            <div className="flex-1 space-y-10">
-                                {/* Brand & Rating */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[12px] font-black text-blue-500 uppercase tracking-[0.2em]">
-                                            {product.brand}
-                                        </span>
-                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">
-                                            <Star className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-                                            <span className="text-[11px] font-black text-white">{product.rating}</span>
-                                            <span className="text-[11px] text-gray-600">({product.reviews})</span>
-                                        </div>
-                                    </div>
-                                    <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-[0.9]">
-                                        {product.name}
-                                    </h1>
-                                </div>
+                        {/* ── Right: Product Info + CTA ── */}
+                        <div className="flex flex-col p-8 lg:p-12 gap-8">
 
-                                {/* Pricing */}
-                                <div className="flex items-baseline gap-6 border-b border-white/5 pb-8">
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{dict.demoSection.salePrice}</span>
-                                        <div className="text-5xl font-black text-white">{product.price}</div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{dict.demoSection.msrp}</span>
-                                        <div className="text-2xl font-bold text-gray-700 line-through decoration-red-500/20">{product.originalPrice}</div>
-                                    </div>
-                                </div>
+                            {/* Top label */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">
+                                    {dict.demoSection.environment || "Demo Environment"}
+                                </span>
+                                <ArrowRight className="h-3 w-3 text-gray-700" />
+                                <span className="text-[11px] font-black text-blue-500 uppercase tracking-widest">
+                                    {dict.demoSection.productBrand || "Imagine this: your products"}
+                                </span>
+                            </div>
 
-                                {/* Description */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <Info className="w-3 h-3" /> {dict.demoSection.productIntel}
-                                    </h4>
-                                    <p className="text-gray-400 text-lg leading-relaxed font-medium">
-                                        {product.description}
+                            {/* Product name + rating */}
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    {[1,2,3,4,5].map(i => (
+                                        <span key={i} className={`text-sm ${i <= 4 ? "text-yellow-400" : "text-gray-600"}`}>★</span>
+                                    ))}
+                                    <span className="text-gray-500 text-xs font-medium">(128)</span>
+                                </div>
+                                <h3 className="text-2xl lg:text-3xl font-black text-white leading-tight tracking-tight">
+                                    {dict.demoSection.productName || "Let your clients try before they buy"}
+                                </h3>
+                            </div>
+
+                            {/* Pricing */}
+                            <div className="flex items-baseline gap-4 py-5 border-y border-white/5">
+                                <div>
+                                    <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">
+                                        {dict.demoSection.salePrice || "Sale Price"}
                                     </p>
+                                    <span className="text-4xl font-black text-white">$50.00</span>
                                 </div>
-
-                                {/* Main Actions */}
-                                <div className="space-y-5 pt-4">
-                                    <div className="relative group">
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-[24px] blur-lg opacity-40 group-hover:opacity-100 transition duration-500" />
-                                        <button
-                                            onClick={triggerUpload}
-                                            className="relative w-full py-6 bg-white text-black rounded-[20px] font-black text-xl flex items-center justify-center gap-4 transition-transform active:scale-95 shadow-2xl overflow-hidden"
-                                        >
-                                            {status === "processing" ? (
-                                                <RefreshCw className="w-6 h-6 animate-spin" />
-                                            ) : (
-                                                <>
-                                                    <Camera className="w-6 h-6" />
-                                                    {view === "details" ? dict.demoSection.virtualTryon : dict.demoSection.tryDifferent}
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <button className="w-full py-5 bg-white/5 border border-white/10 text-gray-700 rounded-[20px] font-black text-lg cursor-not-allowed flex items-center justify-center gap-3 transition-colors hover:bg-white/10">
-                                        <ShoppingCart className="w-5 h-5" />
-                                        {dict.demoSection.addToCart}
-                                    </button>
-
-                                    <div className="flex items-center justify-center gap-2 pt-2 text-blue-500/60">
-                                        <ShieldCheck className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                                            {dict.demoSection.guarantee}
-                                        </span>
-                                    </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">
+                                        {dict.demoSection.msrp || "MSRP"}
+                                    </p>
+                                    <span className="text-xl font-bold text-gray-600 line-through">$65.00</span>
                                 </div>
                             </div>
 
-                            {/* Trust Footer */}
-                            <div className="pt-10 mt-12 border-t border-white/5 grid grid-cols-3 gap-4">
+                            {/* Description */}
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                {dict.demoSection.productDesc || "Revolutionize your storefront with hyper-realistic AI try-on technology. Build trust, reduce returns, and watch conversion rates soar."}
+                            </p>
+
+                            {/* CTAs */}
+                            <div className="space-y-3 mt-auto">
+                                {/* Primary CTA — Try On */}
+                                <button
+                                    onClick={triggerUpload}
+                                    disabled={status === "processing"}
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+                                >
+                                    {status === "processing" ? (
+                                        <>
+                                            <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                                            Generating…
+                                        </>
+                                    ) : status === "success" ? (
+                                        <>
+                                            <RotateCcw className="h-4 w-4" />
+                                            {dict.demoSection.tryDifferent || "Try Different Photo"}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Camera className="h-4 w-4" />
+                                            {dict.demoSection.virtualTryon || "Virtual Try-On — Upload Photo"}
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Secondary CTA — Add to Cart (disabled, demo only) */}
+                                <button
+                                    disabled
+                                    className="w-full py-4 bg-white/5 border border-white/8 text-gray-600 rounded-2xl font-bold text-base flex items-center justify-center gap-3 cursor-not-allowed"
+                                >
+                                    <ShoppingCart className="h-4 w-4" />
+                                    {dict.demoSection.addToCart || "Add to Cart"}
+                                </button>
+
+                                {/* Back button (only when in result mode) */}
+                                {status === "success" && (
+                                    <button
+                                        onClick={reset}
+                                        className="w-full py-3 text-gray-500 hover:text-white text-sm font-medium transition-colors"
+                                    >
+                                        ← {dict.demoSection.back || "Back to Product"}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Trust badges */}
+                            <div className="flex items-center justify-center gap-6 pt-4 border-t border-white/5">
                                 {[
-                                    { label: dict.demoSection.stats.privacy, value: dict.demoSection.stats.secure, icon: ShieldCheck, color: "text-green-400" },
-                                    { label: dict.demoSection.stats.engine, value: dict.demoSection.stats.neural, icon: Wand2, color: "text-blue-400" },
-                                    { label: dict.demoSection.stats.latency, value: dict.demoSection.stats.global, icon: Zap, color: "text-yellow-400" }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group">
-                                        <item.icon className={`w-5 h-5 mb-2 ${item.color} group-hover:scale-110 transition-transform`} />
-                                        <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-1">{item.label}</span>
-                                        <span className="text-white text-[10px] font-black">{item.value}</span>
+                                    { label: dict.demoSection.stats?.privacy || "Privacy", value: dict.demoSection.stats?.secure || "Secure Eng" },
+                                    { label: dict.demoSection.stats?.engine || "AI Engine", value: dict.demoSection.stats?.neural || "Neural 2.5" },
+                                    { label: dict.demoSection.stats?.latency || "Latency", value: dict.demoSection.stats?.global || "~8s Global" }
+                                ].map((badge, i) => (
+                                    <div key={i} className="text-center">
+                                        <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest">{badge.label}</p>
+                                        <p className="text-[11px] font-bold text-gray-400 mt-0.5">{badge.value}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Hidden File Input */}
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                />
             </div>
+
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
         </section>
     );
 }
