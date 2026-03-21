@@ -117,24 +117,19 @@ export async function getSystemLogsAction() {
             }
 
             // ── Detect platform/source ──
-            let platform = "droutfit"
+            const bodySource = meta.source || meta.channel || (log.path?.includes('shopify') ? 'shopify' : (log.path?.includes('wordpress') ? 'wordpress' : null));
+            let platform = bodySource || "droutfit";
             if (log.path === '/api/generate-demo') platform = "demo"
-            else if (meta.source === 'shopify' || log.path?.includes('shopify')) platform = "shopify"
-            else if (meta.source === 'wordpress' || log.path?.includes('wordpress') || log.path?.includes('wp-')) platform = "wordpress"
-            else if (meta.channel === 'shopify') platform = "shopify"
-            else if (meta.channel === 'wordpress') platform = "wordpress"
-            // If it came from a widget (has product_id but no user_id, path = /api/virtual-try-on)
-            else if (!log.user_id && log.product_id && log.path === '/api/virtual-try-on') platform = "widget"
+            else if (!log.user_id && log.product_id && log.path === '/api/virtual-try-on' && !bodySource) platform = "widget"
 
             // ── Resolve store info ──
             let userInfo = profilesMap.get(log.user_id)
-            // If no direct user, try to get store info from the product owner
             if (!userInfo && log.product_id) {
                 const productOwner = productOwnerMap.get(log.product_id)
                 if (productOwner) userInfo = productOwner as any
             }
 
-            const storeLabel = userInfo?.store_name || userInfo?.store_domain || userInfo?.full_name || null
+            const storeLabel = userInfo?.store_name || userInfo?.store_domain || userInfo?.full_name || (meta.shop ? meta.shop.replace('.myshopify.com', '') : null)
 
             return {
                 id: log.id,
@@ -148,9 +143,9 @@ export async function getSystemLogsAction() {
                     store_domain: userInfo.store_domain || null,
                     email: (userInfo as any).email || null,
                 } : {
-                    full_name: platform === 'demo' ? 'Landing Page Visitor' : 'Widget User',
+                    full_name: platform === 'demo' ? 'Landing Page Visitor' : (platform === 'shopify' ? 'Shopify Guest' : 'Widget Guest'),
                     store_name: storeLabel,
-                    store_domain: null,
+                    store_domain: meta.shop || null,
                     email: null,
                 },
                 meta: { ...meta, source: platform }
