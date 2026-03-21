@@ -139,10 +139,19 @@ export async function POST(req: NextRequest) {
                 resultImages = [resultUrlPruna];
 
                 if (logEntryId) {
+                    const detectSource = shop ? 'shopify' : (metadata?.channel || 'widget');
                     await supabase.from("usage_logs").update({
                         status: 200,
                         latency: `${Date.now() - startTime}ms`,
-                        error_message: JSON.stringify({ provider: 'pruna', model: 'p-image-edit', estimated_cost: 0.01, result_url: resultUrlPruna })
+                        error_message: JSON.stringify({ 
+                            provider: 'pruna', 
+                            model: 'p-image-edit', 
+                            estimated_cost: 0.01, 
+                            result_url: resultUrlPruna,
+                            source: detectSource,
+                            channel: detectSource,
+                            shop: shop || null
+                        })
                     }).eq("id", logEntryId);
                 }
             } else if (PREFERRED_PROVIDER === "dashscope") {
