@@ -41,7 +41,7 @@ export default function AdminSidebar() {
                             }`}
                     >
                         <LayoutDashboard className={`h-5 w-5 ${isActive('/xdash') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        Overview
+                        Command Center
                     </Link>
                     <Link
                         href="/xdash/users"
@@ -52,7 +52,7 @@ export default function AdminSidebar() {
                             }`}
                     >
                         <Users className={`h-5 w-5 ${isActive('/xdash/users') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        Users Management
+                        Client Intelligence
                     </Link>
                     <Link
                         href="/xdash/revenue"
@@ -65,7 +65,7 @@ export default function AdminSidebar() {
                         <div className="h-5 w-5 flex items-center justify-center">
                             <span className="text-green-500 font-bold">$</span>
                         </div>
-                        Revenue Analytics
+                        Revenue Stream
                     </Link>
                     <Link
                         href="/xdash/settings"
@@ -76,7 +76,7 @@ export default function AdminSidebar() {
                             }`}
                     >
                         <Settings className={`h-5 w-5 ${isActive('/xdash/settings') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        Set pricing
+                        Pricing Engine
                     </Link>
                     <Link
                         href="/xdash/prompts"
@@ -87,7 +87,7 @@ export default function AdminSidebar() {
                             }`}
                     >
                         <MessageSquare className={`h-5 w-5 ${isActive('/xdash/prompts') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        Prompt Manager
+                        AI Prompt Studio
                     </Link>
                     <Link
                         href="/xdash/logs"
@@ -98,7 +98,7 @@ export default function AdminSidebar() {
                             }`}
                     >
                         <ListTree className={`h-5 w-5 ${isActive('/xdash/logs') ? 'text-blue-500' : 'text-gray-500'}`} />
-                        API Logs
+                        System Logs
                     </Link>
                 </nav>
 
