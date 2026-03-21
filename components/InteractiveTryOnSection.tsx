@@ -189,19 +189,24 @@ export default function InteractiveTryOnSection({
                 <div className="flex flex-col items-center gap-4 mt-10">
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-[20px] blur-lg opacity-50 group-hover:opacity-80 transition duration-500" />
-                        <button
-                            onClick={() => status === "success" ? reset() : fileInputRef.current?.click()}
-                            disabled={status === "processing"}
-                            className="relative px-10 py-5 bg-white text-black rounded-[16px] font-black text-lg flex items-center gap-3 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-2xl"
-                        >
-                            {status === "processing" ? (
-                                <><span className="h-5 w-5 rounded-full border-2 border-gray-300 border-t-black animate-spin" /> Generating…</>
-                            ) : status === "success" ? (
-                                <><RotateCcw className="h-5 w-5" /> {dict.demoSection?.tryDifferent || "Try Different Photo"}</>
-                            ) : (
-                                <><Camera className="h-5 w-5" /> {dict.demoSection?.virtualTryon || "Try On — Upload Your Photo"}</>
-                            )}
-                        </button>
+                    <button
+                        onClick={() => {
+                            if (status === "success") {
+                                reset();
+                                setTimeout(() => fileInputRef.current?.click(), 100);
+                            } else {
+                                fileInputRef.current?.click();
+                            }
+                        }}
+                        disabled={status === "processing"}
+                        className="relative px-10 py-5 bg-white text-black rounded-[16px] font-black text-lg flex items-center gap-3 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-2xl"
+                    >
+                        {status === "processing" ? (
+                            <><span className="h-5 w-5 rounded-full border-2 border-gray-300 border-t-black animate-spin" /> Generating…</>
+                        ) : (
+                            <><Camera className="h-5 w-5" /> {status === "success" ? "Try Another Photo" : (dict.demoSection?.virtualTryon || "Try On — Upload Your Photo")}</>
+                        )}
+                    </button>
                     </div>
                     <p className="text-gray-700 text-xs font-medium">
                         {dict.demoSection?.guarantee || "Free · No account required · Results in ~10s"}
