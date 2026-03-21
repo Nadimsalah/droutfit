@@ -55,6 +55,10 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
 
     useEffect(() => {
         fetchLogs();
+        const intervalId = setInterval(() => {
+            fetchLogs();
+        }, 5000); // Auto-refresh every 5 seconds so user always sees newest generations
+        return () => clearInterval(intervalId);
     }, [params.id]);
 
     const confirmDelete = async () => {
