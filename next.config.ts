@@ -7,10 +7,14 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: "/:path*",
         headers: [
-          {
-            key: "Content-Security-Policy",
-            value: "frame-ancestors *"
-          }
+            {
+              key: "Content-Security-Policy",
+              value: "frame-ancestors 'self' http://localhost:3000 http://127.0.0.1:3000 http://localhost:3005 http://127.0.0.1:3005 *"
+            },
+            {
+              key: "X-Frame-Options",
+              value: "ALLOWALL"
+            }
         ]
       },
       {
@@ -28,7 +32,8 @@ const nextConfig: NextConfig = {
         ]
       }
     ];
-  }
+  },
+  allowedDevOrigins: ["localhost:3000", "127.0.0.1:3000", "localhost:3005", "127.0.0.1:3005"]
 };
 
 export default nextConfig;

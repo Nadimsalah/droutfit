@@ -7,21 +7,28 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const merchantId = searchParams.get('merchant_id');
-
-        // Note: In a production scenario, we should ideally validate the `token` 
-        // passed in the Authorization header. For simplicity and since merchant_id 
-        // is generally a UUID not easily guessable, we'll use it to fetch public-safe profile data for the WP dashboard.
+        let merchantId = searchParams.get('merchant_id') || searchParams.get('api_key');
 
         if (!merchantId) {
-            return NextResponse.json({ error: "Merchant ID is required" }, { status: 400 });
+            return NextResponse.json({ error: "Merchant ID or API Key is required" }, { status: 400 });
         }
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
+        // If it starts with dr_, it's an API Key, resolve to ID
+        if (merchantId.startsWith('dr_')) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('api_key', merchantId)
+                .single();
+            if (!profile) return NextResponse.json({ error: "Invalid API Key" }, { status: 401 });
+            merchantId = profile.id;
+        }
+
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('credits, store_website')
+            .select('id, credits, store_website')
             .eq('id', merchantId)
             .single();
 
@@ -55,6 +62,10 @@ export async function GET(req: Request) {
 
         return NextResponse.json({
             success: true,
+            user: {
+                id: merchantId,
+                email: profile.store_website || "Connected", // Placeholder since email is in auth.users
+            },
             credits: profile.credits || 0,
             store_website: profile.store_website,
             logs

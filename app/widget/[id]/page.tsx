@@ -29,11 +29,14 @@ function WidgetContent() {
             try {
                 const id = params.id as string
                 const shop = searchParams.get("shop")
-                const merchantId = searchParams.get("m") || searchParams.get("merchant_id")
-                const wpName = searchParams.get("name") || searchParams.get("product_name")
-                const wpImage = searchParams.get("image") || searchParams.get("product_image")
+                const merchantId = searchParams.get("m") || searchParams.get("merchant_id") || searchParams.get("mid")
+                const wpName = searchParams.get("name") || searchParams.get("product_name") || searchParams.get("title") || searchParams.get("productName")
+                const wpImage = searchParams.get("image") || searchParams.get("product_image") || searchParams.get("img") || searchParams.get("productImage")
+
+                console.log(`[WIDGET] Loading Product: ID=${id}, M=${merchantId}, IMG=${wpImage}`);
 
                 if (merchantId && wpImage) {
+                    console.log(`[WIDGET] Triggering JIT Sync for ${id}...`);
                     // This is a JIT sync for WordPress
                     const syncRes = await fetch('/api/wp/sync-product', {
                         method: 'POST',
@@ -108,9 +111,18 @@ function WidgetContent() {
                 <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-sm">
                     <X className="h-12 w-12 text-red-400 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Product Not Found</h3>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-500 text-sm mb-4">
                         The product you are looking for does not exist or has been removed.
                     </p>
+                    {!searchParams.get('image') && !searchParams.get('img') && !searchParams.get('product_image') && (
+                        <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-xs text-left">
+                            <p className="font-bold mb-1">💡 Integration Tip:</p>
+                            <p>Make sure to include the <strong>image</strong> parameter in the URL if you're using a custom integration.</p>
+                            <code className="block mt-2 bg-white/50 p-2 rounded border border-amber-200">
+                                ...?image=URL&name=Title&merchant_id=ID
+                            </code>
+                        </div>
+                    )}
                 </div>
             </div>
         )

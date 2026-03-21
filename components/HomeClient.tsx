@@ -353,12 +353,21 @@ export default function HomeClient({ dict, locale }: { dict: any, locale: string
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-12 w-full lg:w-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 w-full lg:w-auto">
                         <nav aria-label="Product Navigation">
                             <h4 className="font-bold text-white mb-6">{dict.footer.product}</h4>
                             <ul className="space-y-4 text-sm text-gray-400">
                                 <li><Link href={`/${locale}#features`} className="hover:text-white transition-colors">{dict.footer.features}</Link></li>
                                 <li><Link href={`/${locale}#demo`} className="hover:text-white transition-colors">{dict.footer.demo}</Link></li>
+                                <li><Link href={`/${locale}#shopify`} className="hover:text-white transition-colors">{dict.navbar.shopify}</Link></li>
+                            </ul>
+                        </nav>
+                        <nav aria-label="Developer Navigation">
+                            <h4 className="font-bold text-white mb-6">Developers</h4>
+                            <ul className="space-y-4 text-sm text-gray-400">
+                                <li><Link href={`/${locale}/docs`} className="hover:text-white transition-colors font-bold text-blue-400">{dict.navbar.apiDocs}</Link></li>
+                                <li><Link href={`/${locale}/docs#widget`} className="hover:text-white transition-colors">Button Integration</Link></li>
+                                <li><Link href={`/${locale}/docs#direct-api`} className="hover:text-white transition-colors">Direct API</Link></li>
                             </ul>
                         </nav>
                         <nav aria-label="Portal Navigation">

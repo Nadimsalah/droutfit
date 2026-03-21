@@ -22,9 +22,10 @@ export default function DocsClient({ dict, locale }: { dict: any, locale: string
 
     const sections = [
         { id: "shopify", title: dict.integrationsPage?.cat1 || "1. Shopify", icon: <Globe className="h-5 w-5" /> },
-        { id: "wordpress", title: dict.integrationsPage?.cat2 || "2. WordPress", icon: <Layers className="h-5 w-5" /> },
-        { id: "direct-api", title: dict.integrationsPage?.cat3 || "3. Direct API", icon: <Cpu className="h-5 w-5" /> },
-        { id: "api-reference", title: dict.integrationsPage?.cat4 || "4. API Reference", icon: <Terminal className="h-5 w-5" /> }
+        { id: "widget", title: "2. Button Integration", icon: <CheckCircle2 className="h-5 w-5" /> },
+        { id: "wordpress", title: dict.integrationsPage?.cat2 || "3. WordPress", icon: <Layers className="h-5 w-5" /> },
+        { id: "direct-api", title: dict.integrationsPage?.cat3 || "4. Direct API", icon: <Cpu className="h-5 w-5" /> },
+        { id: "api-reference", title: dict.integrationsPage?.cat4 || "5. API Reference", icon: <Terminal className="h-5 w-5" /> }
     ]
 
     return (
@@ -97,6 +98,56 @@ export default function DocsClient({ dict, locale }: { dict: any, locale: string
                                 <p className="text-sm text-gray-500 leading-relaxed">
                                     Your inventory and credits are always in sync between DrOutfit and Shopify.
                                 </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Widget Integration */}
+                    <section id="widget" className="space-y-8">
+                        <div className="space-y-4">
+                            <span className="px-4 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">NEW</span>
+                            <h2 className="text-3xl font-black italic tracking-tight">{dict.docsPage?.widget || "Add Try-On Button"}</h2>
+                            <p className="text-gray-400 font-medium">Add a "Try-On" button to any store platform in seconds using our universal widget.</p>
+                        </div>
+
+                        <div className="bg-[#0D1117] rounded-[32px] border border-white/5 overflow-hidden">
+                            <div className="p-8 space-y-6">
+                                <p className="text-sm text-gray-300">
+                                    To show the AI Try-On tool on your store, simply link to the following URL pattern. If the product isn't already in our database, we will dynamically use the image and name provided in the URL.
+                                </p>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 text-xs font-black text-gray-500 uppercase tracking-widest">
+                                        <Code className="h-4 w-4" /> URL Pattern
+                                    </div>
+                                    <div className="p-4 bg-white/[0.02] rounded-xl font-mono text-xs text-blue-400 break-all border border-white/5">
+                                        https://droutfit.com/widget/<span className="text-orange-300">[PRODUCT_ID]</span>?m=<span className="text-green-400">[YOUR_KEY]</span>&image=<span className="text-purple-400">[IMG_URL]</span>&name=<span className="text-white">[NAME]</span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-white">Using JS (Recommended)</h4>
+                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto">
+{`function openTryOn(id, name, img) {
+  const mid = "YOUR_API_KEY";
+  const url = \`https://droutfit.com/widget/\${id}?m=\${mid}&image=\${img}&name=\${name}\`;
+  window.open(url, 'DrOutfit', 'width=500,height=800');
+}`}
+                                        </pre>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-white">Using Iframe</h4>
+                                        <pre className="p-4 bg-black/50 rounded-xl text-[10px] text-gray-400 font-mono overflow-auto">
+{`<iframe 
+  src="https://droutfit.com/widget/ID?m=KEY&image=IMG"
+  width="100%" 
+  height="600px" 
+  style="border-radius: 20px;"
+></iframe>`}
+                                        </pre>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
