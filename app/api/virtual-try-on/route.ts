@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
 
         const logEntry = await supabase.from("usage_logs").insert([{
             user_id: null,
+            product_id: productId || null,
             method: "POST",
             path: "/api/virtual-try-on",
             ip_address: ip,

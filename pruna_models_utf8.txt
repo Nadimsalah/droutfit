@@ -1,0 +1,28 @@
+{
+  "error": "Missing or unsupported model",
+  "message": "The 'Model' header is required and must be one of the supported models.",
+  "supported_models": [
+    "flux-2-klein-4b",
+    "flux-dev",
+    "flux-dev-lora",
+    "p-image",
+    "p-image-edit",
+    "p-image-edit-lora",
+    "p-image-edit-trainer",
+    "p-image-lora",
+    "p-image-pro",
+    "p-image-trainer",
+    "p-video",
+    "qwen-image",
+    "qwen-image-edit-plus",
+    "qwen-image-fast",
+    "vace",
+    "wan-i2v",
+    "wan-image-small",
+    "wan-t2v",
+    "z-image-turbo",
+    "z-image-turbo-lora",
+    "z-image-turbo-small"
+  ],
+  "example": "curl -H 'Model: flux-dev' -H 'apikey: YOUR_KEY' https://api.pruna.ai/v1/predictions -d '{\"input\": {...}}'"
+}
