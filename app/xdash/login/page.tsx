@@ -11,6 +11,7 @@ function SubmitButton() {
         <button
             type="submit"
             disabled={pending}
+            suppressHydrationWarning
             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-2"
         >
             {pending ? <Loader2 className="animate-spin h-5 w-5" /> : "Access Dashboard"}
