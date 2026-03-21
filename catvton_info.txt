@@ -1,0 +1,2 @@
+KEYS=mask,seed,image,width,height,try_on,garment,hf_token,num_steps,guidance_scale
+VERSION=cc41d1b963023987ed2ddf26e9264efcc96ee076640115c303f95b0010f6a958

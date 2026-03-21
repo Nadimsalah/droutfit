@@ -18,6 +18,7 @@ import {
     Camera,
     Activity
 } from "lucide-react";
+import { optimizeImageForGemini } from "@/lib/image-processing";
 
 export default function InteractiveTryOnSection({
     dict,
@@ -80,29 +81,39 @@ export default function InteractiveTryOnSection({
         }, 300);
 
         try {
-            const base64Image = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+            // Optimization Pipeline: Resize to 1024px, WebP 75%
+            const { base64: base64Image, metadata } = await optimizeImageForGemini(file);
+            console.log(">>> [Cost-Optimization] Optimized image for upload:", metadata);
 
             const response = await fetch('/api/generate-demo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Bypass framework abort to prevent "aborted without reason" during complex AI processing
-                signal: null as any,
+                signal: undefined,
                 body: JSON.stringify({
                     userImageUrl: base64Image,
-                    garmentUrl: product.garmentUrl
+                    garmentUrl: product.garmentUrl,
+                    metadata: {
+                        ...metadata,
+                        isMobile: window.innerWidth < 768
+                    }
                 })
             });
 
+            console.log(">>> [TryOn] API Response Status:", response.status);
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || dict.demoSection.generationFailed);
+            console.log(">>> [TryOn] API Data:", data);
 
-            await new Promise(r => setTimeout(r, 1000));
+            if (!response.ok) {
+                console.error(">>> [TryOn] API Error Detail:", data);
+                throw new Error(data.error || "Generation failed");
+            }
 
+            if (!data.result_url) {
+                console.error(">>> [TryOn] Missing result_url in success response");
+                throw new Error("API succeeded but returned no result URL");
+            }
+
+            console.log(">>> [TryOn] Success! Setting result image:", data.result_url);
             setResultImage(data.result_url);
             setStatus("success");
             setProgress(100);
@@ -245,7 +256,12 @@ export default function InteractiveTryOnSection({
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
                                                     </motion.div>
                                                 ) : status === "error" ? (
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-red-500/5">
+                                                    <motion.div 
+                                                        key="error-state"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-red-500/5"
+                                                    >
                                                         <RefreshCw className="w-12 h-12 text-red-500 mb-6" />
                                                         <p className="text-white font-black uppercase tracking-widest text-xs mb-2">{dict.demoSection.failed}</p>
                                                         <p className="text-gray-500 text-[11px] text-center mb-8">{errorMsg}</p>
@@ -255,7 +271,7 @@ export default function InteractiveTryOnSection({
                                                         >
                                                             {dict.demoSection.tryAgain}
                                                         </button>
-                                                    </div>
+                                                    </motion.div>
                                                 ) : null}
                                             </AnimatePresence>
 

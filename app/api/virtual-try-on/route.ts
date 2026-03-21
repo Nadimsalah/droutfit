@@ -1,361 +1,260 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getOptimalResolution, calculateGeminiCost, getCachedGarment, stripMetadata, enterQueue, leaveQueue } from "@/lib/google-ai-optimizer";
+import { submitDashScopeVTO, pollDashScopeTask } from "@/lib/ai-providers/dashscope";
+import { generateSiliconFlow } from "@/lib/ai-providers/siliconflow";
+import { generateReplicateVTO } from "@/lib/ai-providers/replicate";
+import { generateFalVTO } from "@/lib/ai-providers/falai";
+import { generateHFSpaceVTO } from "@/lib/ai-providers/hf-space";
+import { generatePrunaVTO } from "@/lib/ai-providers/pruna";
 
-// Initialize Supabase Client (Service Role for Admin Access)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Fallback to Anon key if Service key is missing (but warn)
-if (!supabaseServiceKey) {
-    console.warn("SUPABASE_SERVICE_ROLE_KEY is missing. Rate limiting may fail due to RLS.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
-// Removal of NanoBanana provider to maximize profit.
-
-async function uploadBase64Image(base64Image: string): Promise<string> {
-    if (!supabaseServiceKey) throw new Error("Missing Supabase Service Key for upload");
-
-    // Remove data:image/jpeg;base64, prefix if present
-    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-
-    // Generate random filename
-    const fileName = `vto_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-
-    const { data, error } = await supabase.storage
-        .from("tryimages")
-        .upload(fileName, buffer, {
-            contentType: "image/jpeg",
-            upsert: true
-        });
-
-    if (error) {
-        throw new Error("Failed to upload image to storage: " + error.message);
-    }
-
-    const { data: urlData } = supabase.storage
-        .from("tryimages")
-        .getPublicUrl(fileName);
-
-    return urlData.publicUrl;
-}
-
-function isUUID(str: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
-}
+const supabase = createClient(supabaseUrl, supabaseServiceKey || "");
 
 export async function POST(req: NextRequest) {
+    const startTime = Date.now();
     try {
         const body = await req.json();
-        const { prompt, type, numImages, imageUrls, productId, shop } = body;
+        const { prompt, type, numImages, imageUrls, productId, shop, metadata } = body;
+        const isMobile = metadata?.isMobile || false;
+        const isHD = metadata?.isHD || false;
 
         const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
 
-        let merchantId: string | null = null;
+        const logEntry = await supabase.from("usage_logs").insert([{
+            user_id: null,
+            method: "POST",
+            path: "/api/virtual-try-on",
+            ip_address: ip,
+            status: 102
+        }]).select();
 
-        // 0. Try X-API-Key authentication (Priority)
-        const apiKey = req.headers.get("x-api-key");
-        if (apiKey) {
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("api_key", apiKey)
-                .single();
-            if (profile) merchantId = profile.id;
-        }
+        const logEntryId = logEntry.data?.[0]?.id;
+        const resultUrl = null;
+        const taskId = "task-" + Date.now();
 
-        // 1. Identify Merchant
-        // A. Try finding by productId (internal UUID)
-        if (productId && isUUID(productId)) {
-            const { data: product } = await supabase
-                .from("products")
-                .select("user_id")
-                .eq("id", productId)
-                .single();
-            if (product) merchantId = product.user_id;
-        }
-
-        // B. Try finding by shop domain (resilient lookup)
-        if (!merchantId && shop) {
-            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-            const { data: profiles } = await (supabase as any)
-                .from("profiles")
-                .select("id, credits")
-                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
-                .order('credits', { ascending: false })
-                .limit(1);
-
-            if (profiles && profiles.length > 0) {
-                merchantId = profiles[0].id;
-            } else {
-                return NextResponse.json({
-                    error: "This store is not yet linked to a DrOutfit account. Please open the DrOutfit app in your Shopify admin to initialize your connection."
-                }, { status: 404 });
-            }
-        }
-
-        // C. Fallback for testing/direct API
-        if (!merchantId) {
-            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-            if (!firstMerchant) return NextResponse.json({ error: "System not ready" }, { status: 500 });
-            merchantId = firstMerchant.id;
-        }
-
-        // 2. Load Merchant Profile for Limits/Credits
-        const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("credits, ip_limit")
-            .eq("id", merchantId)
-            .single();
-
-        if (profileError || !profile) {
-            return NextResponse.json({ error: "Merchant profile not found" }, { status: 404 });
-        }
-
-        if ((profile.credits || 0) <= 0) {
-            return NextResponse.json(
-                { error: "STORE_LIMIT_REACHED" }, // Consistent error code for frontend
-                { status: 403 }
-            );
-        }
-
-        const limit = (profile as any).ip_limit || 5;
-        let isAllowedByRateLimit = true;
-        try {
-            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-            const { count, error: countError } = await (supabase as any)
-                .from("usage_logs")
-                .select("*", { count: "exact", head: true })
-                .eq("user_id", merchantId)
-                .eq("ip_address", ip)
-                .gte("created_at", oneDayAgo);
-
-            if (!countError && count !== null && count >= limit) {
-                isAllowedByRateLimit = false;
-            }
-        } catch (e) {
-            console.warn("Rate limiting bypass:", e);
-        }
-
-        if (!isAllowedByRateLimit) {
-            return NextResponse.json({ error: "Daily try-on limit reached for this IP." }, { status: 429 });
-        }
-
-        const referer = req.headers.get("referer") || "";
-        const source = (shop || referer.includes("myshopify.com") || referer.includes("shopify.com")) ? "shopify" : "droutfit";
-
-        const startTime = Date.now();
-        let logEntryId: string | null = null;
-        try {
-            const { data: logEntry } = await (supabase as any).from("usage_logs").insert([{
-                user_id: merchantId,
-                method: "POST",
-                path: "/api/virtual-try-on",
-                status: 202,
-                latency: null,
-                product_id: (productId && isUUID(productId)) ? productId : null,
-                error_message: JSON.stringify({ source }),
-                ...((profile as any).ip_limit ? { ip_address: ip } : {})
-            }]).select().single();
-            if (logEntry) logEntryId = logEntry.id;
-        } catch (e) {
-            console.warn("Failed to log usage pending status:", e);
-        }
-
-        let resultUrl = null;
-        let taskId = "task-" + Date.now();
-
+        await enterQueue();
         try {
             const { data: settingsData } = await supabase.from('system_settings').select('key, value');
             const settings: Record<string, string> = {};
             settingsData?.forEach(s => settings[s.key] = s.value);
 
-            const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-            const geminiPrompt = settings.GEMINI_PROMPT || "Analyze these images for virtual try-on suitability. Return 'READY'.";
+            const PREFERRED_PROVIDER = "pruna" as string;
+            let resultImages: string[] = [];
 
-            if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
+            if (PREFERRED_PROVIDER === "hfspace") {
+                console.log(">>> [API:virtual-try-on] Using FREE HuggingFace IDM-VTON Space");
+                const resultUrlHF = await generateHFSpaceVTO({
+                    personImageUrl: imageUrls[0].startsWith('//') ? 'https:' + imageUrls[0] : imageUrls[0],
+                    garmentImageUrl: imageUrls[1].startsWith('//') ? 'https:' + imageUrls[1] : imageUrls[1],
+                    hfToken: settings.HF_TOKEN || process.env.HF_TOKEN
+                });
+                resultImages = [resultUrlHF];
 
-            const genAI = new GoogleGenerativeAI(GEM_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ provider: 'hfspace', model: 'idm-vton-free' })
+                    }).eq("id", logEntryId);
+                }
+            } else if (PREFERRED_PROVIDER === "falai") {
+                const FAL_API_KEY = settings.FALAI_API_KEY || process.env.FALAI_API_KEY;
+                if (!FAL_API_KEY) throw new Error("fal.ai API Key is missing.");
 
-            const [personData, garmentData] = await Promise.all([
-                (async () => {
-                    let url = imageUrls[0];
-                    if (url.startsWith('//')) url = 'https:' + url;
-                    // Bypassing the framework's abort signal to prevent "aborted without reason"
-                    const resp = await fetch(url, { signal: null } as any);
-                    const buffer = await resp.arrayBuffer();
-                    return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                })(),
-                (async () => {
-                    let url = imageUrls[1];
-                    if (url.startsWith('//')) url = 'https:' + url;
-                    const resp = await fetch(url, { signal: null } as any);
-                    const buffer = await resp.arrayBuffer();
-                    return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/jpeg" } };
-                })()
-            ]);
+                console.log(">>> [API:virtual-try-on] Using fal.ai flux-klein-9b VTO");
+                const resultUrlFal = await generateFalVTO({
+                    personImageUrl: imageUrls[0].startsWith('//') ? 'https:' + imageUrls[0] : imageUrls[0],
+                    garmentImageUrl: imageUrls[1].startsWith('//') ? 'https:' + imageUrls[1] : imageUrls[1],
+                    apiKey: FAL_API_KEY
+                });
+                resultImages = [resultUrlFal];
 
-            const result = await model.generateContent([geminiPrompt, personData, garmentData]);
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ provider: 'falai', model: 'flux-klein-9b-vto' })
+                    }).eq("id", logEntryId);
+                }
+            } else if (PREFERRED_PROVIDER === "replicate") {
+                const REP_API_KEY = settings.REPLICATE_API_KEY || process.env.REPLICATE_API_KEY;
+                if (!REP_API_KEY) throw new Error("Replicate API Key is missing.");
 
-            const usage = result.response.usageMetadata;
-            const promptTokens = usage?.promptTokenCount || 0;
-            const candidatesTokens = usage?.candidatesTokenCount || 0;
-            const totalTokens = usage?.totalTokenCount || 0;
-            const estimatedCost = (promptTokens * 0.0000001) + (candidatesTokens * 0.000001);
+                console.log(">>> [API:virtual-try-on] Using Replicate IDM-VTON - Open Source VTO");
 
-            let base64Result = null;
-            if (result.response.candidates && result.response.candidates[0].content.parts) {
-                for (const part of result.response.candidates[0].content.parts) {
-                    if (part.inlineData) {
-                        base64Result = part.inlineData.data;
-                        break;
+                const resultUrlRep = await generateReplicateVTO({
+                    personImageUrl: imageUrls[0].startsWith('//') ? 'https:' + imageUrls[0] : imageUrls[0],
+                    garmentImageUrl: imageUrls[1].startsWith('//') ? 'https:' + imageUrls[1] : imageUrls[1],
+                    hfToken: settings.HF_TOKEN || process.env.HF_TOKEN,
+                    apiKey: REP_API_KEY
+                });
+                resultImages = [resultUrlRep];
+
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ provider: 'replicate', model: 'idm-vton' })
+                    }).eq("id", logEntryId);
+                }
+            } else if (PREFERRED_PROVIDER === "siliconflow") {
+                const SF_API_KEY = settings.SILICONFLOW_API_KEY || process.env.SILICONFLOW_API_KEY;
+                if (!SF_API_KEY) throw new Error("SiliconFlow API Key is missing.");
+
+                const sfModel = settings.SILICONFLOW_MODEL || 'black-forest-labs/FLUX.1-schnell';
+                console.log(`>>> [API:virtual-try-on] Using SiliconFlow Model: ${sfModel}`);
+
+                // T2I approach: describe the try-on in a detailed text prompt
+                const sfPrompt = `Photorealistic fashion photograph of a person wearing the exact garment shown in a clothing product image. The clothing must be realistic with natural fabric draping and matching lighting. High quality, professional fashion photo, full body shot.`;
+                const resultUrlSF = await generateSiliconFlow({
+                    model: sfModel,
+                    prompt: sfPrompt,
+                    imageUrls: imageUrls,
+                    apiKey: SF_API_KEY
+                });
+                resultImages = [resultUrlSF];
+
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ provider: 'siliconflow', model: sfModel })
+                    }).eq("id", logEntryId);
+                }
+            } else if (PREFERRED_PROVIDER === "pruna") {
+                const PRUNA_API_KEY = process.env.PRUNA_API_KEY || "pru_AdE9f0Zx_wZMX8GJzqQjGvcB5CizoY5G";
+                console.log(">>> [API:virtual-try-on] Using Pruna Key:", PRUNA_API_KEY?.substring(0, 10) + "...");
+                if (!PRUNA_API_KEY) throw new Error("Pruna API Key is missing.");
+
+                console.log(">>> [API:virtual-try-on] Using Pruna AI P-API");
+                const resultUrlPruna = await generatePrunaVTO({
+                    personImageUrl: imageUrls[0].startsWith('//') ? 'https:' + imageUrls[0] : imageUrls[0],
+                    garmentImageUrl: imageUrls[1].startsWith('//') ? 'https:' + imageUrls[1] : imageUrls[1],
+                    apiKey: PRUNA_API_KEY
+                });
+                resultImages = [resultUrlPruna];
+
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ provider: 'pruna', model: 'p-image-edit' })
+                    }).eq("id", logEntryId);
+                }
+            } else if (PREFERRED_PROVIDER === "dashscope") {
+                const DS_API_KEY = settings.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY;
+                if (!DS_API_KEY) throw new Error("DashScope API Key is missing.");
+
+                console.log(">>> [API:virtual-try-on] Using Chinese Provider: Alibaba DashScope");
+                const taskIdDS = await submitDashScopeVTO({
+                    modelImage: imageUrls[0],
+                    garmentImage: imageUrls[1],
+                    apiKey: DS_API_KEY
+                });
+                const resultUrlDS = await pollDashScopeTask(taskIdDS, DS_API_KEY);
+                resultImages = [resultUrlDS];
+
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ 
+                            taskId: taskIdDS, 
+                            provider: 'dashscope'
+                        })
+                    }).eq("id", logEntryId);
+                }
+            } else {
+                // GOOGLE FALLBACK
+                const GEM_API_KEY = settings.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+                if (!GEM_API_KEY) throw new Error("Google Gemini API Key is missing.");
+
+                const genAI = new GoogleGenerativeAI(GEM_API_KEY);
+                const resValue = getOptimalResolution(isMobile, isHD);
+                const resolutionStr = `${resValue}px`;
+                const modelName = settings.GEMINI_MODEL || "gemini-1.5-flash";
+                console.log(`>>> [API:virtual-try-on] Using Google Model: ${modelName}, Resolution: ${resolutionStr}`);
+                
+                const model = genAI.getGenerativeModel({ model: modelName });
+
+                const [personData, garmentData] = await Promise.all([
+                    (async () => {
+                        let url = imageUrls[0];
+                        if (url.startsWith('data:')) return { inlineData: { data: stripMetadata(url), mimeType: "image/webp" } };
+                        if (url.startsWith('//')) url = 'https:' + url;
+                        const resp = await fetch(url, { signal: null } as any);
+                        const buffer = await resp.arrayBuffer();
+                        return { inlineData: { data: Buffer.from(buffer).toString("base64"), mimeType: "image/webp" } };
+                    })(),
+                    (async () => {
+                        const url = imageUrls[1].startsWith('//') ? 'https:' + imageUrls[1] : imageUrls[1];
+                        const base64 = await getCachedGarment(url, async (targetUrl) => {
+                            const resp = await fetch(targetUrl, { signal: null } as any);
+                            const buffer = await resp.arrayBuffer();
+                            return Buffer.from(buffer).toString("base64");
+                        });
+                        return { inlineData: { data: base64, mimeType: "image/jpeg" } };
+                    })()
+                ]);
+
+                const qualityPrompt = "Professional virtual try-on. Replace the clothing in the user photo with the clothing from the garment image. The new clothing must follow the body contours, folds, and pose of the person. REMOVE any visible parts of the original clothing. Blend the edges naturally with the skin and background. Preserve the exact texture, fabric material, and patterns of the garment. Ensure photorealistic lighting, depth, and shadows that match the environment. High resolution, sharp details, cinematic quality. Return ONLY the final try-on image.";
+                const finalPrompt = prompt || settings.GEMINI_PROMPT || qualityPrompt;
+                const result = await model.generateContent([finalPrompt, personData, garmentData]);
+                
+                const usage = result.response.usageMetadata;
+                const promptTokens = usage?.promptTokenCount || 0;
+                const candidatesTokens = usage?.candidatesTokenCount || 0;
+                const estimatedCost = calculateGeminiCost(promptTokens, candidatesTokens, modelName);
+                
+                console.log(`>>> [Cost-Optimization] Tokens: ${usage?.totalTokenCount}. Cost: $${estimatedCost.toFixed(5)}`);
+
+                let base64Result = null;
+                if (result.response.candidates && result.response.candidates[0].content.parts) {
+                    for (const part of result.response.candidates[0].content.parts) {
+                        if (part.inlineData) {
+                            base64Result = part.inlineData.data;
+                            break;
+                        }
                     }
                 }
+
+                if (!base64Result) throw new Error("AI did not generate an image.");
+                
+                if (logEntryId) {
+                    await supabase.from("usage_logs").update({
+                        status: 200,
+                        latency: `${Date.now() - startTime}ms`,
+                        error_message: JSON.stringify({ 
+                            taskId, 
+                            resolution: resolutionStr,
+                            prompt_tokens: promptTokens,
+                            candidates_tokens: candidatesTokens,
+                            estimated_cost: estimatedCost,
+                            provider: 'google'
+                        })
+                    }).eq("id", logEntryId);
+                }
+                resultImages = ["data:image/png;base64," + base64Result];
             }
 
-            if (base64Result) {
-                resultUrl = await uploadBase64Image(base64Result);
-            } else {
-                const analysisText = result.response.text();
-                throw new Error("AI did not generate an image: " + analysisText);
-            }
+            return NextResponse.json({
+                status: "success",
+                task_id: taskId,
+                result: resultImages,
+                result_url: resultImages[0]
+            });
 
-            const usageMetadata = { tokens_used: totalTokens, estimated_cost: estimatedCost };
-
-            // Update credits
-            const newCredits = Math.max(0, (profile.credits || 0) - 1);
-            await supabase.from('profiles').update({ credits: newCredits }).eq('id', merchantId);
-
-            if (productId && isUUID(productId)) {
-                const { data: prodUsage } = await supabase.from('products').select('usage').eq('id', productId).single();
-                await supabase.from('products').update({ usage: (prodUsage?.usage || 0) + 1 }).eq('id', productId);
-            }
-
-            if (logEntryId) {
-                await supabase.from("usage_logs").update({
-                    status: 200,
-                    latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ taskId, result_url: resultUrl, source, ...usageMetadata })
-                }).eq("id", logEntryId);
-            }
-
-            return NextResponse.json({ status: "success", result_url: resultUrl, taskId });
-
-            // Only Google provider remains for cost efficiency.
-
-        } catch (error) {
-            if (logEntryId) {
-                await supabase.from("usage_logs").update({
-                    status: 500,
-                    latency: `${Date.now() - startTime}ms`,
-                    error_message: JSON.stringify({ error: (error as Error).message, taskId })
-                }).eq("id", logEntryId);
-            }
-            throw error;
+        } finally {
+            leaveQueue();
         }
     } catch (error) {
-        console.error("API Error:", error);
-        return NextResponse.json({ error: (error as Error).message || "Internal Server Error" }, { status: 500 });
-    }
-}
-
-export async function GET(req: NextRequest) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const productId = searchParams.get("productId");
-        const shop = searchParams.get("shop");
-
-        if (!productId && !shop) {
-            return NextResponse.json({ 
-                error: "Missing required parameters", 
-                message: "Please provide either 'productId' or 'shop' as a query parameter. For generation, use the POST method as described in the documentation."
-            }, { status: 400 });
-        }
-
-        const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
-
-        let merchantId: string | null = null;
-
-        // 0. Try X-API-Key authentication (Priority)
-        const apiKey = req.headers.get("x-api-key");
-        if (apiKey) {
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("api_key", apiKey)
-                .single();
-            if (profile) merchantId = profile.id;
-        }
-
-        // 1. Identify Merchant
-        if (productId && isUUID(productId)) {
-            const { data: product } = await supabase.from("products").select("user_id").eq("id", productId).single();
-            if (product) merchantId = product.user_id;
-        }
-
-        if (!merchantId && shop) {
-            const cleanShop = shop.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-            const { data: profiles } = await (supabase as any)
-                .from("profiles")
-                .select("id, credits")
-                .or(`store_website.eq.${shop},store_website.ilike.%${cleanShop}%`)
-                .order('credits', { ascending: false })
-                .limit(1);
-
-            if (profiles && profiles.length > 0) {
-                merchantId = profiles[0].id;
-            }
-        }
-
-        if (!merchantId) {
-            const { data: firstMerchant } = await supabase.from("profiles").select("id").limit(1).single();
-            merchantId = firstMerchant?.id || null;
-        }
-
-        if (!merchantId) return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
-
-        // 2. Get Limits
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("ip_limit, credits")
-            .eq("id", merchantId)
-            .single();
-
-        const limit = (profile as any)?.ip_limit || 5;
-        const totalCredits = (profile as any)?.credits || 0;
-
-        // 3. Get Usage
-        let used = 0;
-        try {
-            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-            const { count } = await (supabase as any)
-                .from("usage_logs")
-                .select("*", { count: "exact", head: true })
-                .eq("user_id", merchantId)
-                .eq("ip_address", ip)
-                .gte("created_at", oneDayAgo);
-            used = count || 0;
-        } catch (e) {
-            console.warn("Usage check failed:", e);
-        }
-
-        const remaining = Math.max(0, limit - used);
-
-        return NextResponse.json({
-            limit,
-            used,
-            remaining,
-            hasAccess: remaining > 0 && totalCredits > 0,
-            totalCredits
-        });
-
-    } catch (error) {
-        console.error("API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("VTO API Error:", error);
+        return NextResponse.json(
+            { error: (error as Error).message || "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }

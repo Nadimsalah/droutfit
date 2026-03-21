@@ -2,10 +2,10 @@
 
 import { useParams, useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
-import { Upload, X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon } from "lucide-react"
-import { uploadImage } from "@/lib/supabase"
+import { X, Sparkles, ArrowRight, ShieldCheck, RefreshCw, ShoppingBag, Loader2, Image as ImageIcon, Upload } from "lucide-react"
 // Removed NanoBanana import
 import { getProductByIdPublic, incrementProductUsage } from "@/lib/storage"
+import { optimizeImageForGemini } from "@/lib/image-processing"
 
 function WidgetContent() {
     const params = useParams()
@@ -158,18 +158,23 @@ function WidgetContent() {
         }, 400)
 
         try {
-            const publicUserUrl = await uploadImage(userFile)
+            // 1. Optimize image client-side before sending
+            const optimized = await optimizeImageForGemini(userFile);
+            const base64Image = optimized.base64;
 
-            // Call the real AI API
+            // Call the real AI API with base64 for speed and cost savings
             const response = await fetch("/api/virtual-try-on", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                signal: null as any,
+                signal: undefined,
                 body: JSON.stringify({
-                    imageUrls: [publicUserUrl, product.image],
+                    imageUrls: [base64Image, product.image],
                     productId: product.id,
                     shop: shop,
-                    type: "person"
+                    type: "person",
+                    metadata: {
+                        isMobile: window.innerWidth < 768
+                    }
                 }),
             });
 
@@ -179,6 +184,13 @@ function WidgetContent() {
                 throw new Error(data.error || "Generation failed");
             }
 
+            // Standardized API now returns result_url
+            const finalImage = data.result_url || (data.result && data.result[0]);
+
+            if (!finalImage) {
+                throw new Error("No result image returned");
+            }
+
             if (product.id) {
                 setRemainingTries(prev => prev !== null ? Math.max(0, prev - 1) : null)
             }
@@ -186,7 +198,7 @@ function WidgetContent() {
             clearInterval(progressInterval)
             setProgress(100)
             setTimeout(() => {
-                setResultImage(data.result_url)
+                setResultImage(finalImage)
                 setStep("result")
             }, 800)
         } catch (error: any) {

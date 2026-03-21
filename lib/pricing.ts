@@ -12,7 +12,14 @@ export const DEFAULT_PRICING = {
     PACKAGE_4_PRICE: 750,
     CUSTOM_CREDIT_PRICE: 0.015,
     MINIMUM_CUSTOM_AMOUNT: 50000,
-    // AI Provider Settings
+    // AI Engine Settings (VTO)
+    PREFERRED_AI_PROVIDER: 'pruna', // 'google', 'replicate', 'falai', 'hfspace', 'dashscope', 'pruna'
+    HF_TOKEN: '',
+    REPLICATE_API_KEY: '',
+    FALAI_API_KEY: '',
+    DASHSCOPE_API_KEY: '',
+    SILICONFLOW_API_KEY: '',
+    PRUNA_API_KEY: '',
     GEMINI_API_KEY: '',
     LANDING_DEMO_IMAGE: '/alaska-jacket.webp',
     WP_PLUGIN_ZIP_URL: '/plugins/droutfit-try-on.zip'

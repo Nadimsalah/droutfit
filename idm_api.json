@@ -1,0 +1,142 @@
+{
+  "named_endpoints": {
+    "/tryon": {
+      "parameters": [
+        {
+          "label": "Human. Mask with pen or use auto-masking",
+          "parameter_name": "dict",
+          "parameter_has_default": false,
+          "parameter_default": null,
+          "type": "",
+          "python_type": {
+            "type": "Dict(background: filepath | None, layers: List[filepath], composite: filepath | None)",
+            "description": ""
+          },
+          "component": "Imageeditor",
+          "example_input": {
+            "background": {
+              "path": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png",
+              "meta": {
+                "_type": "gradio.FileData"
+              },
+              "orig_name": "bus.png",
+              "url": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png"
+            },
+            "layers": [],
+            "composite": null
+          }
+        },
+        {
+          "label": "Garment",
+          "parameter_name": "garm_img",
+          "parameter_has_default": false,
+          "parameter_default": null,
+          "type": "Blob | File | Buffer",
+          "python_type": {
+            "type": "filepath",
+            "description": ""
+          },
+          "component": "Image",
+          "example_input": {
+            "path": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png",
+            "meta": {
+              "_type": "gradio.FileData"
+            },
+            "orig_name": "bus.png",
+            "url": "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png"
+          }
+        },
+        {
+          "label": "parameter_17",
+          "parameter_name": "garment_des",
+          "parameter_has_default": false,
+          "parameter_default": null,
+          "type": "string",
+          "python_type": {
+            "type": "str",
+            "description": ""
+          },
+          "component": "Textbox",
+          "example_input": "Hello!!"
+        },
+        {
+          "label": "Yes",
+          "parameter_name": "is_checked",
+          "parameter_has_default": true,
+          "parameter_default": true,
+          "type": "boolean",
+          "python_type": {
+            "type": "bool",
+            "description": ""
+          },
+          "component": "Checkbox",
+          "example_input": true
+        },
+        {
+          "label": "Yes",
+          "parameter_name": "is_checked_crop",
+          "parameter_has_default": true,
+          "parameter_default": false,
+          "type": "boolean",
+          "python_type": {
+            "type": "bool",
+            "description": ""
+          },
+          "component": "Checkbox",
+          "example_input": true
+        },
+        {
+          "label": "Denoising Steps",
+          "parameter_name": "denoise_steps",
+          "parameter_has_default": true,
+          "parameter_default": 30,
+          "type": "number",
+          "python_type": {
+            "type": "float",
+            "description": ""
+          },
+          "component": "Number",
+          "example_input": 3
+        },
+        {
+          "label": "Seed",
+          "parameter_name": "seed",
+          "parameter_has_default": true,
+          "parameter_default": 42,
+          "type": "number",
+          "python_type": {
+            "type": "float",
+            "description": ""
+          },
+          "component": "Number",
+          "example_input": 3
+        }
+      ],
+      "returns": [
+        {
+          "label": "Output",
+          "type": "string",
+          "python_type": {
+            "type": "filepath",
+            "description": ""
+          },
+          "component": "Image"
+        },
+        {
+          "label": "Masked image output",
+          "type": "string",
+          "python_type": {
+            "type": "filepath",
+            "description": ""
+          },
+          "component": "Image"
+        }
+      ],
+      "type": {
+        "continuous": false,
+        "generator": false
+      }
+    }
+  },
+  "unnamed_endpoints": {}
+}

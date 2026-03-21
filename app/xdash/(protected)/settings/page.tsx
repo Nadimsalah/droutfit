@@ -366,26 +366,110 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             <Cpu className="h-5 w-5 text-blue-500" />
-                            AI Engine (Google Gemini)
+                            AI Infrastructure (VTO Engines)
                         </h2>
 
-                        <div className="grid md:grid-cols-1 gap-8">
-                            <div className="space-y-4">
+                        <div className="space-y-6">
+                            {/* Provider Selection */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Default AI Provider</label>
+                                <select
+                                    value={config.PREFERRED_AI_PROVIDER || 'google'}
+                                    onChange={(e) => handleChange('PREFERRED_AI_PROVIDER', e.target.value)}
+                                    className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-bold"
+                                >
+                                    <option value="google">Google Gemini (Lowest Cost)</option>
+                                    <option value="hfspace">HuggingFace Spaces (100% Free - Fallback System)</option>
+                                    <option value="pruna">Pruna AI (P-API)</option>
+                                    <option value="replicate">Replicate (High Stability)</option>
+                                    <option value="falai">fal.ai (Premium Quality)</option>
+                                    <option value="dashscope">Alibaba DashScope (Asia Optimized)</option>
+                                </select>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Pruna AI */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                        <Key className="h-4 w-4" />
-                                        Google (Gemini) API Key
+                                        Pruna AI Key
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.PRUNA_API_KEY || ''}
+                                        onChange={(e) => handleChange('PRUNA_API_KEY', e.target.value)}
+                                        placeholder="Enter Pruna API Key"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                    />
+                                </div>
+
+                                {/* Google Gemini */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        Google Gemini Key
                                     </label>
                                     <input
                                         type="password"
                                         value={config.GEMINI_API_KEY || ''}
                                         onChange={(e) => handleChange('GEMINI_API_KEY', e.target.value)}
                                         placeholder="Enter Gemini API Key"
-                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
                                     />
-                                    <p className="text-xs text-gray-500 italic">
-                                        Google Gemini runs at lowest possible cost (~$0.0003 per generation).
-                                    </p>
+                                </div>
+
+                                {/* HuggingFace */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        HuggingFace Token (Public API)
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.HF_TOKEN || ''}
+                                        onChange={(e) => handleChange('HF_TOKEN', e.target.value)}
+                                        placeholder="hf_..."
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                    />
+                                </div>
+
+                                {/* Replicate */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        Replicate API Key
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.REPLICATE_API_KEY || ''}
+                                        onChange={(e) => handleChange('REPLICATE_API_KEY', e.target.value)}
+                                        placeholder="r8_..."
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                    />
+                                </div>
+
+                                {/* dashscope */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        DashScope Key
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.DASHSCOPE_API_KEY || ''}
+                                        onChange={(e) => handleChange('DASHSCOPE_API_KEY', e.target.value)}
+                                        placeholder="Enter Key"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                    />
+                                </div>
+
+                                {/* FalAI */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        Fal.ai API Key
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={config.FALAI_API_KEY || ''}
+                                        onChange={(e) => handleChange('FALAI_API_KEY', e.target.value)}
+                                        placeholder="Enter Key"
+                                        className="w-full bg-[#1A1D24] border border-gray-800 text-white rounded-xl py-2 px-4 focus:outline-none focus:border-blue-500 transition-all font-mono text-sm"
+                                    />
                                 </div>
                             </div>
                         </div>

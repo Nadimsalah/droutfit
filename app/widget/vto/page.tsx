@@ -2,8 +2,8 @@
 
 import { useSearchParams } from "next/navigation"
 import { useState, useRef, useEffect, Suspense } from "react"
-import { Upload, X, Sparkles, RefreshCw, ShoppingBag, Loader2, ShieldCheck } from "lucide-react"
-import { uploadImage } from "@/lib/supabase"
+import { X, Sparkles, RefreshCw, ShoppingBag, Loader2, ShieldCheck, Upload } from "lucide-react"
+import { optimizeImageForGemini } from "@/lib/image-processing"
 // Removed NanoBanana import
 
 function ShopifyWidgetContent() {
@@ -76,18 +76,23 @@ function ShopifyWidgetContent() {
         }, 400)
 
         try {
-            const publicUserUrl = await uploadImage(userFile)
+            // 1. Optimize image client-side before sending
+            const optimized = await optimizeImageForGemini(userFile);
+            const base64Image = optimized.base64;
 
-            // Call the real AI API
+            // Call the real AI API with base64 for speed and cost savings
             const response = await fetch("/api/virtual-try-on", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                signal: null as any,
+                signal: undefined,
                 body: JSON.stringify({
-                    imageUrls: [publicUserUrl, productImage],
+                    imageUrls: [base64Image, productImage],
                     productId: productId,
                     shop: shop,
-                    type: "person" // Default type
+                    type: "person",
+                    metadata: {
+                        isMobile: window.innerWidth < 768
+                    }
                 }),
             });
 
@@ -97,10 +102,17 @@ function ShopifyWidgetContent() {
                 throw new Error(data.error || "Generation failed");
             }
 
+            // Standardized API now returns result_url
+            const finalImage = data.result_url || (data.result && data.result[0]);
+
+            if (!finalImage) {
+                throw new Error("No result image returned");
+            }
+
             clearInterval(progressInterval)
             setProgress(100)
             setTimeout(() => {
-                setResultImage(data.result_url)
+                setResultImage(finalImage)
                 setStep("result")
             }, 800)
         } catch (error: any) {
