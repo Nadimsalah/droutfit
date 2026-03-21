@@ -15,24 +15,30 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey || "");
 
 export async function POST(req: NextRequest) {
     const startTime = Date.now();
+    const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
+
+    // --- CRITICAL EARLY LOGGING ---
+    // Create entry BEFORE parsing body to ensure we see the attempt
+    const initialLog = await supabase.from("usage_logs").insert([{
+        user_id: null,
+        method: "POST",
+        path: "/api/virtual-try-on",
+        ip_address: ip,
+        status: 102,
+        error_message: "Processing initiated..."
+    }]).select();
+    const logEntryId = initialLog.data?.[0]?.id;
+
     try {
         const body = await req.json();
         const { prompt, type, numImages, imageUrls, productId, shop, metadata } = body;
         const isMobile = metadata?.isMobile || false;
         const isHD = metadata?.isHD || false;
-
-        const ip = req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(',')[0] || (req as any).ip || "unknown";
-
-        const logEntry = await supabase.from("usage_logs").insert([{
-            user_id: null,
-            product_id: productId || null,
-            method: "POST",
-            path: "/api/virtual-try-on",
-            ip_address: ip,
-            status: 102
-        }]).select();
-
-        const logEntryId = logEntry.data?.[0]?.id;
+        
+        // Update log with product_id if available
+        if (logEntryId && productId) {
+            await supabase.from("usage_logs").update({ product_id: productId }).eq("id", logEntryId);
+        }
         const resultUrl = null;
         const taskId = "task-" + Date.now();
 
