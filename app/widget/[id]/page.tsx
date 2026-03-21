@@ -29,14 +29,11 @@ function WidgetContent() {
             try {
                 const id = params.id as string
                 const shop = searchParams.get("shop")
-                const merchantId = searchParams.get("m")
-                const wpName = searchParams.get("name")
-                const wpImage = searchParams.get("image")
+                const merchantId = searchParams.get("m") || searchParams.get("merchant_id")
+                const wpName = searchParams.get("name") || searchParams.get("product_name")
+                const wpImage = searchParams.get("image") || searchParams.get("product_image")
 
-                // UUID Regex
-                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-                if (!uuidRegex.test(id) && shop === "wordpress" && merchantId && wpImage) {
+                if (merchantId && wpImage) {
                     // This is a JIT sync for WordPress
                     const syncRes = await fetch('/api/wp/sync-product', {
                         method: 'POST',
@@ -74,6 +71,15 @@ function WidgetContent() {
                     })
 
                     // Mocked limit as NanoBanana is removed
+                    setRemainingTries(5)
+                } else if (wpImage) {
+                    // Fallback: If not found in DB but we have image parameters, use them directly
+                    setProduct({
+                        id: id,
+                        name: wpName || "Virtual Try-On Product",
+                        image: wpImage,
+                        storeUrl: searchParams.get("store") || undefined
+                    })
                     setRemainingTries(5)
                 } else {
                     setError("Product not found")

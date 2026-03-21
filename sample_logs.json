@@ -1,0 +1,44 @@
+[
+  {
+    "id": "b422d65e-cf45-4aa5-a26f-946a4980f7f9",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/generate-demo",
+    "status": 200,
+    "latency": "6272ms",
+    "error_message": "{\"taskId\":\"LIVE-DEMO\",\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/4bW6thTKCX79IZSeoPvWs8ewAhpzxud2lm1WZPjfAUemBkMZB/output_327860.jpeg\",\"resolution\":\"1024px\",\"provider\":\"pruna\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T18:06:18.027086+00:00",
+    "ip_address": "::1",
+    "product_id": null,
+    "tokens_used": null,
+    "estimated_cost": null
+  },
+  {
+    "id": "2081dc76-eccf-45df-841e-18d52dabaac3",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/generate-demo",
+    "status": 200,
+    "latency": "5198ms",
+    "error_message": "{\"taskId\":\"LIVE-DEMO\",\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/42afP10dMuWdF6DW6ewmj7wklSqnexHoHcD503nMwg6xqRmsA/output_64346.jpeg\",\"resolution\":\"1024px\",\"provider\":\"pruna\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T17:54:32.692724+00:00",
+    "ip_address": "196.75.160.128",
+    "product_id": null,
+    "tokens_used": null,
+    "estimated_cost": null
+  },
+  {
+    "id": "f9bd8067-62ab-4270-8809-c729dcec9fb6",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/generate-demo",
+    "status": 200,
+    "latency": "4975ms",
+    "error_message": "{\"taskId\":\"LIVE-DEMO\",\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/CZWJpzfBuVxtDK0RFT6l7gMkRLSQPy2ydOC8LgndMvb7ZkJLA/output_795784.jpeg\",\"resolution\":\"1024px\",\"provider\":\"pruna\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T17:52:55.36341+00:00",
+    "ip_address": "::1",
+    "product_id": null,
+    "tokens_used": null,
+    "estimated_cost": null
+  }
+]
