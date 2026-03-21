@@ -190,7 +190,9 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-[#0B0E14] border border-white/5 rounded-2xl p-5 shadow-inner">
                                 <p className="text-gray-500 font-black text-[9px] uppercase tracking-widest">{dict.productDetailsPage.successfulTryons}</p>
-                                <p className="text-3xl font-black text-white mt-2 tracking-tighter italic">{product.usage}</p>
+                                <p className="text-3xl font-black text-white mt-2 tracking-tighter italic">
+                                    {tryonLogs.filter(log => log.status >= 200 && log.status < 300).length}
+                                </p>
                             </div>
                             <div className="bg-[#0B0E14] border border-white/5 rounded-2xl p-5 shadow-inner">
                                 <p className="text-gray-500 font-black text-[9px] uppercase tracking-widest">{dict.productDetailsPage.uplinkStatus}</p>
