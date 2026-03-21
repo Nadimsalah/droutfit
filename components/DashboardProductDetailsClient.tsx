@@ -38,19 +38,17 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
         if (!params.id) return;
         setLogsLoading(true);
 
-        let { data, error } = await supabase
-            .from('usage_logs')
-            .select('*')
-            .eq('product_id', params.id as string)
-            .order('created_at', { ascending: false })
-            .limit(50);
-
-        if (error) {
-            console.error("Error fetching logs:", error);
+        try {
+            // Use server-side API route with service role key to bypass RLS.
+            // Pruna logs have user_id=null which the anon client cannot read.
+            const res = await fetch(`/api/product-logs?product_id=${params.id}`);
+            const json = await res.json();
+            if (json.logs) setTryonLogs(json.logs);
+        } catch (err) {
+            console.error("Error fetching logs:", err);
+        } finally {
+            setLogsLoading(false);
         }
-
-        if (data) setTryonLogs(data);
-        setLogsLoading(false);
     };
 
     useEffect(() => {

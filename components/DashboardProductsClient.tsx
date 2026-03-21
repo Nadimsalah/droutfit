@@ -19,7 +19,21 @@ export default function DashboardProductsClient({ dict, locale }: { dict: any, l
         const fetchProducts = async () => {
             try {
                 const data = await getProducts();
-                setProducts(data);
+
+                // Fetch real usage counts via server API (bypasses RLS for Pruna null user_id logs)
+                if (data.length > 0) {
+                    const ids = data.map(p => p.id).join(",");
+                    const countsRes = await fetch(`/api/product-usage-counts?product_ids=${ids}`);
+                    const countsJson = await countsRes.json();
+                    const counts: Record<string, number> = countsJson.counts || {};
+                    const enriched = data.map(p => ({
+                        ...p,
+                        usage: counts[p.id] || 0
+                    }));
+                    setProducts(enriched);
+                } else {
+                    setProducts(data);
+                }
             } finally {
                 setIsLoading(false);
             }

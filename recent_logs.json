@@ -1,0 +1,30 @@
+[
+  {
+    "id": "5ae13fc6-3fde-42e2-abbe-d2c0b03fe1d8",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/virtual-try-on",
+    "status": 200,
+    "latency": "10655ms",
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T17:13:59.400202+00:00",
+    "ip_address": "::1",
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "tokens_used": null,
+    "estimated_cost": null
+  },
+  {
+    "id": "175d24c9-f65a-4d6c-8cc1-ac0df34bb4ce",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/virtual-try-on",
+    "status": 200,
+    "latency": "4458ms",
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T17:11:56.928571+00:00",
+    "ip_address": "196.75.160.128",
+    "product_id": null,
+    "tokens_used": null,
+    "estimated_cost": null
+  }
+]

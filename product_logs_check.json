@@ -1,0 +1,42 @@
+[
+  {
+    "id": "5adfe3cb-f638-4dea-a53c-f9112298fb4a",
+    "user_id": null,
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "status": 200,
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01,\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/0XpqIjm4elUAAS4IXvzpUEliEThkfOJc1SaSVsm08SiFZITWA/output_75129.jpeg\"}",
+    "created_at": "2026-03-21T17:24:13.548649+00:00"
+  },
+  {
+    "id": "4b006bbb-5370-4d7a-b4cd-9b0495994c08",
+    "user_id": null,
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "status": 200,
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01,\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/jLwhfoH7skykRCI4BNhNqvur1OWCipt6yVZpAML3Gk7lLkJLA/output_325722.jpeg\"}",
+    "created_at": "2026-03-21T17:22:14.78645+00:00"
+  },
+  {
+    "id": "07c3cbca-1544-4a14-b748-8f7f5c9b867c",
+    "user_id": null,
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "status": 200,
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01,\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/QefEWoVFatirMkp7oFT8XmkIdkgWdBJwYZPKCDKvCxAHUITWA/output_669488.jpeg\"}",
+    "created_at": "2026-03-21T17:18:57.892683+00:00"
+  },
+  {
+    "id": "5ae13fc6-3fde-42e2-abbe-d2c0b03fe1d8",
+    "user_id": null,
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "status": 200,
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01}",
+    "created_at": "2026-03-21T17:13:59.400202+00:00"
+  },
+  {
+    "id": "d004aff2-fc8e-4e0e-999f-0534b834b8be",
+    "user_id": "c78deb57-d80a-4645-932d-67396bd0f358",
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "status": 200,
+    "error_message": "{\"taskId\":\"task-1772495259057\",\"result_url\":\"https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/tryimages/vto_1772495270917_g0pqw.jpg\",\"input_images\":[\"https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/tryimages/upload_1772495256475_ajoisg.jpg\",\"https://dvbuiiaymvynzwecefup.supabase.co/storage/v1/object/public/tryimages/upload_1772495214987_cfz7g.jpg\"],\"credits_used\":1,\"channel\":\"google\",\"tokens_used\":2137,\"estimated_cost\":0.0013747,\"prompt_tokens\":847,\"candidates_tokens\":1290}",
+    "created_at": "2026-03-02T23:47:38.991427+00:00"
+  }
+]

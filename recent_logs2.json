@@ -1,0 +1,30 @@
+[
+  {
+    "id": "4b006bbb-5370-4d7a-b4cd-9b0495994c08",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/virtual-try-on",
+    "status": 200,
+    "latency": "5401ms",
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01,\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/jLwhfoH7skykRCI4BNhNqvur1OWCipt6yVZpAML3Gk7lLkJLA/output_325722.jpeg\"}",
+    "created_at": "2026-03-21T17:22:14.78645+00:00",
+    "ip_address": "::1",
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "tokens_used": null,
+    "estimated_cost": null
+  },
+  {
+    "id": "07c3cbca-1544-4a14-b748-8f7f5c9b867c",
+    "user_id": null,
+    "method": "POST",
+    "path": "/api/virtual-try-on",
+    "status": 200,
+    "latency": "5744ms",
+    "error_message": "{\"provider\":\"pruna\",\"model\":\"p-image-edit\",\"estimated_cost\":0.01,\"result_url\":\"https://api.pruna.ai/v1/predictions/delivery/xezq/QefEWoVFatirMkp7oFT8XmkIdkgWdBJwYZPKCDKvCxAHUITWA/output_669488.jpeg\"}",
+    "created_at": "2026-03-21T17:18:57.892683+00:00",
+    "ip_address": "::1",
+    "product_id": "fa51b8fd-716f-416e-8176-44140d9ee882",
+    "tokens_used": null,
+    "estimated_cost": null
+  }
+]
