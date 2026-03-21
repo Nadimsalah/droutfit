@@ -78,8 +78,8 @@ export async function generatePrunaVTO(req: PrunaVTORequest): Promise<string> {
 
   // 2. Submit prediction
   const prompt = req.garmentDescription 
-    ? `Virtual try-on: Change the clothing on the person in the second image to exactly match the garment in the first image. ${req.garmentDescription}`
-    : "Virtual try-on: Change the clothing on the person in the second image to match the garment shown in the first image. Photorealistic, seamless blending.";
+    ? `Virtual try-on: Photorealistic. Redress the person in the first image to wear the garment from the second image. MUST preserve the exact face, identity, pose, and background of the person in the first image. ${req.garmentDescription}`
+    : "Virtual try-on: Photorealistic. Redress the person in the first image to wear the garment from the second image. MUST preserve the exact face, identity, pose, and background of the person in the first image.";
 
   const submitResp = await fetch("https://api.pruna.ai/v1/predictions", {
     method: "POST",
@@ -87,12 +87,12 @@ export async function generatePrunaVTO(req: PrunaVTORequest): Promise<string> {
       "apikey": req.apiKey,
       "Content-Type": "application/json",
       "Model": "p-image-edit",
-      "Try-Sync": "true" // Prefer immediate result if available
+      "Try-Sync": "true"
     },
     body: JSON.stringify({
       input: {
         prompt: prompt,
-        images: [garmentFileUrl, personFileUrl],
+        images: [personFileUrl, garmentFileUrl],
         aspect_ratio: "match_input_image",
         turbo: false
       }
