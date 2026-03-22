@@ -68,18 +68,26 @@ export function Sidebar({ isOpen, onClose, dict, locale }: SidebarProps) {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('first_name, last_name')
-                    .eq('id', user.id)
-                    .single()
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    const { data } = await supabase
+                        .from('profiles')
+                        .select('first_name, last_name')
+                        .eq('id', user.id)
+                        .single()
 
-                setProfile({
-                    fullName: data ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email?.split('@')[0] || 'User' : user.email?.split('@')[0] || 'User',
-                    email: user.email || ''
-                })
+                    setProfile({
+                        fullName: data ? `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email?.split('@')[0] || 'User' : user.email?.split('@')[0] || 'User',
+                        email: user.email || ''
+                    })
+                }
+            } catch (error: any) {
+                if (error.name === 'AbortError' || error.message?.includes('abort')) {
+                    // console.log("Sidebar fetch aborted (normal)");
+                } else {
+                    console.error("Sidebar profile fetch error:", error);
+                }
             }
         }
         fetchProfile()

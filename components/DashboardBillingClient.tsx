@@ -33,14 +33,14 @@ export default function DashboardBillingClient({ dict, locale }: { dict: any, lo
                     .single()
 
                 if (profileData) setProfile(profileData)
-            }
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
-                console.log("Billing fetch aborted (normal)");
-            } else {
-                console.error("Error fetching transactions:", error);
-            }
-        } finally {
+                }
+            } catch (error: any) {
+                if (error.name === 'AbortError' || error.message?.toLowerCase().includes('abort')) {
+                    // console.log("Settings fetch aborted (normal)");
+                } else {
+                    console.error("Error fetching settings data:", error);
+                }
+            } finally {
             setLoading(false)
         }
     }

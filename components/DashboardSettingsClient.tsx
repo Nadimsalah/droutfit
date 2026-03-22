@@ -56,8 +56,8 @@ export default function DashboardSettingsClient({ dict, locale }: { dict: any, l
                     }
                 }
             } catch (error: any) {
-                if (error.name === 'AbortError') {
-                    console.log("Settings fetch aborted (normal)");
+                if (error.name === 'AbortError' || error.message?.toLowerCase().includes('abort')) {
+                    // Ignore
                 } else {
                     console.error("Error fetching settings data:", error);
                 }

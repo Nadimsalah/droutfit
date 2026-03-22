@@ -42,7 +42,7 @@ export default function DashboardProductsClient({ dict, locale }: { dict: any, l
                     setProducts(data);
                 }
             } catch (error: any) {
-                if (error.name === 'AbortError') {
+                if (error.name === 'AbortError' || error.message?.includes('aborted')) {
                     console.log("Fetch aborted (normal during navigation)");
                 } else {
                     console.error("Error fetching products:", error);

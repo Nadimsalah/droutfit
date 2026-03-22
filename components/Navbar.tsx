@@ -57,17 +57,27 @@ export default function Navbar({ dict, locale }: { dict: any, locale: string }) 
         };
         window.addEventListener('scroll', handleScroll);
 
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('store_website')
-                    .eq('id', session.user.id)
-                    .single();
-                setIsStoreLinked(!!profile?.store_website);
+        const checkSession = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user ?? null);
+                if (session?.user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('store_website')
+                        .eq('id', session.user.id)
+                        .single();
+                    setIsStoreLinked(!!profile?.store_website);
+                }
+            } catch (err: any) {
+                if (err.name === 'AbortError' || err.message?.includes('abort')) {
+                    // Ignore auth aborts during navigation
+                } else {
+                    console.error("Navbar session check error:", err);
+                }
             }
-        });
+        };
+        checkSession();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null);

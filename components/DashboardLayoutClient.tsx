@@ -36,9 +36,17 @@ export default function DashboardLayoutClient({
         }
 
         const checkAuth = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession()
-            if (!session || error) {
-                router.push(`/${locale}/login`)
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession()
+                if (!session || error) {
+                    router.push(`/${locale}/login`)
+                }
+            } catch (err: any) {
+                if (err.name === 'AbortError' || err.message?.includes('abort')) {
+                    console.log("Auth session check aborted (normal)");
+                } else {
+                    console.error("Auth check error:", err);
+                }
             }
         }
         checkAuth()

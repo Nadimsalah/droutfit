@@ -35,7 +35,7 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
                     const data = await getProductById(params.id as string, user)
                     setProduct(data || null)
                 } catch (error: any) {
-                    if (error.name === 'AbortError') {
+                    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
                         console.log("Product fetch aborted (normal)");
                     } else {
                         console.error("Error fetching product:", error);
@@ -59,7 +59,7 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
             const json = await res.json();
             if (json.logs) setTryonLogs(json.logs);
         } catch (err: any) {
-            if (err.name === 'AbortError') {
+            if (err.name === 'AbortError' || err.message?.includes('aborted')) {
                 console.log("Log fetch aborted (normal)");
             } else {
                 console.error("Error fetching logs:", err);

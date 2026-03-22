@@ -84,8 +84,8 @@ export default function DashboardOverviewClient({ dict, locale }: { dict: any, l
                 } as any)
                 setChartData(dailyData)
             } catch (error: any) {
-                if (error.name === 'AbortError') {
-                    console.log("Fetch aborted (normal during navigation)")
+                if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+                    console.log("Stats fetch aborted (normal)")
                 } else {
                     console.error("Error fetching dashboard stats:", error)
                 }
