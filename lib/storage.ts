@@ -88,8 +88,8 @@ export async function saveProduct(image: string, storeUrl?: string): Promise<Pro
     };
 }
 
-export async function getProductById(id: string): Promise<Product | undefined> {
-    const { data: { user } } = await supabase.auth.getUser();
+export async function getProductById(id: string, existingUser?: any): Promise<Product | undefined> {
+    const user = existingUser || (await supabase.auth.getUser()).data.user;
     if (!user) return undefined;
 
     // Validate UUID format to avoid Postgres errors
