@@ -5,6 +5,7 @@ import { Plus, Search, Link as LinkIcon, Code, Eye, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { getProducts, Product, deleteProduct } from "@/lib/storage"
 import Toast from "@/components/Toast"
+import { supabase } from "@/lib/supabase"
 
 export default function DashboardProductsClient({ dict, locale }: { dict: any, locale: string }) {
     const [products, setProducts] = useState<Product[]>([])
