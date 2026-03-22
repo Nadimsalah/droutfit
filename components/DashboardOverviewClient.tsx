@@ -51,32 +51,44 @@ export default function DashboardOverviewClient({ dict, locale }: { dict: any, l
             }
 
             try {
-                const { data: { user } } = await supabase.auth.getUser()
+                const { data: { user }, error: userError } = await supabase.auth.getUser()
+                
+                if (userError || !user) {
+                    console.warn("No user found for dashboard stats")
+                    setIsLoading(false)
+                    return
+                }
 
                 const [dashboardStats, dailyStats, profileRes] = await Promise.all([
-                    getDashboardStats(),
-                    getChartData(14),
-                    user ? supabase.from('profiles').select('store_website').eq('id', user.id).single() : Promise.resolve({ data: null })
+                    getDashboardStats(user),
+                    getChartData(14, user),
+                    supabase.from('profiles').select('store_website').eq('id', user.id).single()
                 ])
 
                 if (isShopifyContext && profileRes.data && !profileRes.data.store_website) {
                     setShowConnectPrompt(true)
                 }
 
-                const totalBlocked = dailyStats.reduce((sum: number, day: any) => sum + day.blocked, 0);
-                const totalSuccess = dailyStats.reduce((sum: number, day: any) => sum + day.success, 0);
+                const dailyData = dailyStats || []
+                const totalBlocked = dailyData.reduce((sum: number, day: any) => sum + (day.blocked || 0), 0);
+                const totalSuccess = dailyData.reduce((sum: number, day: any) => sum + (day.success || 0), 0);
                 const totalRequests = totalSuccess + totalBlocked;
                 const successRate = totalRequests > 0 ? (totalSuccess / totalRequests) * 100 : 100;
 
                 setStats({
-                    ...dashboardStats,
+                    ...(dashboardStats || {}),
+                    credits: (dashboardStats as any)?.credits || 0,
                     totalUsage: totalRequests,
                     successRate,
                     totalBlocked
                 } as any)
-                setChartData(dailyStats)
-            } catch (error) {
-                console.error("Error fetching dashboard stats:", error)
+                setChartData(dailyData)
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    console.log("Fetch aborted (normal during navigation)")
+                } else {
+                    console.error("Error fetching dashboard stats:", error)
+                }
             } finally {
                 setIsLoading(false)
             }

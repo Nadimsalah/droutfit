@@ -14,8 +14,8 @@ export const defaultProducts: Product[] = [
     // ... (keeping for reference if needed, but we prefer DB data)
 ];
 
-export async function getProducts(): Promise<Product[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+export async function getProducts(existingUser?: any): Promise<Product[]> {
+    const user = existingUser || (await supabase.auth.getUser()).data.user;
     if (!user) return [];
 
     const { data: dbProducts, error } = await supabase
@@ -249,8 +249,8 @@ export async function addLog(method: string, path: string, status: number, laten
     }]);
 }
 
-export async function getDashboardStats() {
-    const { data: { user } } = await supabase.auth.getUser();
+export async function getDashboardStats(existingUser?: any) {
+    const user = existingUser || (await supabase.auth.getUser()).data.user;
     if (!user) return null;
 
     // 1. Fetch Credits from profile
@@ -281,8 +281,8 @@ export async function getDashboardStats() {
     };
 }
 
-export async function getChartData(days = 14) {
-    const { data: { user } } = await supabase.auth.getUser();
+export async function getChartData(days = 14, existingUser?: any) {
+    const user = existingUser || (await supabase.auth.getUser()).data.user;
     if (!user) return [];
 
     const startDate = new Date();

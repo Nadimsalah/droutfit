@@ -18,7 +18,13 @@ export default function DashboardProductsClient({ dict, locale }: { dict: any, l
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const data = await getProducts();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    setIsLoading(false);
+                    return;
+                }
+
+                const data = await getProducts(user);
 
                 // Fetch real usage counts via server API (bypasses RLS for Pruna null user_id logs)
                 if (data.length > 0) {
@@ -33,6 +39,12 @@ export default function DashboardProductsClient({ dict, locale }: { dict: any, l
                     setProducts(enriched);
                 } else {
                     setProducts(data);
+                }
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    console.log("Fetch aborted (normal during navigation)");
+                } else {
+                    console.error("Error fetching products:", error);
                 }
             } finally {
                 setIsLoading(false);
