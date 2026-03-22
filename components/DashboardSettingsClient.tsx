@@ -55,8 +55,12 @@ export default function DashboardSettingsClient({ dict, locale }: { dict: any, l
                         setUser(prev => ({ ...prev, id: authUser.id, email: authUser.email || "" }))
                     }
                 }
-            } catch (error) {
-                console.error("Error fetching data:", error)
+            } catch (error: any) {
+                if (error.name === 'AbortError') {
+                    console.log("Settings fetch aborted (normal)");
+                } else {
+                    console.error("Error fetching settings data:", error);
+                }
             } finally {
                 setIsLoading(false)
             }

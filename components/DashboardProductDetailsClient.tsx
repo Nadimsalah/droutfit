@@ -26,9 +26,23 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
     useEffect(() => {
         const fetchProduct = async () => {
             if (params.id) {
-                const data = await getProductById(params.id as string)
-                setProduct(data || null)
-                setLoading(false)
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) {
+                        setLoading(false);
+                        return;
+                    }
+                    const data = await getProductById(params.id as string, user)
+                    setProduct(data || null)
+                } catch (error: any) {
+                    if (error.name === 'AbortError') {
+                        console.log("Product fetch aborted (normal)");
+                    } else {
+                        console.error("Error fetching product:", error);
+                    }
+                } finally {
+                    setLoading(false)
+                }
             }
         }
         fetchProduct()
@@ -44,8 +58,12 @@ export default function DashboardProductDetailsClient({ dict, locale }: { dict: 
             const res = await fetch(`/api/product-logs?product_id=${params.id}`);
             const json = await res.json();
             if (json.logs) setTryonLogs(json.logs);
-        } catch (err) {
-            console.error("Error fetching logs:", err);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log("Log fetch aborted (normal)");
+            } else {
+                console.error("Error fetching logs:", err);
+            }
         } finally {
             setLogsLoading(false);
         }

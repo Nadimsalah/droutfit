@@ -15,25 +15,34 @@ export default function DashboardBillingClient({ dict, locale }: { dict: any, lo
 
     const fetchTransactions = async () => {
         setLoading(true)
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-            const { data: txData } = await supabase
-                .from('transactions')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: txData } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
 
-            if (txData) setTransactions(txData)
+                if (txData) setTransactions(txData)
 
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('full_name, store_name')
-                .eq('id', user.id)
-                .single()
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('full_name, store_name')
+                    .eq('id', user.id)
+                    .single()
 
-            if (profileData) setProfile(profileData)
+                if (profileData) setProfile(profileData)
+            }
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log("Billing fetch aborted (normal)");
+            } else {
+                console.error("Error fetching transactions:", error);
+            }
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     useEffect(() => {
