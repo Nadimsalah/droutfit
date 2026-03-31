@@ -111,17 +111,18 @@ export default function InteractiveTryOnSection({
 
                                 {/* Idle — upload invite */}
                                 {status === "idle" && (
-                                    <motion.div key="idle"
+                                    <motion.button key="idle"
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                        className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-6 text-center">
-                                        <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                            <Camera className="h-9 w-9 text-gray-600" />
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-6 text-center cursor-pointer hover:bg-white/5 transition-all group w-full h-full">
+                                        <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:border-blue-500/50 transition-all duration-300">
+                                            <Camera className="h-9 w-9 text-gray-600 group-hover:text-blue-400 transition-colors" />
                                         </div>
                                         <div>
-                                            <p className="text-white font-black text-base mb-1">Your photo here</p>
-                                            <p className="text-gray-600 text-sm">Upload to see the magic</p>
+                                            <p className="text-white font-black text-base mb-1 group-hover:text-blue-400 transition-colors">Your photo here</p>
+                                            <p className="text-gray-600 text-sm group-hover:text-gray-400 transition-colors">Upload to see the magic</p>
                                         </div>
-                                    </motion.div>
+                                    </motion.button>
                                 )}
 
                                 {/* Processing */}

@@ -27,8 +27,8 @@ export default function XDashLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" dir="ltr">
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <html lang="en" dir="ltr" suppressHydrationWarning>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
                 {children}
             </body>
         </html>
