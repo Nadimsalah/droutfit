@@ -191,8 +191,11 @@ export async function POST(req: NextRequest) {
         }
 
         if (!resultUrl) {
-            console.warn(">>> [API:generate-demo] No result URL generated, falling back to garment image.");
-            resultUrl = absoluteGarmentUrl || "";
+            console.error(">>> [API:generate-demo] No result URL — AI provider returned nothing.");
+            return NextResponse.json(
+                { error: "The AI model did not return a result. Please try again." },
+                { status: 500 }
+            );
         }
 
         const latency = `${Date.now() - startTime}ms`;

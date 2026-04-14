@@ -33,23 +33,52 @@ export default function InteractiveTryOnSection({
         setProgress(0);
 
         (async () => {
-            const interval = setInterval(() => setProgress(p => p >= 90 ? p : p + Math.random() * 4 + 1), 400);
+            // Stage-based progress — tied to actual work, not a fake timer
+            setProgress(5);
+
+            // Slowly creep during upload (20→70%) then hold until AI responds (70→95%)
+            const creepInterval = setInterval(() => {
+                setProgress(p => {
+                    if (p < 70) return p + (Math.random() * 3 + 1);       // upload phase: faster
+                    if (p < 93) return p + (Math.random() * 0.8 + 0.2);   // AI phase: slow creep
+                    return p;                                                 // hold at 93%
+                });
+            }, 600);
+
             try {
+                // Stage 1: Optimize image
                 const { base64, metadata } = await optimizeImageForGemini(file);
+                setProgress(20);
+
+                // Stage 2: Send to API with a 90-second timeout (handles slow connections)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 90_000);
+
+                setProgress(30); // Upload starting
                 const res = await fetch('/api/generate-demo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userImageUrl: base64, garmentUrl, metadata: { ...metadata, isMobile: window.innerWidth < 768 } })
+                    body: JSON.stringify({ userImageUrl: base64, garmentUrl, metadata: { ...metadata, isMobile: window.innerWidth < 768 } }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
+
+                setProgress(80); // AI done, parsing response
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Failed");
-                if (!data.result_url) throw new Error("No result");
-                clearInterval(interval);
+                if (!data.result_url) throw new Error("No result from AI model");
+
+                clearInterval(creepInterval);
                 setProgress(100);
                 setTimeout(() => { setResultImage(data.result_url); setStatus("success"); }, 300);
             } catch (err: any) {
-                clearInterval(interval);
-                setErrorMsg(err.message);
+                clearInterval(creepInterval);
+                // Friendly message for timeouts (slow internet)
+                if (err.name === 'AbortError') {
+                    setErrorMsg("Your connection is slow — the request timed out. Please try again on a faster network.");
+                } else {
+                    setErrorMsg(err.message);
+                }
                 setStatus("error");
             }
         })();

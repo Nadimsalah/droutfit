@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { verifyShopifyWebhook } from "@/lib/shopify-webhook";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,46 +8,31 @@ const supabase = createClient(
 );
 
 /**
- * Verifies that the webhook request came from Shopify by comparing
- * the HMAC signature in the header with one computed from the raw body.
- */
-function verifyShopifyWebhook(rawBody: Buffer, hmacHeader: string): boolean {
-    const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
-    if (!secret) {
-        console.warn("SHOPIFY_WEBHOOK_SECRET is not set. Cannot verify HMAC.");
-        return false;
-    }
-    const digest = createHmac("sha256", secret).update(rawBody).digest("base64");
-    try {
-        return timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
-    } catch {
-        return false;
-    }
-}
-
-/**
  * MANDATORY SHOPIFY GDPR WEBHOOK: customers/data_request
  *
- * Shopify sends this when a customer requests a copy of their data
- * stored by the app. The app must respond within 30 days.
+ * Triggered when a customer requests a copy of their data stored by the app.
+ * The app must respond with 200 OK immediately, then fulfill within 30 days.
  *
- * DrOutfit stores minimal customer data — only try-on usage logs
- * linked to the merchant account (shop), not individual end-customers.
- * This handler logs the request for audit purposes.
+ * DrOutfit stores NO personally identifiable customer data — only usage logs
+ * tied to the merchant's shop domain, not individual customers.
  */
 export async function POST(req: NextRequest) {
+    // STEP 1: Read raw body first (stream can only be read once)
     const rawBody = Buffer.from(await req.arrayBuffer());
-    const hmacHeader = req.headers.get("x-shopify-hmac-sha256") || "";
 
+    // STEP 2: Verify HMAC signature — reject anything not from Shopify
+    const hmacHeader = req.headers.get("x-shopify-hmac-sha256") ?? "";
     if (!verifyShopifyWebhook(rawBody, hmacHeader)) {
+        console.warn("[GDPR] customers/data_request: HMAC verification failed");
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let payload: any = {};
+    // STEP 3: Parse payload
+    let payload: any;
     try {
         payload = JSON.parse(rawBody.toString("utf-8"));
     } catch {
-        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const { shop_id, shop_domain, customer, orders_requested } = payload;
@@ -58,22 +43,18 @@ export async function POST(req: NextRequest) {
         orders_requested,
     });
 
-    // Log the compliance request for audit trail
-    try {
-        await supabase.from("compliance_logs").insert([{
-            type: "customers/data_request",
-            shop_domain,
-            shop_id: String(shop_id),
-            customer_id: customer?.id ? String(customer.id) : null,
-            payload: payload,
-            received_at: new Date().toISOString(),
-        }]);
-    } catch (e) {
-        // Table may not exist yet — log to console but don't fail
-        console.warn("[GDPR] Could not write to compliance_logs (table may not exist):", e);
-    }
+    // STEP 4: Log request for audit trail (non-blocking — never fail on DB error)
+    supabase.from("compliance_logs").insert([{
+        type: "customers/data_request",
+        shop_domain: shop_domain ?? null,
+        shop_id: shop_id ? String(shop_id) : null,
+        customer_id: customer?.id ? String(customer.id) : null,
+        payload,
+        received_at: new Date().toISOString(),
+    }]).then(({ error }) => {
+        if (error) console.warn("[GDPR] compliance_logs insert failed:", error.message);
+    });
 
-    // Shopify requires a 200 OK response. The actual data export
-    // should be fulfilled manually or via a follow-up process.
+    // STEP 5: Return 200 immediately — Shopify requires this
     return NextResponse.json({ success: true }, { status: 200 });
 }

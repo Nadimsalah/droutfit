@@ -1,78 +1,95 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { verifyShopifyWebhook } from "@/lib/shopify-webhook";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function verifyShopifyWebhook(rawBody: Buffer, hmacHeader: string): boolean {
-    const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
-    if (!secret) {
-        console.warn("SHOPIFY_WEBHOOK_SECRET is not set. Cannot verify HMAC.");
-        return false;
-    }
-    const digest = createHmac("sha256", secret).update(rawBody).digest("base64");
-    try {
-        return timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
-    } catch {
-        return false;
-    }
-}
-
 /**
  * MANDATORY SHOPIFY GDPR WEBHOOK: shop/redact
  *
- * Shopify sends this 48 hours after a shop owner uninstalls the app.
- * All data related to the shop must be deleted.
- * We remove the store_website link from the merchant profile and
- * any associated usage logs.
+ * Triggered 48 hours after a merchant uninstalls the app.
+ * All data associated with the shop MUST be deleted.
+ *
+ * Actions taken:
+ *  1. Unlink the shop from any merchant profile in our DB
+ *  2. Delete usage logs associated with this shop domain
+ *  3. Log the action for audit compliance
  */
 export async function POST(req: NextRequest) {
+    // STEP 1: Read raw body first (stream can only be read once)
     const rawBody = Buffer.from(await req.arrayBuffer());
-    const hmacHeader = req.headers.get("x-shopify-hmac-sha256") || "";
 
+    // STEP 2: Verify HMAC signature
+    const hmacHeader = req.headers.get("x-shopify-hmac-sha256") ?? "";
     if (!verifyShopifyWebhook(rawBody, hmacHeader)) {
+        console.warn("[GDPR] shop/redact: HMAC verification failed");
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let payload: any = {};
+    // STEP 3: Parse payload
+    let payload: any;
     try {
         payload = JSON.parse(rawBody.toString("utf-8"));
     } catch {
-        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
     const { shop_id, shop_domain } = payload;
 
     console.log("[GDPR] shop/redact received:", { shop_domain, shop_id });
 
-    try {
-        // 1. Unlink the store from any merchant profile
-        const { error: unlinkError } = await supabase
-            .from("profiles")
-            .update({ store_website: null })
-            .or(`store_website.eq.${shop_domain},store_website.ilike.%${shop_domain}%`);
+    // STEP 4: Delete all shop data (non-blocking — fire and forget)
+    (async () => {
+        try {
+            // 4a. Unlink the store_domain from merchant profiles
+            const { error: profileErr } = await supabase
+                .from("profiles")
+                .update({
+                    store_domain: null,
+                    store_website: null,
+                    store_name: null,
+                })
+                .or(
+                    `store_domain.eq.${shop_domain},` +
+                    `store_domain.ilike.%${shop_domain}%,` +
+                    `store_website.ilike.%${shop_domain}%`
+                );
 
-        if (unlinkError) {
-            console.error("[GDPR] shop/redact: failed to unlink profile:", unlinkError.message);
-        } else {
-            console.log(`[GDPR] shop/redact: unlinked profile for ${shop_domain}`);
+            if (profileErr) {
+                console.error("[GDPR] shop/redact: profile unlink error:", profileErr.message);
+            } else {
+                console.log(`[GDPR] shop/redact: profile unlinked for ${shop_domain}`);
+            }
+
+            // 4b. Delete usage logs associated with this shop
+            const { error: logsErr } = await supabase
+                .from("usage_logs")
+                .delete()
+                .ilike("error_message", `%"shop":"${shop_domain}"%`);
+
+            if (logsErr) {
+                console.warn("[GDPR] shop/redact: usage_logs deletion error:", logsErr.message);
+            } else {
+                console.log(`[GDPR] shop/redact: usage_logs cleaned for ${shop_domain}`);
+            }
+
+            // 4c. Log the compliance action for audit
+            await supabase.from("compliance_logs").insert([{
+                type: "shop/redact",
+                shop_domain: shop_domain ?? null,
+                shop_id: shop_id ? String(shop_id) : null,
+                customer_id: null,
+                payload,
+                received_at: new Date().toISOString(),
+            }]);
+        } catch (err) {
+            console.error("[GDPR] shop/redact: unexpected error:", err);
         }
+    })();
 
-        // 2. Log the compliance action for audit purposes
-        await supabase.from("compliance_logs").insert([{
-            type: "shop/redact",
-            shop_domain,
-            shop_id: String(shop_id),
-            customer_id: null,
-            payload: payload,
-            received_at: new Date().toISOString(),
-        }]);
-    } catch (e) {
-        console.warn("[GDPR] shop/redact error (non-critical):", e);
-    }
-
+    // STEP 5: Return 200 immediately — Shopify requires this
     return NextResponse.json({ success: true }, { status: 200 });
 }
