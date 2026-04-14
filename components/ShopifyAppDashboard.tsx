@@ -5,14 +5,14 @@ import { supabase } from "@/lib/supabase";
 import {
     CheckCircle2, XCircle, Zap, ExternalLink, Loader2, Plus,
     AlertTriangle, ChevronRight, Activity, RefreshCw, Clock,
-    Package, CheckCircle, Eye, EyeOff,
+    CheckCircle, Eye, EyeOff, LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n-config";
 
 type View = "loading" | "login" | "not_connected" | "dashboard";
 
-const Shell = ({ children, view, user, loadData }: { children: React.ReactNode, view: string, user: any, loadData: () => void }) => (
+const Shell = ({ children, view, user, loadData, onSignOut }: { children: React.ReactNode, view: string, user: any, loadData: () => void, onSignOut: () => void }) => (
     <div className="min-h-screen bg-[#f6f6f7] font-sans">
         <header className="bg-white border-b border-[#e1e3e5] px-5 py-3 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-2.5">
@@ -26,11 +26,22 @@ const Shell = ({ children, view, user, loadData }: { children: React.ReactNode, 
                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#e3f1df] text-[#008060] border border-[#a8d5a2] font-medium">Connected</span>
                 )}
             </div>
-            {user && view === "dashboard" && (
-                <button onClick={() => loadData()} className="text-[#6d7175] hover:text-[#202223] transition-colors">
-                    <RefreshCw className="w-4 h-4" />
-                </button>
-            )}
+            <div className="flex items-center gap-2">
+                {user && view === "dashboard" && (
+                    <button onClick={() => loadData()} className="text-[#6d7175] hover:text-[#202223] transition-colors p-1.5 rounded-lg hover:bg-[#f6f6f7]">
+                        <RefreshCw className="w-4 h-4" />
+                    </button>
+                )}
+                {user && (
+                    <button
+                        onClick={onSignOut}
+                        className="flex items-center gap-1.5 text-xs font-medium text-[#6d7175] hover:text-[#d72c0d] border border-[#e1e3e5] hover:border-[#feb8b2] hover:bg-[#fff3f2] px-2.5 py-1.5 rounded-lg transition-all"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out
+                    </button>
+                )}
+            </div>
         </header>
         {children}
     </div>
@@ -167,9 +178,16 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
     const credits = profile?.credits ?? 0;
     const shopSearch = typeof window !== "undefined" ? window.location.search : "";
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        setView("login");
+    };
+
     // ─── LOADING ────────────────────────────────────────────────
     if (view === "loading") return (
-        <Shell view={view} user={user} loadData={loadData}>
+        <Shell view={view} user={user} loadData={loadData} onSignOut={handleSignOut}>
             <div className="flex items-center justify-center min-h-[calc(100vh-57px)]">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-5 h-5 border-2 border-[#5c6ac4] border-t-transparent rounded-full animate-spin" />
@@ -181,7 +199,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── LOGIN ──────────────────────────────────────────────────
     if (view === "login") return (
-        <Shell view={view} user={user} loadData={loadData}>
+        <Shell view={view} user={user} loadData={loadData} onSignOut={handleSignOut}>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 py-12">
                 <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-7 w-full max-w-sm">
                     <div className="flex justify-center mb-6">
@@ -266,7 +284,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── NOT CONNECTED ──────────────────────────────────────────
     if (view === "not_connected") return (
-        <Shell view={view} user={user} loadData={loadData}>
+        <Shell view={view} user={user} loadData={loadData} onSignOut={handleSignOut}>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-6 py-12">
                 <div className="bg-white rounded-2xl border border-[#e1e3e5] shadow-sm p-7 w-full max-w-sm">
                     <div className="w-12 h-12 rounded-xl bg-[#fff3cd] border border-[#ffd79d] flex items-center justify-center mx-auto mb-5">
@@ -307,7 +325,7 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
 
     // ─── DASHBOARD ──────────────────────────────────────────────
     return (
-        <Shell view={view} user={user} loadData={loadData}>
+        <Shell view={view} user={user} loadData={loadData} onSignOut={handleSignOut}>
             <div className="max-w-2xl mx-auto p-5 space-y-4">
 
                 {/* Store banner */}
@@ -353,14 +371,10 @@ export default function ShopifyAppDashboard({ locale }: { locale: Locale }) {
                 )}
 
                 {/* Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                     <Link href={`https://droutfit.com/${locale}/dashboard/billing`} target="_blank"
                         className="flex items-center justify-center gap-2 bg-[#5c6ac4] hover:bg-[#4959bd] text-white px-4 py-3 rounded-xl font-medium text-sm transition-colors">
-                        <Zap className="w-4 h-4" />Top up
-                    </Link>
-                    <Link href="/app/dashboard"
-                        className="flex items-center justify-center gap-2 bg-white border border-[#e1e3e5] hover:bg-[#f6f6f7] text-[#202223] px-4 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
-                        <Package className="w-4 h-4" />Manage Try-On Products
+                        <Zap className="w-4 h-4" />Top Up Credits
                     </Link>
                 </div>
 
